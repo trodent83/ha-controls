@@ -1,0 +1,98 @@
+.btn:first-child {
+  border-top-left-radius: var(--ha-card-border-radius, 12px) !important;
+  border-bottom-left-radius: var(--ha-card-border-radius, 12px) !important;
+}
+.btn:last-child {
+  border-top-right-radius: var(--ha-card-border-radius, 12px) !important;
+  border-bottom-right-radius: var(--ha-card-border-radius, 12px) !important;
+}
+
+ha-card {
+  display: grid !important;
+  /* Dies erzwingt die nebeneinander Aufteilung, egal wie breit der Inhalt ist */
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  
+  padding: 0px !important;
+  margin: 0px !important;
+  overflow: hidden;
+  align-items: stretch;     /* Buttons strecken sich über die volle Höhe */
+  justify-items: stretch;   /* Buttons strecken sich über die volle Breite der Zelle */
+}
+
+.btn {
+  display: flex !important;
+  flex-direction: column !important; 
+  align-items: center !important;    /* Zentriert Icon/Label horizontal im Button */
+  justify-content: center !important; /* Zentriert Inhalt vertikal */
+  
+  /* Kein width: 100% nötig, da justify-items: stretch das übernimmt */
+  width: auto; 
+  
+  padding: 8px 0;
+  gap: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.label {
+  /* WICHTIG: Das Label darf nicht breiter als der Button sein */
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.2;
+  word-wrap: break-word;
+}
+
+ha-icon {
+  display: flex;                     /* Macht das Icon selbst zum Flex-Container */
+  align-items: center;
+  justify-content: center;
+  --mdc-icon-size: 18px;
+  transform: translateZ(0);         /* Added GPU boost */
+}
+
+/* GPU Optimized Animations */
+.bounce, .rotating, .pulse, .shake, .float, .spin-slow {
+  will-change: transform;
+}
+
+.bounce    { animation: bounce 1s ease infinite; }
+.blink     { animation: blink 1.5s linear infinite; }
+.rotating  { animation: rotating 2s linear infinite; }
+.pulse     { animation: pulse 2s infinite; }
+.shake     { animation: shake 0.4s linear infinite; }
+.float     { animation: float 3s ease-in-out infinite; }
+.spin-slow { animation: rotating 8s linear infinite; }
+
+@keyframes rotating { 
+  from { transform: rotate(0deg) translateZ(0); } 
+  to { transform: rotate(360deg) translateZ(0); } 
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+  60% { transform: translateY(-3px); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}

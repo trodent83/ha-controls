@@ -1,0 +1,145 @@
+/* Main wrapper */
+.container {
+    padding: 0;
+    background: transparent;
+}
+
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns, 4), 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* Individual buttons */
+.room-button {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    
+    border-radius: var(--ha-card-border-radius, 12px);
+    background: var(--ha-card-background, var(--card-background-color, white));
+    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
+    box-shadow: var(--ha-card-box-shadow, none);
+    
+    padding: 8px;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    overflow: hidden;
+    color: var(--primary-text-color);
+}
+
+/* Toggle All Button - Styled like a Tile Card */
+.tile-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    cursor: pointer;
+    border-radius: var(--ha-card-border-radius, 12px);
+    background: var(--ha-card-background, var(--card-background-color, white));
+    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
+    transition: all 0.2s ease-in-out;
+}
+
+.tile-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--secondary-background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    color: var(--primary-text-color);
+}
+
+.tile-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tile-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+}
+
+.tile-state {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+}
+
+/* Active State for Grid Buttons Only */
+.room-button.active {
+    background-color: var(--selection-color) !important;
+    color: var(--selection-foreground) !important;
+    border-color: var(--selection-color) !important;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon styling */
+.room-button ha-icon, .tile-icon-container ha-icon {
+    --mdc-icon-size: 24px;
+    color: inherit;
+    pointer-events: none;
+    display: inline-block; /* Essential for smooth rotation */
+}
+
+.room-button ha-icon {
+    margin-bottom: 8px;
+}
+
+/* Room Name styling */
+.room-button .name {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+/* Hover effect */
+@media (hover: hover) {
+    .room-button:hover:not(.active), .tile-button:hover {
+        background: var(--secondary-background-color);
+        border-color: var(--outline-color);
+    }
+}
+
+/* Press effect */
+.room-button:active, .tile-button:active {
+    transform: scale(0.98);
+}
+
+.container.readonly {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Animations - Synchronized with Editor Options */
+.none { animation: none !important; }
+.spinning { animation: rotating 2s linear infinite; }
+.pulsing  { animation: pulse 2s infinite; }
+.flash    { animation: blink 1.5s linear infinite; }
+
+@keyframes rotating { 
+    from { transform: rotate(0deg); } 
+    to { transform: rotate(360deg); } 
+}
+@keyframes pulse { 
+    0%, 100% { transform: scale(1); } 
+    50% { transform: scale(1.15); } 
+}
+@keyframes blink { 
+    0%, 100% { opacity: 1; } 
+    50% { opacity: 0.3; } 
+}

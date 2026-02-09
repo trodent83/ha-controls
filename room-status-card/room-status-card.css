@@ -1,0 +1,15 @@
+/* /config/www/room-status-card.css */
+ha-card { 
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 8px 0px;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+}
+.header_container { display: flex; align-items: center; gap: 12px; }
+ha-icon { color: var(--secondary-text-color); --mdc-icon-size: 20px; }
+.room_title { font-size: 1.1rem; font-weight: 500; color: var(--primary-text-color); }
+.status_badges { display: flex; gap: 12px; }
+.status_badge { font-size: 0.95rem; font-weight: 400; display: flex; align-items: center; }
