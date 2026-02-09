@@ -170,6 +170,27 @@ class MultiPropertyCardEditor extends LitElement {
                       }}
                     ></ha-icon-picker>
 
+                    <ha-textfield
+                      label="Color Override"
+                      .value=${ent.color || ""}
+                      @input=${(e) => {
+                        const ents = [...this._config.entities];
+                        ents[idx] = { ...ents[idx], color: e.target.value };
+                        this._config = { ...this._config, entities: ents };
+                        this._fireConfigChanged();
+                      }}
+                    >
+                      ${ent.color ? html`
+                        <ha-icon-button slot="suffix" @click=${(e) => {
+                            e.stopPropagation();
+                            const ents = [...this._config.entities];
+                            ents[idx] = { ...ents[idx], color: "" };
+                            this._config = { ...this._config, entities: ents };
+                            this._fireConfigChanged();
+                        }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
+                      ` : ""}
+                    </ha-textfield>
+
                     <div class="actions-container">
                       <ha-form
                         .hass=${this.hass}

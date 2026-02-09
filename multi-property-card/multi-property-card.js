@@ -95,7 +95,7 @@ class MultiPropertyCard extends LitElement {
 
           const matchColor = this._getMatchedProperty(state, entConf.thresholds, 'color');
           const matchAnim = this._getMatchedProperty(state, entConf.thresholds, 'animation');
-          const finalColor = isUnavailable ? 'var(--disabled-text-color)' : (matchColor || 'var(--primary-text-color)');
+          const finalColor = isUnavailable ? 'var(--disabled-text-color)' : (matchColor || entConf.color || 'var(--primary-text-color)');
           
           const icon = entConf.icon || stateObj?.attributes?.icon || this._getFallbackIcon(domain, deviceClass);
           const unit = entConf.unit !== undefined ? entConf.unit : stateObj?.attributes?.unit_of_measurement || '';
