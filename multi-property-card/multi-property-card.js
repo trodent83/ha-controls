@@ -31,7 +31,7 @@ class MultiPropertyCard extends LitElement {
     const stringState = String(stateValue).toLowerCase();
 
     const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName]) return exactMatch[propertyName];
+    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
 
     const numericValue = parseFloat(stateValue);
     if (!isNaN(numericValue)) {
@@ -95,8 +95,9 @@ class MultiPropertyCard extends LitElement {
 
           const matchColor = this._getMatchedProperty(state, entConf.thresholds, 'color');
           const matchAnim = this._getMatchedProperty(state, entConf.thresholds, 'animation');
-          const finalColor = isUnavailable ? 'var(--disabled-text-color)' : (matchColor || entConf.color || 'var(--primary-text-color)');
-          
+          const finalColor = isUnavailable ? 'var(--disabled-text-color)' : (matchColor !== null ? (matchColor || 'var(--primary-text-color)') : (entConf.color || 'var(--primary-text-color)'));
+          const finalAnim = matchAnim !== null ? matchAnim : (entConf.animation || '');
+
           const icon = entConf.icon || stateObj?.attributes?.icon || this._getFallbackIcon(domain, deviceClass);
           const unit = entConf.unit !== undefined ? entConf.unit : stateObj?.attributes?.unit_of_measurement || '';
 
@@ -109,7 +110,7 @@ class MultiPropertyCard extends LitElement {
                 @click="${() => this._runAction(entConf, 'tap')}"
                 @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}">
               
-              <ha-icon .icon="${icon}" class="${matchAnim || ''}" style="color: inherit;"></ha-icon>
+              <ha-icon .icon="${icon}" class="${finalAnim}" style="color: inherit;"></ha-icon>
 
               <div class="info-container" style="color: inherit;">
                 ${showLabel ? html`

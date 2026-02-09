@@ -191,6 +191,32 @@ class MultiPropertyCardEditor extends LitElement {
                       ` : ""}
                     </ha-textfield>
 
+                    <ha-select
+                      label="Default Animation"
+                      .value=${ent.animation || ""}
+                      @closed=${(e) => {
+                        e.stopPropagation();
+                        const target = e.target;
+                        if (target.value !== undefined && target.value !== ent.animation) {
+                          const ents = [...this._config.entities];
+                          ents[idx] = { ...ents[idx], animation: target.value };
+                          this._config = { ...this._config, entities: ents };
+                          this._fireConfigChanged();
+                        }
+                      }}
+                      fixedMenuPosition
+                      naturalMenuWidth
+                    >
+                      <mwc-list-item value="">None</mwc-list-item>
+                      <mwc-list-item value="blink">Blink</mwc-list-item>
+                      <mwc-list-item value="bounce">Bounce</mwc-list-item>
+                      <mwc-list-item value="rotating">Rotating</mwc-list-item>
+                      <mwc-list-item value="pulse">Pulse</mwc-list-item>
+                      <mwc-list-item value="shake">Shake</mwc-list-item>
+                      <mwc-list-item value="float">Float</mwc-list-item>
+                      <mwc-list-item value="spin-slow">Spin Slow</mwc-list-item>
+                    </ha-select>
+
                     <div class="actions-container">
                       <ha-form
                         .hass=${this.hass}
