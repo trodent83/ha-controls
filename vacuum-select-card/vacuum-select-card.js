@@ -29,8 +29,7 @@ class VacuumSelectCard extends LitElement {
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
     const rooms = allRooms.filter(room => !this.config.rooms?.[room.id]?.disabled);
 
-    const isReadonly = this.config.readonly === true || 
-                      (this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on');
+    const isReadonly = this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on';
     
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
 
@@ -40,7 +39,7 @@ class VacuumSelectCard extends LitElement {
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
 
     return html`
-      <link rel="stylesheet" href="/local/custom/vacuum-select-card/vacuum-select-card.css?v=0.1.6">
+      <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=0.2.2">
       <div class="container ${isReadonly ? 'readonly' : ''}" 
           style="--grid-columns: ${this.config.columns || 4}; 
                   --selection-color: ${this.config.selection_color || 'var(--primary-color)'}; 
@@ -52,16 +51,23 @@ class VacuumSelectCard extends LitElement {
             const customConfig = this.config.rooms?.[room.id] || {};
             
             const roomIdInt = Math.floor(parseFloat(room.id));
-            const isActiveCleaning = currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
+            const showActiveCleaning = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on' && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
             
             let animationClass = '';
-            if (isActiveCleaning) {
-                const selectedAnim = customConfig.animation || this.config.default_animation || 'spinning';
-                animationClass = selectedAnim === 'none' ? '' : selectedAnim;
+            let animationStyle = '';
+            if (showActiveCleaning) {
+                const markingAnimation = this.config.mark_animation || 'none';
+                animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
+                const bgColor = this.config.mark_animation_background;
+                const fgColor = this.config.mark_animation_foreground;
+                if (bgColor || fgColor) {
+                    animationStyle = `${bgColor ? `background-color: ${bgColor} !important;` : ''} ${fgColor ? `color: ${fgColor} !important;` : ''}`;
+                }
             }
             
             return html`
               <div class="room-button ${isSelected ? 'active' : ''}" 
+                   style="${animationStyle}"
                    @click="${() => !isReadonly && this._toggleRoom(room.id, selectedRooms, cleanSequence)}">
                 <ha-icon 
                   class="${animationClass}" 
@@ -91,12 +97,10 @@ class VacuumSelectCard extends LitElement {
   }
 
   _toggleAll(rooms, selectedRooms, cleanSequence) {
-    // Check if ALL visible rooms are currently in the selection
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
     
     let newSelection = [];
     
-    // Logic: If not all are selected -> select all. If literally all are selected -> clear.
     if (!allVisibleSelected) {
       newSelection = rooms.map(r => r.id);
       newSelection.sort((a, b) => {

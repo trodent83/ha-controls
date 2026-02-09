@@ -22,7 +22,7 @@ class UniversalSelectCard extends LitElement {
     const isLocked = this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
 
     return html`
-      <link rel="stylesheet" href="/local/custom/universal-select-card/universal-select-card.css?v=1.0.1">
+      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card.css?v=1.0.1">
       <ha-card style="${isLocked ? 'pointer-events: none; opacity: 0.6; filter: grayscale(1);' : ''}">
         ${options.map(option => {
           const optCfg = this.config.options_config?.[option] || {};

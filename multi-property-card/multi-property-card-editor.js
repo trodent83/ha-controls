@@ -78,7 +78,7 @@ class MultiPropertyCardEditor extends LitElement {
     if (!this.hass || !this._config) return html``;
 
     return html`
-      <link rel="stylesheet" href="/local/custom/multi-property-card/multi-property-card-editor.css?v=0.1.9">
+      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card-editor.css?v=0.1.9">
       <div class="card-config">
             
         <div class="global-settings">

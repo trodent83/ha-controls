@@ -57,7 +57,7 @@ class MultiPropertyCard extends LitElement {
     if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">No entities</ha-alert>`;
 
     return html`
-      <link rel="stylesheet" href="/local/custom/multi-property-card/multi-property-card.css?v=0.2.1">
+      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=0.2.1">
       <ha-card>
       ${this.config.entities
         .filter(entConf => {

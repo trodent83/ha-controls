@@ -26,6 +26,34 @@ class VacuumSelectCardEditor extends LitElement {
       { name: "output_entity", label: "Selection Helper (Output)", selector: { entity: {} } },
       { name: "currently_cleaning_entity", label: "Currently Cleaning Entity", selector: { entity: {} } },
       { name: "readonly_entity", label: "Lock Entity", selector: { entity: { domain: "binary_sensor" } } },
+      { name: "mark_active_room", label: "Display Active Room Selector", selector: { entity: { domain: "binary_sensor" } } },
+      { 
+        name: "mark_animation", 
+        label: "Animation For Selected Room", 
+        selector: { 
+          select: { 
+            options: [
+              { value: "none", label: "None (Static)" },
+              { value: "spinning", label: "Spinning" },
+              { value: "pulsing", label: "Pulsing" },
+              { value: "flash", label: "Flashing" },
+              { value: "bouncing", label: "Bouncing" },
+              { value: "shaking", label: "Shaking" },
+              { value: "floating", label: "Floating" },
+              { value: "spin-slow", label: "Slow Spin" }
+            ],
+            mode: "list"
+          } 
+        } 
+      },
+      { 
+        name: "", 
+        type: "grid", 
+        schema: [
+          { name: "mark_animation_background", label: "Animation Background Color", selector: { text: {} } },
+          { name: "mark_animation_foreground", label: "Animation Text Color", selector: { text: {} } }
+        ] 
+      },
       { 
         name: "", 
         type: "grid", 
@@ -62,13 +90,16 @@ class VacuumSelectCardEditor extends LitElement {
             selector: { 
               select: { 
                 options: [
-                  { value: "none", label: "None (Static)" },
-                  { value: "spinning", label: "Spinning" },
-                  { value: "pulsing", label: "Pulsing" },
-                  { value: "flash", label: "Flashing" }
-                ],
-                custom_value: true,
-                mode: "dropdown"
+                    { value: "none", label: "None (Static)" },
+                    { value: "spinning", label: "Spinning" },
+                    { value: "pulsing", label: "Pulsing" },
+                    { value: "flash", label: "Flashing" },
+                    { value: "bounce", label: "Bouncing" },
+                    { value: "shake", label: "Shaking" },
+                    { value: "float", label: "Floating" },
+                    { value: "spin-slow", label: "Slow Spin" }
+                  ],
+                mode: "list"
               } 
             } 
           },

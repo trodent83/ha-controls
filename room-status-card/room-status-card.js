@@ -63,7 +63,7 @@ class RoomStatusCard extends LitElement {
     const humidity_state = humidity_entity ? this.hass.states[humidity_entity] : null;
 
     return html`
-      <link rel="stylesheet" href="/local/custom/room-status-card/room-status-card.css?v=1.0.5">
+      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.5">
       <ha-card>
         <div class="header_container">
         ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
