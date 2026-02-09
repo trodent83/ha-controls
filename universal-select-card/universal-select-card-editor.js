@@ -74,8 +74,15 @@ class UniversalSelectCardEditor extends LitElement {
   }
 
   _valueChanged(ev) {
+    let config = ev.detail.value;
+
+    if (this._config && this._config.entity !== config.entity) {
+      const { options_config, ...rest } = config;
+      config = rest;
+    }
+
     const event = new CustomEvent("config-changed", {
-      detail: { config: ev.detail.value },
+      detail: { config: config },
       bubbles: true,
       composed: true,
     });
