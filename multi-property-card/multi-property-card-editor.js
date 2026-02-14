@@ -59,6 +59,18 @@ class MultiPropertyCardEditor extends LitElement {
     this._fireConfigChanged();
   }
 
+  _moveEntity(index, direction) {
+    const entities = [...(this._config.entities || [])];
+    if (index + direction < 0 || index + direction >= entities.length) return;
+    
+    const temp = entities[index];
+    entities[index] = entities[index + direction];
+    entities[index + direction] = temp;
+    
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
   _removeEntity(index) {
     const entities = [...this._config.entities];
     entities.splice(index, 1);
@@ -122,10 +134,20 @@ class MultiPropertyCardEditor extends LitElement {
               <ha-expansion-panel>
                   <div slot="header" class="panel-header">
                     <div class="panel-title">${entityLabel}</div>
-                    <ha-icon-button
-                      class="delete-button"
-                      @click=${(e) => { e.stopPropagation(); this._removeEntity(idx); }}
-                    ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                    <div style="display: flex; align-items: center;">
+                      <ha-icon-button
+                        @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, -1); }}
+                        .disabled=${idx === 0}
+                      ><ha-icon icon="mdi:arrow-up"></ha-icon></ha-icon-button>
+                      <ha-icon-button
+                        @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, 1); }}
+                        .disabled=${idx === (this._config.entities || []).length - 1}
+                      ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
+                      <ha-icon-button
+                        class="delete-button"
+                        @click=${(e) => { e.stopPropagation(); this._removeEntity(idx); }}
+                      ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                    </div>
                   </div>
 
                   <div class="panel-content">
@@ -152,6 +174,27 @@ class MultiPropertyCardEditor extends LitElement {
                             e.stopPropagation();
                             const ents = [...this._config.entities];
                             ents[idx] = { ...ents[idx], name: "" };
+                            this._config = { ...this._config, entities: ents };
+                            this._fireConfigChanged();
+                        }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
+                      ` : ""}
+                    </ha-textfield>
+
+                    <ha-textfield
+                      label="Static Value (for constants)"
+                      .value=${ent.value || ""}
+                      @input=${(e) => {
+                        const ents = [...this._config.entities];
+                        ents[idx] = { ...ents[idx], value: e.target.value };
+                        this._config = { ...this._config, entities: ents };
+                        this._fireConfigChanged();
+                      }}
+                    >
+                      ${ent.value ? html`
+                        <ha-icon-button slot="suffix" @click=${(e) => {
+                            e.stopPropagation();
+                            const ents = [...this._config.entities];
+                            ents[idx] = { ...ents[idx], value: "" };
                             this._config = { ...this._config, entities: ents };
                             this._fireConfigChanged();
                         }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
@@ -216,6 +259,19 @@ class MultiPropertyCardEditor extends LitElement {
                       <mwc-list-item value="float">Float</mwc-list-item>
                       <mwc-list-item value="spin-slow">Spin Slow</mwc-list-item>
                     </ha-select>
+
+                    <ha-textarea
+                      label="Complex Visibility Condition"
+                      placeholder="Available: hass, entities, entity, state, attributes. E.g.,&#10;state > 10 &amp;&amp; attributes.power > 100&#10;entities['sun.sun'].state === 'below_horizon'&#10;hass.user.is_admin"
+                      .value=${ent.condition || ""}
+                      @input=${(e) => {
+                        const ents = [...this._config.entities];
+                        ents[idx] = { ...ents[idx], condition: e.target.value };
+                        this._config = { ...this._config, entities: ents };
+                        this._fireConfigChanged();
+                      }}
+                      autogrow
+                    ></ha-textarea>
 
                     <div class="actions-container">
                       <ha-form

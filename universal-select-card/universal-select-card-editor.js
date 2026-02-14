@@ -27,33 +27,47 @@ class UniversalSelectCardEditor extends LitElement {
       name: "options_config",
       type: "expandable",
       title: `Button: ${option}`,
-      schema: [{
-        name: option,
-        type: "grid",
-        schema: [
-          { name: "label", label: "Custom Label", selector: { text: {} } },
-          { name: "icon", label: "Icon", selector: { icon: {} } },
-          { name: "color", label: "Color (Hex/Name)", selector: { text: {} } }, // Simple text for stability
-          { 
-            name: "animation", 
-            label: "Animation", 
-            selector: { 
-              select: { 
-                options: [
-                  { value: "", label: "None" },
-                  { value: "bounce", label: "Bounce" },
-                  { value: "blink", label: "Blink" },
-                  { value: "rotating", label: "Rotating" },
-                  { value: "pulse", label: "Pulse" },
-                  { value: "shake", label: "Shake" },
-                  { value: "float", label: "Float" },
-                  { value: "spin-slow", label: "Spin Slow" }
-                ] 
+      schema: [
+        {
+          name: option,
+          type: "grid",
+          schema: [
+            { name: "label", label: "Custom Label", selector: { text: {} } },
+            { name: "icon", label: "Icon", selector: { icon: {} } },
+            { name: "color", label: "Color (Hex/Name)", selector: { text: {} } }, // Simple text for stability
+            { 
+              name: "animation", 
+              label: "Animation", 
+              selector: { 
+                select: { 
+                  options: [
+                    { value: "", label: "None" },
+                    { value: "bounce", label: "Bounce" },
+                    { value: "blink", label: "Blink" },
+                    { value: "rotating", label: "Rotating" },
+                    { value: "pulse", label: "Pulse" },
+                    { value: "shake", label: "Shake" },
+                    { value: "float", label: "Float" },
+                    { value: "spin-slow", label: "Spin Slow" }
+                  ] 
+                } 
               } 
-            } 
-          }
-        ]
-      }]
+            }
+          ]
+        },
+        {
+          name: option,
+          type: "grid",
+          schema: [
+            { 
+              name: "active_label_script", 
+              label: "Active Label Script (JS)", 
+              selector: { text: { multiline: true, rows: 6 } },
+              helper: "Return a string. Vars: hass, option.\n\nExamples:\n// Timer (00:00:00)\nconst t = hass.states['timer.x'];\nif (t?.state === 'active') {\n  const left = Math.max(0, new Date(t.attributes.finishes_at) - Date.now());\n  return new Date(left).toISOString().slice(11, 19);\n}\n\n// Conditional\nreturn hass.states['sun.sun'].state === 'above_horizon' ? 'Day' : 'Night';" 
+            }
+          ]
+        }
+      ]
     }));
 
     // The ... ensures ha-form gets a flat list of all configuration fields

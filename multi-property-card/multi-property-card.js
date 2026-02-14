@@ -10,6 +10,55 @@ class MultiPropertyCard extends LitElement {
     return document.createElement("multi-property-card-editor");
   }
 
+  shouldUpdate(changedProps) {
+    if (changedProps.has('config')) {
+      this._conditionCache = {};
+      return true;
+    }
+
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.hass || !this.config.entities) return true;
+
+      let hasChanges = false;
+      if (!this._conditionCache) this._conditionCache = {};
+
+      for (const [index, ent] of this.config.entities.entries()) {
+        const entityId = typeof ent === 'string' ? ent : ent.entity;
+        const stateObj = this.hass.states[entityId];
+        const oldStateObj = oldHass.states[entityId];
+        
+        const stateChanged = oldStateObj !== stateObj;
+        
+        let conditionResult = true;
+        let conditionChanged = false;
+
+        if (typeof ent === 'object' && ent.condition) {
+          try {
+            const hass = this.hass;
+            const entity = stateObj;
+            const state = stateObj?.state;
+            const attributes = stateObj?.attributes;
+            conditionResult = !!eval(ent.condition);
+          } catch (e) {
+            conditionResult = false;
+          }
+
+          if (this._conditionCache[index] !== conditionResult) {
+            this._conditionCache[index] = conditionResult;
+            conditionChanged = true;
+          }
+        }
+
+        if (conditionChanged || (conditionResult && stateChanged)) {
+          hasChanges = true;
+        }
+      }
+      return hasChanges;
+    }
+    return true;
+  }
+
   static getStubConfig() {
     return {
       show_label: true,
@@ -62,9 +111,34 @@ class MultiPropertyCard extends LitElement {
       ${this.config.entities
         .filter(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf?.entity;
-          const stateObj = this.hass?.states[entityId];
+          
+          if (!entityId) {
+            if (typeof entConf === 'object' && entConf.condition) {
+              try {
+                const hass = this.hass;
+                return eval(entConf.condition);
+              } catch (e) {
+                return false;
+              }
+            }
+            return true;
+          }
 
+          const stateObj = this.hass?.states[entityId];
           if (!stateObj) return false;
+
+          if (typeof entConf === 'object' && entConf.condition) {
+            try {
+              const hass = this.hass;
+              const entity = stateObj;
+              const state = stateObj.state;
+              const attributes = stateObj.attributes;
+              return eval(entConf.condition);
+            } catch (e) {
+              console.error("Error evaluating condition for", entityId, e);
+              return false;
+            }
+          }
 
           const attr = typeof entConf === 'object' ? entConf.attribute : null;
           const val = attr ? stateObj.attributes[attr] : stateObj.state;
@@ -84,13 +158,18 @@ class MultiPropertyCard extends LitElement {
         })
         .map(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf.entity;
-          const stateObj = this.hass.states[entityId];
+          const stateObj = entityId ? this.hass.states[entityId] : null;
           
           // 3. SECURE SPLIT: Ensure entityId is valid before splitting
           const domain = (entityId && entityId.includes('.')) ? entityId.split('.')[0] : 'unknown';
           
-          const state = entConf.attribute ? stateObj?.attributes[entConf.attribute] : stateObj?.state;
-          const isUnavailable = !stateObj || state === 'unavailable' || state === 'unknown' || state === undefined || state === null;
+          let state;
+          if (stateObj) {
+            state = entConf.attribute ? stateObj?.attributes[entConf.attribute] : stateObj?.state;
+          } else if (typeof entConf === 'object' && entConf.value !== undefined) {
+            state = entConf.value;
+          }
+          const isUnavailable = entityId ? (!stateObj || state === 'unavailable' || state === 'unknown' || state === undefined || state === null) : false;
           const deviceClass = stateObj?.attributes?.device_class;
 
           const matchColor = this._getMatchedProperty(state, entConf.thresholds, 'color');
@@ -115,12 +194,12 @@ class MultiPropertyCard extends LitElement {
               <div class="info-container" style="color: inherit;">
                 ${showLabel ? html`
                   <div class="label" style="color: inherit;">
-                    ${entConf.name || stateObj?.attributes?.friendly_name || entityId}
+                    ${entConf.name || stateObj?.attributes?.friendly_name || entityId || ''}
                   </div>
                 ` : ''}
                 ${showValue ? html`
                   <div class="value-container" style="color: inherit;">
-                      <span class="value-text" style="color: inherit;">${state ?? 'N/A'}</span>
+                      <span class="value-text" style="color: inherit;">${state ?? (entityId ? 'N/A' : '')}</span>
                       ${unit ? html`<span class="unit-text" style="color: inherit;">${unit}</span>` : ''}
                   </div>
                 ` : ''}
