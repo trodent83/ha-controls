@@ -11,6 +11,32 @@ class VacuumSelectCard extends LitElement {
     return document.createElement("vacuum-select-card-editor"); 
   }
 
+  shouldUpdate(changedProps) {
+    if (changedProps.has('config')) {
+      return true;
+    }
+
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.hass || !this.config) return true;
+
+      if (oldHass.states[this.config.vacuum_entity] !== this.hass.states[this.config.vacuum_entity]) return true;
+      if (oldHass.states[this.config.output_entity] !== this.hass.states[this.config.output_entity]) return true;
+      
+      if (this.config.currently_cleaning_entity && 
+          oldHass.states[this.config.currently_cleaning_entity] !== this.hass.states[this.config.currently_cleaning_entity]) return true;
+          
+      if (this.config.readonly_entity && 
+          oldHass.states[this.config.readonly_entity] !== this.hass.states[this.config.readonly_entity]) return true;
+
+      if (this.config.mark_active_room && 
+          oldHass.states[this.config.mark_active_room] !== this.hass.states[this.config.mark_active_room]) return true;
+
+      return false;
+    }
+    return true;
+  }
+
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
     const output = this.hass.states[this.config.output_entity];
@@ -38,6 +64,8 @@ class VacuumSelectCard extends LitElement {
 
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
 
+    const isMarkingEnabled = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on';
+
     return html`
       <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=0.2.2">
       <div class="container ${isReadonly ? 'readonly' : ''}" 
@@ -51,7 +79,7 @@ class VacuumSelectCard extends LitElement {
             const customConfig = this.config.rooms?.[room.id] || {};
             
             const roomIdInt = Math.floor(parseFloat(room.id));
-            const showActiveCleaning = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on' && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
+            const showActiveCleaning = isMarkingEnabled && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
             
             let animationClass = '';
             let animationStyle = '';

@@ -20,7 +20,7 @@ class UniversalSelectCard extends LitElement {
 
     if (changedProps.has('hass')) {
       const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass) return true;
+      if (!oldHass || !this.hass || !this.config) return true;
 
       if (oldHass.states[this.config.entity] !== this.hass.states[this.config.entity]) {
         return true;

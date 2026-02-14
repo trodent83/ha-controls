@@ -18,15 +18,16 @@ class MultiPropertyCard extends LitElement {
 
     if (changedProps.has('hass')) {
       const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config.entities) return true;
+      if (!oldHass || !this.hass || !this.config || !this.config.entities) return true;
 
       let hasChanges = false;
       if (!this._conditionCache) this._conditionCache = {};
 
       for (const [index, ent] of this.config.entities.entries()) {
+        if (!ent) continue;
         const entityId = typeof ent === 'string' ? ent : ent.entity;
-        const stateObj = this.hass.states[entityId];
-        const oldStateObj = oldHass.states[entityId];
+        const stateObj = entityId ? this.hass.states[entityId] : undefined;
+        const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
         
         const stateChanged = oldStateObj !== stateObj;
         
