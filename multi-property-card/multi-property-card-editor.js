@@ -226,6 +226,19 @@ class MultiPropertyCardEditor extends LitElement {
                       }}
                     ></ha-icon-picker>
 
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 10px;">
+                      <span>Show Icon</span>
+                      <ha-switch
+                        .checked=${ent.show_icon !== false}
+                        @change=${(e) => {
+                          const ents = [...this._config.entities];
+                          ents[idx] = { ...ents[idx], show_icon: e.target.checked };
+                          this._config = { ...this._config, entities: ents };
+                          this._fireConfigChanged();
+                        }}
+                      ></ha-switch>
+                    </div>
+
                     <ha-textfield
                       label="Color Override"
                       .value=${ent.color || ""}

@@ -64,6 +64,7 @@ class MultiPropertyCard extends LitElement {
     return {
       show_label: true,
       show_value: true,
+      show_icon: true,
       layout: "row",
       entities: [
         {
@@ -187,6 +188,7 @@ class MultiPropertyCard extends LitElement {
 
           const showValue = entConf.show_value !== undefined ? entConf.show_value : this.config.show_value;
           const showLabel = entConf.show_label !== undefined ? entConf.show_label : this.config.show_label;
+          const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : this.config.show_icon;
 
           return html`
             <div class="btn ${isUnavailable ? 'is-unavailable' : ''}" 
@@ -194,7 +196,7 @@ class MultiPropertyCard extends LitElement {
                 @click="${() => this._runAction(entConf, 'tap')}"
                 @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}">
               
-              <ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>
+              ${showIcon !== false ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
 
               <div class="info-container">
                 ${showLabel ? html`
@@ -231,6 +233,7 @@ class MultiPropertyCard extends LitElement {
     { 
       show_label: true, 
       show_value: true, 
+      show_icon: true,
       show_unavailable: false, // Hier auf false setzen
       ...config }; 
   }
