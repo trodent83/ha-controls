@@ -61,7 +61,19 @@ class UniversalSelectCard extends LitElement {
   render() {
     if (!this.config || !this.config.entity || !this.hass) return html``;
     const stateObj = this.hass.states[this.config.entity];
-    const options = stateObj?.attributes.options || [];
+    let options = stateObj?.attributes.options || [];
+    
+    if (this.config.options_order) {
+      const order = this.config.options_order;
+      options = [...options].sort((a, b) => {
+        const idxA = order.indexOf(a);
+        const idxB = order.indexOf(b);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
     
     // Check if the card should be disabled
     const isLocked = this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
