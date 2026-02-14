@@ -1,22 +1,41 @@
-.btn:first-child {
+.layout-row .btn:first-child {
   border-top-left-radius: var(--ha-card-border-radius, 12px) !important;
   border-bottom-left-radius: var(--ha-card-border-radius, 12px) !important;
 }
-.btn:last-child {
+.layout-row .btn:last-child {
   border-top-right-radius: var(--ha-card-border-radius, 12px) !important;
   border-bottom-right-radius: var(--ha-card-border-radius, 12px) !important;
 }
 
+.layout-column .btn:first-child {
+  border-top-left-radius: var(--ha-card-border-radius, 12px) !important;
+  border-top-right-radius: var(--ha-card-border-radius, 12px) !important;
+}
+.layout-column .btn:last-child {
+  border-bottom-left-radius: var(--ha-card-border-radius, 12px) !important;
+  border-bottom-right-radius: var(--ha-card-border-radius, 12px) !important;
+}
+
 ha-card {
-  display: grid !important;
-  /* Dies erzwingt die nebeneinander Aufteilung, egal wie breit der Inhalt ist */
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  
+  display: flex;
   padding: 0px !important;
   margin: 0px !important;
   overflow: hidden;
-  align-items: stretch;     /* Buttons strecken sich über die volle Höhe */
-  justify-items: stretch;   /* Buttons strecken sich über die volle Breite der Zelle */
+}
+
+.layout-column {
+  flex-direction: column;
+}
+
+.layout-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.locked {
+  pointer-events: none;
+  opacity: 0.6;
+  filter: grayscale(1);
 }
 
 .btn {
@@ -32,6 +51,7 @@ ha-card {
   gap: 4px;
   cursor: pointer;
   text-align: center;
+  flex: 1;
 }
 
 .label {

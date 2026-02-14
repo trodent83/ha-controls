@@ -63,6 +63,7 @@ class MultiPropertyCard extends LitElement {
     return {
       show_label: true,
       show_value: true,
+      layout: "row",
       entities: [
         {
           entity: "sun.sun",
@@ -105,9 +106,12 @@ class MultiPropertyCard extends LitElement {
   render() {
     if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">No entities</ha-alert>`;
 
+    const layoutClass = this.config.layout === 'column' ? 'layout-column' : 'layout-row';
+
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=0.2.1">
+      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=0.2.6">
       <ha-card>
+        <div class="content-container ${layoutClass}">
       ${this.config.entities
         .filter(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf?.entity;
@@ -189,24 +193,25 @@ class MultiPropertyCard extends LitElement {
                 @click="${() => this._runAction(entConf, 'tap')}"
                 @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}">
               
-              <ha-icon .icon="${icon}" class="${finalAnim}" style="color: inherit;"></ha-icon>
+              <ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>
 
-              <div class="info-container" style="color: inherit;">
+              <div class="info-container">
                 ${showLabel ? html`
-                  <div class="label" style="color: inherit;">
+                  <div class="label">
                     ${entConf.name || stateObj?.attributes?.friendly_name || entityId || ''}
                   </div>
                 ` : ''}
                 ${showValue ? html`
-                  <div class="value-container" style="color: inherit;">
-                      <span class="value-text" style="color: inherit;">${state ?? (entityId ? 'N/A' : '')}</span>
-                      ${unit ? html`<span class="unit-text" style="color: inherit;">${unit}</span>` : ''}
+                  <div class="value-container">
+                      <span class="value-text">${state ?? (entityId ? 'N/A' : '')}</span>
+                      ${unit ? html`<span class="unit-text">${unit}</span>` : ''}
                   </div>
                 ` : ''}
               </div>
             </div>
           `;
         })}
+        </div>
       </ha-card>
     `;
   }

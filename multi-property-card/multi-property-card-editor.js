@@ -40,7 +40,7 @@ class MultiPropertyCardEditor extends LitElement {
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
     const target = ev.target.configValue;
-    const value = ev.detail?.value !== undefined ? ev.detail.value : ev.target.checked;
+    const value = ev.detail?.value !== undefined ? ev.detail.value : (ev.target.checked !== undefined ? ev.target.checked : ev.target.value);
     this._config = { ...this._config, [target]: value };
     this._fireConfigChanged();
   }
@@ -106,6 +106,19 @@ class MultiPropertyCardEditor extends LitElement {
             <span>Show Unavailable</span>
             <ha-switch .checked=${this._config.show_unavailable === true} .configValue=${"show_unavailable"} @change=${this._valueChanged}></ha-switch>
           </div>
+          <ha-select
+            label="Layout"
+            .value=${this._config.layout || "row"}
+            .configValue=${"layout"}
+            @closed=${(e) => e.stopPropagation()}
+            @change=${this._valueChanged}
+            fixedMenuPosition
+            naturalMenuWidth
+            style="width: 100%; margin-top: 10px;"
+          >
+            <mwc-list-item value="row">Horizontal</mwc-list-item>
+            <mwc-list-item value="column">Vertical</mwc-list-item>
+          </ha-select>
         </div>
 
         <div class="divider"></div>

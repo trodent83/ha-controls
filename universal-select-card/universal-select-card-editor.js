@@ -18,7 +18,19 @@ class UniversalSelectCardEditor extends LitElement {
     const baseSchema = [
       { name: "entity", label: "Controlled Dropdown", selector: { entity: { domain: "input_select" } } },
       { name: "lock_entity", label: "Disable Control", selector: { entity: { domain: "binary_sensor" } } },
-      { name: "show_label", label: "Show Labels", selector: { boolean: {} } }
+      { name: "show_label", label: "Show Labels", selector: { boolean: {} } },
+      { 
+        name: "layout", 
+        label: "Layout", 
+        selector: { 
+          select: { 
+            options: [
+              { value: "row", label: "Horizontal" },
+              { value: "column", label: "Vertical" }
+            ] 
+          } 
+        } 
+      }
     ];
 
     if (options.length === 0) return baseSchema;
@@ -76,10 +88,11 @@ class UniversalSelectCardEditor extends LitElement {
 
   render() {
     if (!this.hass || !this._config) return html``;
+    const data = { layout: 'row', ...this._config };
     return html`
       <ha-form
         .hass=${this.hass}
-        .data=${this._config}
+        .data=${data}
         .schema=${this._schema()}
         .computeLabel=${(s) => s.label || s.name}
         @value-changed=${this._valueChanged}
