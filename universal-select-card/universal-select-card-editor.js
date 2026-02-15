@@ -67,7 +67,7 @@ class UniversalSelectCardEditor extends LitElement {
 
   _renderOption(option, idx, total) {
       const optionData = this._config.options_config?.[option] || {};
-      const optionSchema = [
+      const mainSchema = [
           {
             name: "",
             type: "grid",
@@ -109,6 +109,14 @@ class UniversalSelectCardEditor extends LitElement {
           }
       ];
 
+      const actionSchema = [
+          {
+            name: "hold_action",
+            label: "Hold Action (Selected)",
+            selector: { "ui-action": {} }
+          }
+      ];
+
       return html`
         <ha-expansion-panel outlined style="margin-top: 8px;">
             <div slot="header" class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -128,7 +136,15 @@ class UniversalSelectCardEditor extends LitElement {
                 <ha-form
                     .hass=${this.hass}
                     .data=${optionData}
-                    .schema=${optionSchema}
+                    .schema=${mainSchema}
+                    .computeLabel=${(s) => s.label || s.name}
+                    @value-changed=${(e) => this._optionValueChanged(option, e)}
+                ></ha-form>
+                <div style="border-top: 1px solid var(--divider-color); margin: 24px 0 16px 0;"></div>
+                <ha-form
+                    .hass=${this.hass}
+                    .data=${optionData}
+                    .schema=${actionSchema}
                     .computeLabel=${(s) => s.label || s.name}
                     @value-changed=${(e) => this._optionValueChanged(option, e)}
                 ></ha-form>
@@ -162,7 +178,7 @@ class UniversalSelectCardEditor extends LitElement {
   }
 
   _optionValueChanged(option, ev) {
-      const newOptionConfig = ev.detail.value;
+      const newOptionConfig = { ...this._config.options_config?.[option], ...ev.detail.value };
       const optionsConfig = { ...this._config.options_config, [option]: newOptionConfig };
       this._config = { ...this._config, options_config: optionsConfig };
       this._fireConfigChanged();

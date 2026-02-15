@@ -112,7 +112,13 @@ class UniversalSelectCard extends LitElement {
             <div class="btn" 
                  style="background-color: ${isActive ? (optCfg.color || 'var(--primary-color)') : 'transparent'}; 
                         color: ${isActive ? 'white' : 'var(--disabled-text-color)'};"
-                 @click="${() => !isLocked && this._selectOption(option)}">
+                 @mousedown="${(e) => this._handleDown(e, option)}"
+                 @touchstart="${(e) => this._handleDown(e, option)}"
+                 @mouseup="${(e) => this._handleUp(e)}"
+                 @touchend="${(e) => this._handleUp(e)}"
+                 @touchcancel="${(e) => this._handleCancel(e)}"
+                 @mouseleave="${(e) => this._handleCancel(e)}"
+                 @click="${(e) => this._handleClick(e, option)}">
               <ha-icon 
                 class="${animationClass}" 
                 .icon="${optCfg.icon || 'mdi:circle-outline'}">
@@ -134,6 +140,86 @@ class UniversalSelectCard extends LitElement {
       entity_id: this.config.entity,
       option: option
     });
+  }
+
+  _isLocked() {
+    return this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
+  }
+
+  _handleDown(e, option) {
+    if (this._isLocked()) return;
+    this._isHolding = false;
+    this._longPressTimer = setTimeout(() => {
+      this._isHolding = true;
+      this._handleHold(option);
+    }, 1000);
+  }
+
+  _handleUp(e) {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
+
+  _handleCancel(e) {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+    this._isHolding = false;
+  }
+
+  _handleClick(e, option) {
+    if (this._isLocked()) return;
+    if (this._isHolding) {
+      e.stopPropagation();
+      e.preventDefault();
+      this._isHolding = false;
+      return;
+    }
+    this._selectOption(option);
+  }
+
+  _handleHold(option) {
+    const stateObj = this.hass.states[this.config.entity];
+    if (stateObj && stateObj.state === option) {
+      const optCfg = this.config.options_config?.[option];
+      if (optCfg && optCfg.hold_action) {
+        this._handleAction(optCfg.hold_action);
+      }
+    }
+  }
+
+  _handleAction(actionConfig) {
+    if (!actionConfig) return;
+    const action = actionConfig.action;
+    if (action === 'call-service' || action === 'perform-action') {
+      const { service, data, target, perform_action } = actionConfig;
+      const svc = service || perform_action;
+      const [domain, serviceName] = svc.split('.');
+      this.hass.callService(domain, serviceName, data, target);
+    } else if (action === 'navigate') {
+      window.history.pushState(null, '', actionConfig.navigation_path);
+      const event = new Event('location-changed', { bubbles: true, composed: true });
+      window.dispatchEvent(event);
+    } else if (action === 'url') {
+      window.open(actionConfig.url_path);
+    } else if (action === 'fire-dom-event') {
+      const event = new CustomEvent("ll-custom", {
+        bubbles: true,
+        composed: true,
+        detail: actionConfig
+      });
+      this.dispatchEvent(event);
+    } else if (action === 'more-info') {
+        const event = new CustomEvent("hass-more-info", {
+            bubbles: true,
+            composed: true,
+            detail: { entityId: this.config.entity }
+        });
+        this.dispatchEvent(event);
+    }
   }
 
   updated(changedProperties) {
