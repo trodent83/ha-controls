@@ -114,7 +114,7 @@ class MultiPropertyCardEditor extends LitElement {
             @change=${this._valueChanged}
             fixedMenuPosition
             naturalMenuWidth
-            style="width: 100%; margin-top: 10px;"
+            class="layout-select"
           >
             <mwc-list-item value="row">Horizontal</mwc-list-item>
             <mwc-list-item value="column">Vertical</mwc-list-item>
@@ -147,7 +147,7 @@ class MultiPropertyCardEditor extends LitElement {
               <ha-expansion-panel>
                   <div slot="header" class="panel-header">
                     <div class="panel-title">${entityLabel}</div>
-                    <div style="display: flex; align-items: center;">
+                    <div class="header-actions">
                       <ha-icon-button
                         @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, -1); }}
                         .disabled=${idx === 0}
@@ -226,7 +226,7 @@ class MultiPropertyCardEditor extends LitElement {
                       }}
                     ></ha-icon-picker>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 10px;">
+                    <div class="icon-settings-row">
                       <span>Show Icon</span>
                       <ha-switch
                         .checked=${ent.show_icon !== false}
@@ -259,6 +259,32 @@ class MultiPropertyCardEditor extends LitElement {
                         }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
                       ` : ""}
                     </ha-textfield>
+
+                    <ha-textfield
+                        label="Label Size"
+                        type="number"
+                        placeholder="12"
+                        .value=${ent.label_font_size ? String(ent.label_font_size).replace("px", "") : ""}
+                        @input=${(e) => {
+                            const ents = [...this._config.entities];
+                            ents[idx] = { ...ents[idx], label_font_size: e.target.value };
+                            this._config = { ...this._config, entities: ents };
+                            this._fireConfigChanged();
+                        }}
+                    ><span slot="suffix">px</span></ha-textfield>
+
+                    <div class="icon-settings-row">
+                        <span>Bold</span>
+                        <ha-switch
+                            .checked=${ent.label_bold === true}
+                            @change=${(e) => {
+                                const ents = [...this._config.entities];
+                                ents[idx] = { ...ents[idx], label_bold: e.target.checked };
+                                this._config = { ...this._config, entities: ents };
+                                this._fireConfigChanged();
+                            }}
+                        ></ha-switch>
+                    </div>
 
                     <ha-select
                       label="Default Animation"

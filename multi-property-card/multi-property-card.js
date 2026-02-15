@@ -186,6 +186,13 @@ class MultiPropertyCard extends LitElement {
           const icon = entConf.icon || stateObj?.attributes?.icon || this._getFallbackIcon(domain, deviceClass);
           const unit = entConf.unit !== undefined ? entConf.unit : stateObj?.attributes?.unit_of_measurement || '';
 
+          let labelStyle = "";
+          if (entConf.label_font_size) {
+            const size = entConf.label_font_size;
+            labelStyle += `font-size: ${isNaN(size) ? size : size + 'px'};`;
+          }
+          if (entConf.label_bold) labelStyle += `font-weight: bold;`;
+
           const showValue = entConf.show_value !== undefined ? entConf.show_value : this.config.show_value;
           const showLabel = entConf.show_label !== undefined ? entConf.show_label : this.config.show_label;
           const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : this.config.show_icon;
@@ -200,7 +207,7 @@ class MultiPropertyCard extends LitElement {
 
               <div class="info-container">
                 ${showLabel ? html`
-                  <div class="label">
+                  <div class="label" style="${labelStyle}">
                     ${entConf.name || stateObj?.attributes?.friendly_name || entityId || ''}
                   </div>
                 ` : ''}
