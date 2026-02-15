@@ -1,0 +1,34 @@
+.badges-section {
+  margin-top: 24px;
+}
+.badge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.badge-content {
+  padding: 8px 0;
+}
+.threshold-block {
+  background: var(--secondary-background-color);
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+.threshold-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.flex-grow {
+  flex-grow: 1;
+}
+.remove-btn-compact {
+  color: var(--error-color);
+}
+ha-expansion-panel {
+  margin-bottom: 8px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+}

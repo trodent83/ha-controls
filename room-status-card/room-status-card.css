@@ -1,15 +1,64 @@
-/* /config/www/room-status-card.css */
-ha-card { 
+@keyframes blink {
+  50% { opacity: 0.5; }
+}
+.blink {
+  animation: blink 1s linear infinite;
+  will-change: opacity;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.pulse {
+  animation: pulse 2s infinite;
+  will-change: transform;
+}
+ha-card {
   background: none !important;
   box-shadow: none !important;
   border: none !important;
-  padding: 8px 0px;
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
 }
-.header_container { display: flex; align-items: center; gap: 12px; }
-ha-icon { color: var(--secondary-text-color); --mdc-icon-size: 20px; }
-.room_title { font-size: 1.1rem; font-weight: 500; color: var(--primary-text-color); }
-.status_badges { display: flex; gap: 12px; }
-.status_badge { font-size: 0.95rem; font-weight: 400; display: flex; align-items: center; }
+.card-content {
+  padding: 12px 12px !important;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.header_container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ha-card-header-color, var(--primary-text-color));
+}
+.room_title {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.header_container ha-icon {
+  --mdc-icon-size: 32px;
+  color: inherit;
+}
+.status_badges {
+  display: flex;
+  gap: 8px;
+}
+.status_badge {
+  font-size: 0.95rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--badge-color);
+  transition: color 0.3s ease-in-out;
+  transform: translateZ(0);         /* Added GPU boost */
+}
+.status_badge ha-icon {
+  color: inherit;
+  color: var(--badge-color);
+  --mdc-icon-size: 20px;
+}

@@ -17,8 +17,39 @@ class RoomStatusCard extends LitElement {
     return {
       name: "My Room",
       icon: "mdi:home",
-      show_header: true
+      header_settings: {
+        show_header: true,
+        show_icon: true
+      },
+      badges: [
+        {
+          entity: "sensor.temperature",
+          icon: "mdi:thermometer",
+          thresholds: [
+            { value: 25, color: "var(--error-color)", animation: "blink" }
+          ]
+        }
+      ]
     };
+  }
+
+  _getMatchedProperty(stateValue, thresholds, propertyName) {
+    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
+    const stringState = String(stateValue).toLowerCase();
+
+    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
+    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
+
+    const numericValue = parseFloat(stateValue);
+    if (!isNaN(numericValue)) {
+      const numericThresholds = thresholds
+        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
+        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+      
+      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
+      if (match) return match[propertyName];
+    }
+    return null;
   }
 
   //Renders the control
@@ -29,57 +60,42 @@ class RoomStatusCard extends LitElement {
     const show_header = header_settings.show_header !== false; // Default true
     const show_icon = header_settings.show_icon !== false;     // Default true
 
-    const sensors = this.config.sensors;
-    const thresholds = this.config.thresholds;
-    const colors = this.config.colors;
-    
-    const get_status_color = (current_value, sensor_type) => {
-      if (!thresholds || !colors) return 'var(--primary-text-color)';
-      
-      const limits = sensor_type === 'temp' ? thresholds.temp_limits : thresholds.hum_limits;
-      if (!limits) return 'var(--primary-text-color)';
-
-      const numeric_value = parseFloat(current_value);
-      const key_prefix = sensor_type === 'temp' ? 'temperature' : 'humidity';
-      
-      const min_ideal = limits[`${key_prefix}_minimum_ideal`];
-      const max_ideal = limits[`${key_prefix}_maximum_ideal`];
-      const min_warning = limits[`${key_prefix}_minimum_warning`];
-      const max_warning = limits[`${key_prefix}_maximum_warning`];
-
-      if (numeric_value >= min_ideal && numeric_value <= max_ideal) {
-        return colors.color_ideal || 'var(--success-color)';
-      }
-      if (numeric_value < min_warning || numeric_value > max_warning) {
-        return colors.color_critical || 'var(--error-color)';
-      }
-      return colors.color_warning || 'var(--warning-color)';
-    };
-
-    const temperature_entity = sensors?.temperature_sensor;
-    const humidity_entity = sensors?.humidity_sensor;
-    
-    const temperature_state = temperature_entity ? this.hass.states[temperature_entity] : null;
-    const humidity_state = humidity_entity ? this.hass.states[humidity_entity] : null;
+    const badges = this.config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.5">
+      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.15">
       <ha-card>
-        <div class="header_container">
-        ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
-        ${show_header ? html`<span class="room_title">${this.config.name}</span>` : ''}
-        </div>
-        <div class="status_badges">
-          ${temperature_state ? html`
-            <div class="status_badge" style="color: ${get_status_color(temperature_state.state, 'temp')}">
-              ${temperature_state.state}${temperature_state.attributes.unit_of_measurement || '°C'}
-            </div>
-          ` : ''}
-          ${humidity_state ? html`
-            <div class="status_badge" style="color: ${get_status_color(humidity_state.state, 'hum')}">
-              ${humidity_state.state}${humidity_state.attributes.unit_of_measurement || '%'}
-            </div>
-          ` : ''}
+        <div class="card-content">
+          <div class="header_container">
+          ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
+          ${show_header ? html`<span class="room_title">${this.config.name}</span>` : ''}
+          </div>
+          <div class="status_badges">
+          ${badges.map(badgeConfig => {
+            const entityId = badgeConfig.entity;
+            const stateObj = entityId ? this.hass.states[entityId] : null;
+            if (!stateObj) return '';
+
+            const state = stateObj.state;
+            const unit = stateObj.attributes.unit_of_measurement || '';
+            
+            const matchColor = this._getMatchedProperty(state, badgeConfig.thresholds, 'color');
+            const matchAnim = this._getMatchedProperty(state, badgeConfig.thresholds, 'animation');
+            
+            const finalColor = matchColor || badgeConfig.color || 'var(--primary-text-color)';
+            const finalAnim = matchAnim || badgeConfig.animation || '';
+            const icon = badgeConfig.icon || stateObj.attributes.icon;
+            const showIcon = badgeConfig.show_icon !== false;
+            const showState = badgeConfig.show_state !== false;
+
+            return html`
+              <div class="status_badge ${finalAnim}" style="--badge-color: ${finalColor}">
+                ${showIcon && icon ? html`<ha-icon .icon="${icon}"></ha-icon>` : ''}
+                ${showState ? html`${state}${unit}` : ''}
+              </div>
+            `;
+          })}
+          </div>
         </div>
       </ha-card>
     `;
