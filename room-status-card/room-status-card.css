@@ -29,10 +29,10 @@ ha-card {
 .header_container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--ha-card-header-color, var(--primary-text-color));
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--secondary-text-color);
 }
 .room_title {
   margin: 0;
@@ -40,7 +40,7 @@ ha-card {
   line-height: inherit;
 }
 .header_container ha-icon {
-  --mdc-icon-size: 32px;
+  --mdc-icon-size: 22px;
   color: inherit;
 }
 .status_badges {

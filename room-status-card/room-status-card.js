@@ -63,7 +63,7 @@ class RoomStatusCard extends LitElement {
     const badges = this.config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.15">
+      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.16">
       <ha-card>
         <div class="card-content">
           <div class="header_container">
