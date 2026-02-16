@@ -1,0 +1,39 @@
+.task-row {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+}
+.task-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  margin-right: 8px;
+  padding-right: 8px;
+  border-right: 2px solid transparent;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+.task-date.empty {
+  width: 50px;
+}
+.weekday {
+  font-size: 0.8em;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+.day {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.month {
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.task-row.done .task-name {
+  text-decoration: line-through;
+  opacity: 0.6;
+}

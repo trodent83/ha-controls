@@ -1,0 +1,14 @@
+.card-config {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.task-editor-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.task-editor-row ha-textfield {
+    flex-grow: 1;
+}
