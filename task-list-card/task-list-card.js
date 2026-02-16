@@ -136,7 +136,25 @@ class TaskListCard extends LitElement {
     const colors = this.config.due_date_colors;
     if (colors && colors.length) {
         const sortedColors = [...colors].sort((a, b) => a.days - b.days);
-        const match = sortedColors.find(rule => diffDays <= rule.days);
+        const match = sortedColors.find(rule => {
+            const operator = rule.operator || '<=';
+            const days = parseInt(rule.days);
+            switch (operator) {
+                case '==':
+                case '=': return diffDays === days;
+                case '!=':
+                case '<>': return diffDays !== days;
+                case '&lt;':
+                case '<': return diffDays < days;
+                case '&lt;=':
+                case '<=': return diffDays <= days;
+                case '&gt;':
+                case '>': return diffDays > days;
+                case '&gt;=':
+                case '>=': return diffDays >= days;
+                default: return diffDays <= days;
+            }
+        });
         if (match) return match.color;
     }
     return this.config.default_due_date_color;
@@ -146,7 +164,7 @@ class TaskListCard extends LitElement {
     if (!this.config || !this.hass) return html``;
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.0">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.3">
       <ha-card>
         <div class="task-list">
           ${this._items.map((task) => {

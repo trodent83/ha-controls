@@ -154,6 +154,7 @@ class TaskListCardEditor extends LitElement {
                         style="width: 100px;"
                     >
                         <mwc-list-item value="=">=</mwc-list-item>
+                        <mwc-list-item value="<>">&lt;&gt;</mwc-list-item>
                         <mwc-list-item value="<">&lt;</mwc-list-item>
                         <mwc-list-item value="<=">&lt;=</mwc-list-item>
                         <mwc-list-item value=">">&gt;</mwc-list-item>
