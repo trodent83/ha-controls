@@ -74,6 +74,11 @@ class TaskListCardEditor extends LitElement {
     this._fireConfigChanged();
   }
 
+  _iconChanged(ev) {
+    this._config = { ...this._config, icon: ev.detail.value };
+    this._fireConfigChanged();
+  }
+
   _fireConfigChanged() {
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
@@ -103,6 +108,12 @@ class TaskListCardEditor extends LitElement {
               .configValue="${'title'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
+            <ha-icon-picker
+              label="Icon"
+              .value="${this._config.icon === undefined ? 'mdi:calendar-check' : this._config.icon}"
+              .configValue="${'icon'}"
+              @value-changed="${(e) => this._iconChanged(e)}"
+            ></ha-icon-picker>
             <ha-textfield
               label="Max Days"
               type="number"

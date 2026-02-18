@@ -92,12 +92,17 @@
   font-weight: 500;
   line-height: 24px;
   color: var(--primary-text-color);
+  display: flex;
+  align-items: center;
+}
+.header-icon {
+  margin-right: 8px;
+  --mdc-icon-size: 20px;
 }
 .task-count-badge {
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--primary-color);
   color: var(--text-primary-color);
   border-radius: 12px;
   padding: 4px 12px;

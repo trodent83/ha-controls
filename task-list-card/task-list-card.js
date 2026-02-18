@@ -12,7 +12,8 @@ class TaskListCard extends LitElement {
 
   static getStubConfig() {
     return {
-      entity: "todo.shopping_list"
+      entity: "todo.shopping_list",
+      icon: "mdi:calendar-check"
     };
   }
 
@@ -32,6 +33,7 @@ class TaskListCard extends LitElement {
         due_in_days_separator_color: '',
         merged_tasks_separator_color: 'var(--divider-color)',
         separator_mode: 'day',
+        icon: 'mdi:calendar-check',
         ...config
     };
     this._items = [];
@@ -209,11 +211,14 @@ class TaskListCard extends LitElement {
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.11">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.13">
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
-            <div class="header-title">${this.config.title}</div>
+            <div class="header-title">
+              ${this.config.icon ? html`<ha-icon class="header-icon" icon="${this.config.icon}"></ha-icon>` : ""}
+              ${this.config.title}
+            </div>
             ${taskCount > 0 ? html`
               <div class="task-count-badge">
                 <ha-icon icon="mdi:calendar-check-outline"></ha-icon>
