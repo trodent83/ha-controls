@@ -45,18 +45,44 @@ class TaskListCard extends LitElement {
     this._fetchItems();
   }
 
+  _debounceTimer;
+
   updated(changedProps) {
     if (changedProps.has("hass")) {
-      const oldHass = changedProps.get("hass");
-      const entities = this._getEntities();
-      if (oldHass) {
-        const changed = entities.some(entity => oldHass.states[entity] !== this.hass.states[entity]);
-        if (changed) {
-          this._fetchItems();
+      // Trace: Start der Prüfung
+      console.groupCollapsed("Card Update Trace: Checking Entities");
+      const entities = this._getEntities().map(e => (typeof e === 'object' ? e.entity : e));
+      
+      const hasChanged = entities.some(entityId => {
+        const oldState = changedProps.get("hass")?.states[entityId];
+        const newState = this.hass.states[entityId];
+        return !oldState || oldState.last_updated !== newState?.last_updated;
+      });
+
+     
+      if (hasChanged) {
+        const allReady = entities.every(entityId => {
+              const stateObj = this.hass.states[entityId];
+              return stateObj && !["unavailable", "unknown"].includes(stateObj.state);
+            });
+
+        if (!allReady) {
+          console.log("Card Trace: Waiting for all entities to become available...");
+          console.groupEnd();
+          return; 
         }
-      } else {
-        this._fetchItems();
+        console.log("Entities have changed, updating task list...");
+        // Lösche den alten Timer, falls einer läuft
+        clearTimeout(this._debounceTimer);
+        // Starte einen neuen Timer (z.B. 100ms warten)
+        this._debounceTimer = setTimeout(() => {
+          console.groupCollapsed("fetching");
+          console.log("Fetch");
+          this._fetchItems();
+          console.groupEnd();
+        }, 100);
       }
+      console.groupEnd();
     }
   }
 
@@ -67,11 +93,11 @@ class TaskListCard extends LitElement {
   }
 
   async _fetchItems() {
-    if (!this.hass || this._isLoading) return;
+    if (!this.hass) return;
     this._isLoading = true;
     this._loadingAction = 'refresh';
     try {
-      const entities = this._getEntities();
+      const entities = this._getEntities().map(e => (typeof e === 'object' ? e.entity : e));
       let allItems = [];
       for (const entity_id of entities) {
         if (!this.hass.states[entity_id]) continue;
@@ -342,7 +368,7 @@ class TaskListCard extends LitElement {
           ` : ''}
           ${this.config.show_refresh_button ? html`
           <ha-card>
-            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this._fetchItems()}">
+            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this.updateTodos()}">
               <div class="tile-icon-container">
                 ${this._isLoading && this._loadingAction === 'refresh' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
               </div>
@@ -356,25 +382,60 @@ class TaskListCard extends LitElement {
     `;
   }
 
+  async updateTodos()
+  {
+    if (!this.hass || this._isLoading) return;
+    this._isLoading = true;
+    this._loadingAction = 'refresh';
+
+    const rawEntities = this._getEntities();
+
+      // Extrahiere nur die IDs
+      const entityIds = rawEntities.map(item => {
+        return typeof item === 'object' ? item.entity : item;
+      });
+
+
+    if (entityIds.length === 0) return;
+
+    // Erzwingt ein Update der Entitäten im Hintergrund
+    try {
+    await this.hass.callService("homeassistant", "reload_config_entry", {
+      entity_id: entityIds
+    });
+    } catch (e) {
+      console.error("Error updating todo entities", e);
+    } finally {
+      this._isLoading = false;
+      this._loadingAction = null;
+    }
+  }
+
   async _deleteCompletedTasks() {
     if (!this.hass || this._isLoading) return;
     this._isLoading = true;
     this._loadingAction = 'delete';
 
+    const rawEntities = this._getEntities();
+
+      // Extrahiere nur die IDs
+      const entityIds = rawEntities.map(item => {
+        return typeof item === 'object' ? item.entity : item;
+      });
+
+      // Sicherheitscheck: Nur rufen, wenn IDs vorhanden sind
+      if (entityIds.length === 0) return;
+
     try {
-      const completedTasks = this._items.filter(item => item.status === 'completed');
-      if (completedTasks.length > 0) {
-        const uids = completedTasks.map(task => task.uid);
-        const entity_id = completedTasks[0].entity_id;
-        await this.hass.callService("todo", "delete_item", { entity_id, item: uids });
-      }
+        await this.hass.callService("todo", "remove_completed_items", {
+          entity_id: entityIds
+          });
     } catch (e) {
       console.error("Error deleting completed tasks", e);
     } finally {
       this._isLoading = false;
       this._loadingAction = null;
     }
-    await this._fetchItems();
   }
 
   _toggleTask(task) {
