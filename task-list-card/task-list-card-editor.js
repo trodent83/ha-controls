@@ -99,7 +99,7 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.46">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.47">
       <div class="card-config">
         <div class="options">
             <ha-textfield
@@ -241,6 +241,13 @@ class TaskListCardEditor extends LitElement {
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
+              <ha-formfield label="Show source">
+                <ha-switch
+                  .checked="${this._config.show_source === true}"
+                  .configValue="${'show_source'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
             </div>
             <ha-select
               label="Separator Mode"
@@ -283,6 +290,12 @@ class TaskListCardEditor extends LitElement {
               label="Merged Tasks Separator Color"
               .value="${this._config.merged_tasks_separator_color || ''}"
               .configValue="${'merged_tasks_separator_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
+            <ha-textfield
+              label="Source Color"
+              .value="${this._config.source_color || ''}"
+              .configValue="${'source_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
           </div>

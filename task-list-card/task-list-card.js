@@ -27,7 +27,9 @@ class TaskListCard extends LitElement {
         show_due_date: true,
         show_description: false,
         show_due_in_days: false,
+        show_source: false,
         merge_tasks_same_day: false,
+        source_color: '',
         date_separator_color: 'transparent',
         day_separator_color: '',
         due_in_days_separator_color: '',
@@ -211,7 +213,7 @@ class TaskListCard extends LitElement {
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.13">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.15">
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -288,6 +290,18 @@ class TaskListCard extends LitElement {
                         <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${() => this._toggleTask(t)}" style="${separatorStyle}">
                             <span class="task-name">${t.summary}</span>
                             ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
+                            ${this.config.show_source ? (() => {
+                                const entity = this.hass.states[t.entity_id];
+                                if (!entity) return '';
+                                const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+                                return html`
+                                    <div class="task-source" style=${style}>
+                                        <ha-icon
+                                            icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon>
+                                        <span>${entity.attributes.friendly_name || t.entity_id}</span>
+                                    </div>
+                                `;
+                            })() : ''}
                         </div>
                       `;
                   })}
