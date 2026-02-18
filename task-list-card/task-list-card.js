@@ -3,7 +3,7 @@ const html = LitElement.prototype.html;
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _items: { state: true }, _isLoading: { state: true } };
+    return { hass: {}, config: {}, _items: { state: true }, _isLoading: { state: true }, _loadingAction: { state: true } };
   }
 
   static getConfigElement() {
@@ -28,6 +28,7 @@ class TaskListCard extends LitElement {
         show_description: false,
         show_due_in_days: false,
         show_refresh_button: false,
+        show_delete_completed_button: false,
         show_source: false,
         merge_tasks_same_day: false,
         source_color: '',
@@ -40,6 +41,7 @@ class TaskListCard extends LitElement {
         ...config
     };
     this._items = [];
+    this._loadingAction = null;
     this._fetchItems();
   }
 
@@ -65,8 +67,9 @@ class TaskListCard extends LitElement {
   }
 
   async _fetchItems() {
-    if (!this.hass) return;
+    if (!this.hass || this._isLoading) return;
     this._isLoading = true;
+    this._loadingAction = 'refresh';
     try {
       const entities = this._getEntities();
       let allItems = [];
@@ -114,6 +117,7 @@ class TaskListCard extends LitElement {
       this._items = allItems;
     } finally {
       this._isLoading = false;
+      this._loadingAction = null;
     }
   }
 
@@ -323,20 +327,54 @@ class TaskListCard extends LitElement {
           ${this._items.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
         </div>
       </ha-card>
-      <ha-card>
-        ${this.config.show_refresh_button ? html`
-          <div class="tile-button" @click="${() => this._fetchItems()}">
-            <div class="tile-icon-container">
-              ${this._isLoading ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
+          ${this.config.show_delete_completed_button ? html`
+          <ha-card>
+            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this._deleteCompletedTasks()}">
+              <div class="tile-icon-container">
+                ${this._isLoading && this._loadingAction === 'delete' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:delete-sweep"></ha-icon>`}
+              </div>
+              <div class="tile-info">
+                <span class="tile-name">Delete Completed</span>
+                <span class="tile-state">${this._isLoading && this._loadingAction === 'delete' ? 'Deleting...' : 'Delete all completed tasks'}</span>
+              </div>
             </div>
-            <div class="tile-info">
-              <span class="tile-name">Refresh</span>
-              <span class="tile-state">${this._isLoading ? 'Updating...' : 'Update task list'}</span>
+          </ha-card>
+          ` : ''}
+          ${this.config.show_refresh_button ? html`
+          <ha-card>
+            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this._fetchItems()}">
+              <div class="tile-icon-container">
+                ${this._isLoading && this._loadingAction === 'refresh' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
+              </div>
+              <div class="tile-info">
+                <span class="tile-name">Refresh</span>
+                <span class="tile-state">${this._isLoading && this._loadingAction === 'refresh' ? 'Updating...' : 'Update task list'}</span>
+              </div>
             </div>
-          </div>
-        ` : ''}
-      </ha-card>
+          </ha-card>
+          ` : ''}
     `;
+  }
+
+  async _deleteCompletedTasks() {
+    if (!this.hass || this._isLoading) return;
+    this._isLoading = true;
+    this._loadingAction = 'delete';
+
+    try {
+      const completedTasks = this._items.filter(item => item.status === 'completed');
+      if (completedTasks.length > 0) {
+        const uids = completedTasks.map(task => task.uid);
+        const entity_id = completedTasks[0].entity_id;
+        await this.hass.callService("todo", "delete_item", { entity_id, item: uids });
+      }
+    } catch (e) {
+      console.error("Error deleting completed tasks", e);
+    } finally {
+      this._isLoading = false;
+      this._loadingAction = null;
+    }
+    await this._fetchItems();
   }
 
   _toggleTask(task) {

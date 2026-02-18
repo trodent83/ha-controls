@@ -143,6 +143,13 @@ class TaskListCardEditor extends LitElement {
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
+              <ha-formfield label="Show delete completed button">
+                <ha-switch
+                  .checked="${this._config.show_delete_completed_button === true}"
+                  .configValue="${'show_delete_completed_button'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
             </div>
         </div>
 
