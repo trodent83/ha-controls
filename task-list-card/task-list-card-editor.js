@@ -99,7 +99,7 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.47">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.48">
       <div class="card-config">
         <div class="options">
             <ha-textfield
@@ -133,6 +133,13 @@ class TaskListCardEditor extends LitElement {
                 <ha-switch
                   .checked="${this._config.show_completed !== false}"
                   .configValue="${'show_completed'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+              <ha-formfield label="Show refresh button">
+                <ha-switch
+                  .checked="${this._config.show_refresh_button === true}"
+                  .configValue="${'show_refresh_button'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>

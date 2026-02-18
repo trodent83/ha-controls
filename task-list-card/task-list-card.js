@@ -27,6 +27,7 @@ class TaskListCard extends LitElement {
         show_due_date: true,
         show_description: false,
         show_due_in_days: false,
+        show_refresh_button: false,
         show_source: false,
         merge_tasks_same_day: false,
         source_color: '',
@@ -213,7 +214,7 @@ class TaskListCard extends LitElement {
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.15">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.21">
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -316,6 +317,19 @@ class TaskListCard extends LitElement {
           })}
           ${this._items.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
         </div>
+      </ha-card>
+      <ha-card>
+        ${this.config.show_refresh_button ? html`
+          <div class="tile-button" @click="${() => this._fetchItems()}">
+            <div class="tile-icon-container">
+              <ha-icon icon="mdi:refresh"></ha-icon>
+            </div>
+            <div class="tile-info">
+              <span class="tile-name">Refresh</span>
+              <span class="tile-state">Update task list</span>
+            </div>
+          </div>
+        ` : ''}
       </ha-card>
     `;
   }
