@@ -33,7 +33,7 @@
   font-weight: bold;
   text-transform: uppercase;
 }
-.task-row.done .task-name {
+.done .task-name {
   text-decoration: line-through;
   opacity: 0.6;
 }

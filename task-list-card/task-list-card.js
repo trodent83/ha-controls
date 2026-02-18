@@ -26,8 +26,10 @@ class TaskListCard extends LitElement {
         show_due_date: true,
         show_description: false,
         show_due_in_days: false,
+        merge_tasks_same_day: false,
         date_separator_color: 'transparent',
         day_separator_color: '',
+        due_in_days_separator_color: '',
         separator_mode: 'day',
         ...config
     };
@@ -183,20 +185,37 @@ class TaskListCard extends LitElement {
     if (!this.config || !this.hass) return html``;
 
     let lastDate = null;
+    const groups = [];
+
+    if (this.config.merge_tasks_same_day) {
+        this._items.forEach(task => {
+            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+            if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
+                groups[groups.length - 1].tasks.push(task);
+            } else {
+                groups.push({ date: taskDate, tasks: [task] });
+            }
+        });
+    } else {
+        this._items.forEach(task => {
+            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+            groups.push({ date: taskDate, tasks: [task] });
+        });
+    }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.4">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.5">
       <ha-card>
         <div class="task-list">
-          ${this._items.map((task) => {
-            const done = task.status === 'completed';
+          ${groups.map((group) => {
+            const task = group.tasks[0];
             const dateParts = this._formatDate(task.due);
             const dateColor = this._getDueDateColor(task);
             const separatorColor = this.config.date_separator_color || 'transparent';
             const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
 
             let daySeparator = html``;
-            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+            const taskDate = group.date;
             if (this.config.day_separator_color && lastDate && lastDate !== taskDate) {
                 let showSeparator = false;
                 const mode = this.config.separator_mode || 'day';
@@ -229,20 +248,28 @@ class TaskListCard extends LitElement {
 
             return html`
               ${daySeparator}
-              <div class="task-row ${done ? 'done' : ''}" @click="${() => this._toggleTask(task)}">
+              <div class="task-row" style="display: flex; align-items: stretch;">
                 ${this.config.show_due_date ? (dateParts ? html`
-                    <div class="task-date" style="${dateStyle}">
+                    <div class="task-date" style="display: flex; flex-direction: column; justify-content: center; ${dateStyle}">
                         <div class="weekday">${dateParts.weekday}</div>
                         <div class="day">${dateParts.day}</div>
                         <div class="month">${dateParts.month}</div>
                     </div>
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
                 <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                  <span class="task-name" style="font-weight: bold;">${task.summary}</span>
-                  ${this.config.show_description && task.description ? html`<span class="task-description" style="font-size: 0.85em; color: var(--secondary-text-color);">${task.description}</span>` : ''}
+                  ${group.tasks.map((t, index) => {
+                      const done = t.status === 'completed';
+                      const itemStyle = index < group.tasks.length - 1 ? 'border-bottom: 1px solid var(--divider-color); padding-bottom: 4px; margin-bottom: 4px;' : '';
+                      return html`
+                        <div class="${done ? 'done' : ''}" @click="${() => this._toggleTask(t)}" style="cursor: pointer; ${itemStyle}">
+                            <span class="task-name" style="font-weight: bold;">${t.summary}</span>
+                            ${this.config.show_description && t.description ? html`<span class="task-description" style="font-size: 0.85em; color: var(--secondary-text-color); display: block;">${t.description}</span>` : ''}
+                        </div>
+                      `;
+                  })}
                 </div>
                 ${this.config.show_due_in_days && dueInDaysText ? html`
-                    <div class="task-due-in" style="font-size: 0.85em; color: var(--secondary-text-color); margin-left: 8px; text-align: right; min-width: 80px;">
+                    <div class="task-due-in" style="font-size: 0.85em; color: var(--secondary-text-color); margin-left: 8px; text-align: center; width: 70px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; line-height: 1.2; ${this.config.due_in_days_separator_color ? `border-left: 1px solid ${this.config.due_in_days_separator_color}; padding-left: 8px;` : ''}">
                         ${dueInDaysText}
                     </div>
                 ` : ''}

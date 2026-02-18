@@ -129,6 +129,12 @@ class TaskListCardEditor extends LitElement {
             .configValue="${'day_separator_color'}"
             @input="${this._valueChanged}"
           ></ha-textfield>
+          <ha-textfield
+            label="Due In Days Separator Color"
+            .value="${this._config.due_in_days_separator_color || ''}"
+            .configValue="${'due_in_days_separator_color'}"
+            @input="${this._valueChanged}"
+          ></ha-textfield>
         </div>
         <div class="options switches-grid">
           <ha-formfield label="Show no due date">
@@ -163,6 +169,13 @@ class TaskListCardEditor extends LitElement {
             <ha-switch
               .checked="${this._config.show_due_in_days === true}"
               .configValue="${'show_due_in_days'}"
+              @change="${this._valueChanged}"
+            ></ha-switch>
+          </ha-formfield>
+          <ha-formfield label="Merge tasks same day">
+            <ha-switch
+              .checked="${this._config.merge_tasks_same_day === true}"
+              .configValue="${'merge_tasks_same_day'}"
               @change="${this._valueChanged}"
             ></ha-switch>
           </ha-formfield>
