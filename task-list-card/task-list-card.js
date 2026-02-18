@@ -70,8 +70,10 @@ class TaskListCard extends LitElement {
           type: "todo/item/list",
           entity_id
         });
-        const items = response.items.map(item => ({ ...item, entity_id }));
-        allItems = allItems.concat(items);
+        if (response && response.items) {
+          const items = response.items.map(item => ({ ...item, entity_id }));
+          allItems = allItems.concat(items);
+        }
       } catch (e) {
         console.error("Error fetching items for", entity_id, e);
       }
@@ -204,9 +206,22 @@ class TaskListCard extends LitElement {
         });
     }
 
+    const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
+
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.7">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.11">
       <ha-card>
+        ${this.config.title ? html`
+          <div class="header-row">
+            <div class="header-title">${this.config.title}</div>
+            ${taskCount > 0 ? html`
+              <div class="task-count-badge">
+                <ha-icon icon="mdi:calendar-check-outline"></ha-icon>
+                <span>${taskCount}</span>
+              </div>
+            ` : ""}
+          </div>
+        ` : ""}
         <div class="task-list">
           ${groups.map((group) => {
             const task = group.tasks[0];

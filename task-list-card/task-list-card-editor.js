@@ -94,9 +94,15 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.45">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.46">
       <div class="card-config">
         <div class="options">
+            <ha-textfield
+              label="Title"
+              .value="${this._config.title || ''}"
+              .configValue="${'title'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
             <ha-textfield
               label="Max Days"
               type="number"

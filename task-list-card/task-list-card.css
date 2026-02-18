@@ -81,3 +81,30 @@
   border-left-style: solid;
   padding-left: 8px;
 }
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 0 16px;
+}
+.header-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--primary-text-color);
+}
+.task-count-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary-color);
+  color: var(--text-primary-color);
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+.task-count-badge ha-icon {
+  --mdc-icon-size: 16px;
+}
