@@ -94,110 +94,60 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.26">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.45">
       <div class="card-config">
         <div class="options">
-          <ha-textfield
-            label="Max Days"
-            type="number"
-            .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
-            .configValue="${'max_days'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
-          <ha-textfield
-            label="Date Separator Color"
-            .value="${this._config.date_separator_color || ''}"
-            .configValue="${'date_separator_color'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
-          <ha-select
-            label="Separator Mode"
-            .value="${this._config.separator_mode || 'day'}"
-            .configValue="${'separator_mode'}"
-            @selected="${this._valueChanged}"
-            @closed="${(e) => e.stopPropagation()}"
-            fixedMenuPosition
-            naturalMenuWidth
-          >
-            <mwc-list-item value="day">Day</mwc-list-item>
-            <mwc-list-item value="week">Week</mwc-list-item>
-            <mwc-list-item value="month">Month</mwc-list-item>
-          </ha-select>
-          <ha-textfield
-            label="Separator Color"
-            .value="${this._config.day_separator_color || ''}"
-            .configValue="${'day_separator_color'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
-          <ha-textfield
-            label="Due In Days Separator Color"
-            .value="${this._config.due_in_days_separator_color || ''}"
-            .configValue="${'due_in_days_separator_color'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
-          <ha-textfield
-            label="Merged Tasks Separator Color"
-            .value="${this._config.merged_tasks_separator_color || ''}"
-            .configValue="${'merged_tasks_separator_color'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
-        </div>
-        <div class="options switches-grid">
-          <ha-formfield label="Show no due date">
-            <ha-switch
-              .checked="${this._config.show_no_due_date !== false}"
-              .configValue="${'show_no_due_date'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield label="Show completed">
-            <ha-switch
-              .checked="${this._config.show_completed !== false}"
-              .configValue="${'show_completed'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield label="Show due date">
-            <ha-switch
-              .checked="${this._config.show_due_date !== false}"
-              .configValue="${'show_due_date'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield label="Show description">
-            <ha-switch
-              .checked="${this._config.show_description === true}"
-              .configValue="${'show_description'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield label="Show due in days">
-            <ha-switch
-              .checked="${this._config.show_due_in_days === true}"
-              .configValue="${'show_due_in_days'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield label="Merge tasks same day">
-            <ha-switch
-              .checked="${this._config.merge_tasks_same_day === true}"
-              .configValue="${'merge_tasks_same_day'}"
-              @change="${this._valueChanged}"
-            ></ha-switch>
-          </ha-formfield>
-        </div>
-
-        <div class="options">
             <ha-textfield
-                label="Default Color"
-                .value="${this._config.default_due_date_color || ''}"
-                .configValue="${'default_due_date_color'}"
-                @input="${this._valueChanged}"
+              label="Max Days"
+              type="number"
+              .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
+              .configValue="${'max_days'}"
+              @input="${this._valueChanged}"
             ></ha-textfield>
+            <div class="switches-grid">
+              <ha-formfield label="Show no due date">
+                <ha-switch
+                  .checked="${this._config.show_no_due_date !== false}"
+                  .configValue="${'show_no_due_date'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+              <ha-formfield label="Show completed">
+                <ha-switch
+                  .checked="${this._config.show_completed !== false}"
+                  .configValue="${'show_completed'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+            </div>
         </div>
 
-        <div class="due-date-colors">
-          <h3>Due Date Colors</h3>
+        <ha-expansion-panel header="Entities" outlined expanded class="panel">
+          <div class="entities-list">
+            ${entities.map((entity, index) => html`
+              <div class="entity-row">
+                <ha-entity-picker
+                  .hass="${this.hass}"
+                  .value="${entity}"
+                  .includeDomains="${['todo']}"
+                  @value-changed="${(e) => this._entityChanged(e, index)}"
+                ></ha-entity-picker>
+                <ha-icon-button
+                  @click="${() => this._removeEntity(index)}"
+                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+              </div>
+            `)}
+            <div class="add-button">
+              <ha-button raised @click="${this._addEntity}">
+                <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                Add Entity
+              </ha-button>
+            </div>
+          </div>
+        </ha-expansion-panel>
+
+                <ha-expansion-panel header="Due Date Colors" outlined class="panel">
+          <div class="due-date-colors">
           ${due_date_colors.map((rule, index) => html`
             <div class="due-date-color-row">
               <ha-select
@@ -241,29 +191,85 @@ class TaskListCardEditor extends LitElement {
             </ha-button>
           </div>
         </div>
+        </ha-expansion-panel>
 
-        <div class="entities-list">
-          <h3>Todo Entities</h3>
-          ${entities.map((entity, index) => html`
-            <div class="entity-row">
-              <ha-entity-picker
-                .hass="${this.hass}"
-                .value="${entity}"
-                .includeDomains="${['todo']}"
-                @value-changed="${(e) => this._entityChanged(e, index)}"
-              ></ha-entity-picker>
-              <ha-icon-button
-                @click="${() => this._removeEntity(index)}"
-              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+        <ha-expansion-panel header="Appearance" outlined class="panel">
+          <div class="options">
+            <div class="switches-grid">
+              <ha-formfield label="Show due date">
+                <ha-switch
+                  .checked="${this._config.show_due_date !== false}"
+                  .configValue="${'show_due_date'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+              <ha-formfield label="Show description">
+                <ha-switch
+                  .checked="${this._config.show_description === true}"
+                  .configValue="${'show_description'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+              <ha-formfield label="Show due in days">
+                <ha-switch
+                  .checked="${this._config.show_due_in_days === true}"
+                  .configValue="${'show_due_in_days'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
+              <ha-formfield label="Merge tasks same day">
+                <ha-switch
+                  .checked="${this._config.merge_tasks_same_day === true}"
+                  .configValue="${'merge_tasks_same_day'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
             </div>
-          `)}
-          <div class="add-button">
-            <ha-button raised @click="${this._addEntity}">
-              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-              Add Entity
-            </ha-button>
+            <ha-select
+              label="Separator Mode"
+              .value="${this._config.separator_mode || 'day'}"
+              .configValue="${'separator_mode'}"
+              @selected="${this._valueChanged}"
+              @closed="${(e) => e.stopPropagation()}"
+              fixedMenuPosition
+              naturalMenuWidth
+            >
+              <mwc-list-item value="day">Day</mwc-list-item>
+              <mwc-list-item value="week">Week</mwc-list-item>
+              <mwc-list-item value="month">Month</mwc-list-item>
+            </ha-select>
+            <ha-textfield
+              label="Default Color"
+              .value="${this._config.default_due_date_color || ''}"
+              .configValue="${'default_due_date_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
+            <ha-textfield
+              label="Date Separator Color"
+              .value="${this._config.date_separator_color || ''}"
+              .configValue="${'date_separator_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
+            <ha-textfield
+              label="Separator Color"
+              .value="${this._config.day_separator_color || ''}"
+              .configValue="${'day_separator_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
+            <ha-textfield
+              label="Due In Days Separator Color"
+              .value="${this._config.due_in_days_separator_color || ''}"
+              .configValue="${'due_in_days_separator_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
+            <ha-textfield
+              label="Merged Tasks Separator Color"
+              .value="${this._config.merged_tasks_separator_color || ''}"
+              .configValue="${'merged_tasks_separator_color'}"
+              @input="${this._valueChanged}"
+            ></ha-textfield>
           </div>
-        </div>
+        </ha-expansion-panel>
       </div>
     `;
   }

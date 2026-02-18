@@ -1,25 +1,38 @@
+.panel {
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    display: block !important;
+}
+
 .options {
-    margin-bottom: 24px !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
 }
 
 .options ha-textfield,
 .options ha-select {
     display: block !important;
     width: 100% !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 0 !important;
 }
 
 .due-date-color-row{
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 0 !important;
 }
 
 .entity-row{
     display: flex !important;
     align-items: center !important; 
-    margin-bottom: 8px !important;
+    margin-bottom: 0 !important;
 }
 
 .entity-row ha-entity-picker{
@@ -48,4 +61,22 @@
 
 .due-date-color-row .color {
     flex-grow: 1 !important;
+}
+
+.due-date-colors {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+}
+
+.entities-list {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
 }
