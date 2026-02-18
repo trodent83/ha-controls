@@ -24,7 +24,10 @@ class TaskListCard extends LitElement {
         show_no_due_date: true,
         show_completed: true,
         show_due_date: true,
+        show_description: false,
         date_separator_color: 'transparent',
+        day_separator_color: '',
+        separator_mode: 'day',
         ...config
     };
     this._items = [];
@@ -160,11 +163,23 @@ class TaskListCard extends LitElement {
     return this.config.default_due_date_color;
   }
 
+  _getWeek(date) {
+    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const year = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${year}-${week}`;
+  }
+
   render() {
     if (!this.config || !this.hass) return html``;
 
+    let lastDate = null;
+
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.3">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.4">
       <ha-card>
         <div class="task-list">
           ${this._items.map((task) => {
@@ -173,7 +188,31 @@ class TaskListCard extends LitElement {
             const dateColor = this._getDueDateColor(task);
             const separatorColor = this.config.date_separator_color || 'transparent';
             const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
+
+            let daySeparator = html``;
+            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+            if (this.config.day_separator_color && lastDate && lastDate !== taskDate) {
+                let showSeparator = false;
+                const mode = this.config.separator_mode || 'day';
+                if (lastDate === 'no-date' || taskDate === 'no-date') {
+                    showSeparator = true;
+                } else if (mode === 'day') {
+                    showSeparator = true;
+                } else if (mode === 'month') {
+                    showSeparator = lastDate.substring(0, 7) !== taskDate.substring(0, 7);
+                } else if (mode === 'week') {
+                    const d1 = new Date(lastDate);
+                    const d2 = new Date(taskDate);
+                    showSeparator = this._getWeek(d1) !== this._getWeek(d2);
+                }
+                if (showSeparator) {
+                    daySeparator = html`<div class="day-separator" style="border-top: 1px solid ${this.config.day_separator_color}; margin: 8px 16px;"></div>`;
+                }
+            }
+            lastDate = taskDate;
+
             return html`
+              ${daySeparator}
               <div class="task-row ${done ? 'done' : ''}" @click="${() => this._toggleTask(task)}">
                 ${this.config.show_due_date ? (dateParts ? html`
                     <div class="task-date" style="${dateStyle}">
@@ -182,7 +221,10 @@ class TaskListCard extends LitElement {
                         <div class="month">${dateParts.month}</div>
                     </div>
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
-                <span class="task-name">${task.summary}</span>
+                <div style="display: flex; flex-direction: column; width: 100%;">
+                  <span class="task-name" style="font-weight: bold;">${task.summary}</span>
+                  ${this.config.show_description && task.description ? html`<span class="task-description" style="font-size: 0.85em; color: var(--secondary-text-color);">${task.description}</span>` : ''}
+                </div>
               </div>
             `;
           })}

@@ -2,7 +2,8 @@
     margin-bottom: 24px !important;
 }
 
-.options ha-textfield {
+.options ha-textfield,
+.options ha-select {
     display: block !important;
     width: 100% !important;
     margin-bottom: 8px !important;
@@ -35,4 +36,16 @@
 .add-button {
     display: flex !important;
     justify-content: center !important;
+}
+
+.due-date-color-row .operator {
+    width: 100px !important;
+}
+
+.due-date-color-row .days {
+    width: 80px !important;
+}
+
+.due-date-color-row .color {
+    flex-grow: 1 !important;
 }
