@@ -205,7 +205,7 @@ class TaskListCard extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.5">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.7">
       <ha-card>
         <div class="task-list">
           ${groups.map((group) => {
@@ -232,7 +232,7 @@ class TaskListCard extends LitElement {
                     showSeparator = this._getWeek(d1) !== this._getWeek(d2);
                 }
                 if (showSeparator) {
-                    daySeparator = html`<div class="day-separator" style="border-top: 1px solid ${this.config.day_separator_color}; margin: 8px 16px;"></div>`;
+                    daySeparator = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
                 }
             }
             lastDate = taskDate;
@@ -249,29 +249,31 @@ class TaskListCard extends LitElement {
 
             return html`
               ${daySeparator}
-              <div class="task-row" style="display: flex; align-items: stretch;">
+              <div class="task-row">
                 ${this.config.show_due_date ? (dateParts ? html`
-                    <div class="task-date" style="display: flex; flex-direction: column; justify-content: center; ${dateStyle}">
+                    <div class="task-date" style="${dateStyle}">
                         <div class="weekday">${dateParts.weekday}</div>
                         <div class="day">${dateParts.day}</div>
                         <div class="month">${dateParts.month}</div>
                     </div>
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
-                <div style="display: flex; flex-direction: column; flex-grow: 1;">
+                <div class="task-content">
                   ${group.tasks.map((t, index) => {
                       const done = t.status === 'completed';
                       const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
-                      const itemStyle = index < group.tasks.length - 1 ? `border-bottom: 1px solid ${separatorColor}; padding-bottom: 4px; margin-bottom: 4px;` : '';
+                      const hasSeparator = index < group.tasks.length - 1;
+                      const separatorClass = hasSeparator ? 'task-item-separator' : '';
+                      const separatorStyle = hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
                       return html`
-                        <div class="${done ? 'done' : ''}" @click="${() => this._toggleTask(t)}" style="cursor: pointer; ${itemStyle}">
-                            <span class="task-name" style="font-weight: bold;">${t.summary}</span>
-                            ${this.config.show_description && t.description ? html`<span class="task-description" style="font-size: 0.85em; color: var(--secondary-text-color); display: block;">${t.description}</span>` : ''}
+                        <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${() => this._toggleTask(t)}" style="${separatorStyle}">
+                            <span class="task-name">${t.summary}</span>
+                            ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
                         </div>
                       `;
                   })}
                 </div>
                 ${this.config.show_due_in_days && dueInDaysText ? html`
-                    <div class="task-due-in" style="font-size: 0.85em; color: var(--secondary-text-color); margin-left: 8px; text-align: center; width: 70px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; line-height: 1.2; ${this.config.due_in_days_separator_color ? `border-left: 1px solid ${this.config.due_in_days_separator_color}; padding-left: 8px;` : ''}">
+                    <div class="task-due-in ${this.config.due_in_days_separator_color ? 'separator' : ''}" style="${this.config.due_in_days_separator_color ? `border-left-color: ${this.config.due_in_days_separator_color};` : ''}">
                         ${dueInDaysText}
                     </div>
                 ` : ''}

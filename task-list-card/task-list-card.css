@@ -1,6 +1,6 @@
 .task-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   padding: 8px;
   cursor: pointer;
 }
@@ -9,7 +9,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 50px;
+  width: 60px;
   margin-right: 8px;
   padding-right: 8px;
   border-right: 2px solid transparent;
@@ -17,23 +17,67 @@
   flex-shrink: 0;
 }
 .task-date.empty {
-  width: 50px;
+  width: 60px;
 }
 .weekday {
-  font-size: 0.8em;
+  font-size: 0.9em;
   opacity: 0.7;
   text-transform: uppercase;
 }
 .day {
-  font-size: 1.2em;
+  font-size: 1.8em;
   font-weight: bold;
 }
 .month {
-  font-size: 0.8em;
+  font-size: 0.9em;
   font-weight: bold;
   text-transform: uppercase;
 }
 .done .task-name {
   text-decoration: line-through;
   opacity: 0.6;
+}
+.day-separator {
+  margin: 8px 16px;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+.task-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.task-item {
+  cursor: pointer;
+}
+.task-item-separator {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+.task-name {
+  font-weight: bold;
+}
+.task-description {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  display: block;
+}
+.task-due-in {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  margin-left: 8px;
+  text-align: center;
+  width: 70px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+.task-due-in.separator {
+  border-left-width: 1px;
+  border-left-style: solid;
+  padding-left: 8px;
 }
