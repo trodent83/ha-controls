@@ -22,23 +22,23 @@ class TaskListCard extends LitElement {
       throw new Error("Please define an entity");
     }
     this.config = {
-        show_no_due_date: true,
-        show_completed: true,
-        show_due_date: true,
-        show_description: false,
-        show_due_in_days: false,
-        show_refresh_button: false,
-        show_delete_completed_button: false,
-        show_source: false,
-        merge_tasks_same_day: false,
-        source_color: '',
-        date_separator_color: 'transparent',
-        day_separator_color: '',
-        due_in_days_separator_color: '',
-        merged_tasks_separator_color: 'var(--divider-color)',
-        separator_mode: 'day',
-        icon: 'mdi:calendar-check',
-        ...config
+      show_no_due_date: true,
+      show_completed: true,
+      show_due_date: true,
+      show_description: false,
+      show_due_in_days: false,
+      show_refresh_button: false,
+      show_delete_completed_button: false,
+      show_source: false,
+      merge_tasks_same_day: false,
+      source_color: '',
+      date_separator_color: 'transparent',
+      day_separator_color: '',
+      due_in_days_separator_color: '',
+      merged_tasks_separator_color: 'var(--divider-color)',
+      separator_mode: 'day',
+      icon: 'mdi:calendar-check',
+      ...config
     };
     this._items = [];
     this._loadingAction = null;
@@ -51,25 +51,25 @@ class TaskListCard extends LitElement {
     if (changedProps.has("hass")) {
       // Trace: Start der Prüfung
       console.groupCollapsed("Card Update Trace: Checking Entities");
-      const entities = this._getEntities().map(e => (typeof e === 'object' ? e.entity : e));
-      
+      const entities = this._getEntities();
+
       const hasChanged = entities.some(entityId => {
         const oldState = changedProps.get("hass")?.states[entityId];
         const newState = this.hass.states[entityId];
         return !oldState || oldState.last_updated !== newState?.last_updated;
       });
 
-     
+
       if (hasChanged) {
         const allReady = entities.every(entityId => {
-              const stateObj = this.hass.states[entityId];
-              return stateObj && !["unavailable", "unknown"].includes(stateObj.state);
-            });
+          const stateObj = this.hass.states[entityId];
+          return stateObj && !["unavailable", "unknown"].includes(stateObj.state);
+        });
 
         if (!allReady) {
           console.log("Card Trace: Waiting for all entities to become available...");
           console.groupEnd();
-          return; 
+          return;
         }
         console.log("Entities have changed, updating task list...");
         // Lösche den alten Timer, falls einer läuft
@@ -87,9 +87,8 @@ class TaskListCard extends LitElement {
   }
 
   _getEntities() {
-    if (this.config.entities) return this.config.entities;
-    if (this.config.entity) return [this.config.entity];
-    return [];
+    return (this.config.entities || (this.config.entity ? [this.config.entity] : []))
+      .map(e => (typeof e === 'object' ? e.entity : e));
   }
 
   async _fetchItems() {
@@ -97,7 +96,7 @@ class TaskListCard extends LitElement {
     this._isLoading = true;
     this._loadingAction = 'refresh';
     try {
-      const entities = this._getEntities().map(e => (typeof e === 'object' ? e.entity : e));
+      const entities = this._getEntities();
       let allItems = [];
       for (const entity_id of entities) {
         if (!this.hass.states[entity_id]) continue;
@@ -151,18 +150,18 @@ class TaskListCard extends LitElement {
     if (!dateStr) return null;
     let date;
     if (dateStr.length === 10) {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        date = new Date(year, month - 1, day);
+      const [year, month, day] = dateStr.split('-').map(Number);
+      date = new Date(year, month - 1, day);
     } else {
-        date = new Date(dateStr);
+      date = new Date(dateStr);
     }
     if (isNaN(date.getTime())) return null;
-    
+
     const locale = this.hass.locale || { language: 'en' };
     return {
-        weekday: date.toLocaleDateString(locale.language, { weekday: 'short' }),
-        day: date.toLocaleDateString(locale.language, { day: 'numeric' }),
-        month: date.toLocaleDateString(locale.language, { month: 'short' })
+      weekday: date.toLocaleDateString(locale.language, { weekday: 'short' }),
+      day: date.toLocaleDateString(locale.language, { day: 'numeric' }),
+      month: date.toLocaleDateString(locale.language, { month: 'short' })
     };
   }
 
@@ -172,11 +171,11 @@ class TaskListCard extends LitElement {
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     let taskDate;
     if (task.due.length === 10) {
-        const [year, month, day] = task.due.split('-').map(Number);
-        taskDate = new Date(Date.UTC(year, month - 1, day));
+      const [year, month, day] = task.due.split('-').map(Number);
+      taskDate = new Date(Date.UTC(year, month - 1, day));
     } else {
-        const d = new Date(task.due);
-        taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const d = new Date(task.due);
+      taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     }
     const diffTime = taskDate - today;
     return Math.round(diffTime / (1000 * 60 * 60 * 24));
@@ -189,27 +188,27 @@ class TaskListCard extends LitElement {
 
     const colors = this.config.due_date_colors;
     if (colors && colors.length) {
-        const sortedColors = [...colors].sort((a, b) => a.days - b.days);
-        const match = sortedColors.find(rule => {
-            const operator = rule.operator || '<=';
-            const days = parseInt(rule.days);
-            switch (operator) {
-                case '==':
-                case '=': return diffDays === days;
-                case '!=':
-                case '<>': return diffDays !== days;
-                case '&lt;':
-                case '<': return diffDays < days;
-                case '&lt;=':
-                case '<=': return diffDays <= days;
-                case '&gt;':
-                case '>': return diffDays > days;
-                case '&gt;=':
-                case '>=': return diffDays >= days;
-                default: return diffDays <= days;
-            }
-        });
-        if (match) return match.color;
+      const sortedColors = [...colors].sort((a, b) => a.days - b.days);
+      const match = sortedColors.find(rule => {
+        const operator = rule.operator || '<=';
+        const days = parseInt(rule.days);
+        switch (operator) {
+          case '==':
+          case '=': return diffDays === days;
+          case '!=':
+          case '<>': return diffDays !== days;
+          case '&lt;':
+          case '<': return diffDays < days;
+          case '&lt;=':
+          case '<=': return diffDays <= days;
+          case '&gt;':
+          case '>': return diffDays > days;
+          case '&gt;=':
+          case '>=': return diffDays >= days;
+          default: return diffDays <= days;
+        }
+      });
+      if (match) return match.color;
     }
     return this.config.default_due_date_color;
   }
@@ -231,19 +230,19 @@ class TaskListCard extends LitElement {
     const groups = [];
 
     if (this.config.merge_tasks_same_day) {
-        this._items.forEach(task => {
-            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
-            if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
-                groups[groups.length - 1].tasks.push(task);
-            } else {
-                groups.push({ date: taskDate, tasks: [task] });
-            }
-        });
+      this._items.forEach(task => {
+        const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+        if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
+          groups[groups.length - 1].tasks.push(task);
+        } else {
+          groups.push({ date: taskDate, tasks: [task] });
+        }
+      });
     } else {
-        this._items.forEach(task => {
-            const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
-            groups.push({ date: taskDate, tasks: [task] });
-        });
+      this._items.forEach(task => {
+        const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+        groups.push({ date: taskDate, tasks: [task] });
+      });
     }
 
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
@@ -267,45 +266,45 @@ class TaskListCard extends LitElement {
         ` : ""}
         <div class="task-list">
           ${groups.map((group) => {
-            const task = group.tasks[0];
-            const dateParts = this._formatDate(task.due);
-            const dateColor = this._getDueDateColor(task);
-            const separatorColor = this.config.date_separator_color || 'transparent';
-            const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
+      const task = group.tasks[0];
+      const dateParts = this._formatDate(task.due);
+      const dateColor = this._getDueDateColor(task);
+      const separatorColor = this.config.date_separator_color || 'transparent';
+      const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
 
-            let daySeparator = html``;
-            const taskDate = group.date;
-            if (this.config.day_separator_color && lastDate && lastDate !== taskDate) {
-                let showSeparator = false;
-                const mode = this.config.separator_mode || 'day';
-                if (lastDate === 'no-date' || taskDate === 'no-date') {
-                    showSeparator = true;
-                } else if (mode === 'day') {
-                    showSeparator = true;
-                } else if (mode === 'month') {
-                    showSeparator = lastDate.substring(0, 7) !== taskDate.substring(0, 7);
-                } else if (mode === 'week') {
-                    const d1 = new Date(lastDate);
-                    const d2 = new Date(taskDate);
-                    showSeparator = this._getWeek(d1) !== this._getWeek(d2);
-                }
-                if (showSeparator) {
-                    daySeparator = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
-                }
-            }
-            lastDate = taskDate;
+      let daySeparator = html``;
+      const taskDate = group.date;
+      if (this.config.day_separator_color && lastDate && lastDate !== taskDate) {
+        let showSeparator = false;
+        const mode = this.config.separator_mode || 'day';
+        if (lastDate === 'no-date' || taskDate === 'no-date') {
+          showSeparator = true;
+        } else if (mode === 'day') {
+          showSeparator = true;
+        } else if (mode === 'month') {
+          showSeparator = lastDate.substring(0, 7) !== taskDate.substring(0, 7);
+        } else if (mode === 'week') {
+          const d1 = new Date(lastDate);
+          const d2 = new Date(taskDate);
+          showSeparator = this._getWeek(d1) !== this._getWeek(d2);
+        }
+        if (showSeparator) {
+          daySeparator = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
+        }
+      }
+      lastDate = taskDate;
 
-            let dueInDaysText = '';
-            const diffDays = this._getDiffDays(task);
-            if (diffDays !== null) {
-                if (diffDays === 0) dueInDaysText = 'Today';
-                else if (diffDays === 1) dueInDaysText = 'Tomorrow';
-                else if (diffDays > 1) dueInDaysText = `Due in ${diffDays} days`;
-                else if (diffDays === -1) dueInDaysText = 'Overdue by 1 day';
-                else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
-            }
+      let dueInDaysText = '';
+      const diffDays = this._getDiffDays(task);
+      if (diffDays !== null) {
+        if (diffDays === 0) dueInDaysText = 'Today';
+        else if (diffDays === 1) dueInDaysText = 'Tomorrow';
+        else if (diffDays > 1) dueInDaysText = `Due in ${diffDays} days`;
+        else if (diffDays === -1) dueInDaysText = 'Overdue by 1 day';
+        else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
+      }
 
-            return html`
+      return html`
               ${daySeparator}
               <div class="task-row">
                 ${this.config.show_due_date ? (dateParts ? html`
@@ -317,30 +316,30 @@ class TaskListCard extends LitElement {
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
                 <div class="task-content">
                   ${group.tasks.map((t, index) => {
-                      const done = t.status === 'completed';
-                      const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
-                      const hasSeparator = index < group.tasks.length - 1;
-                      const separatorClass = hasSeparator ? 'task-item-separator' : '';
-                      const separatorStyle = hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
-                      return html`
+        const done = t.status === 'completed';
+        const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
+        const hasSeparator = index < group.tasks.length - 1;
+        const separatorClass = hasSeparator ? 'task-item-separator' : '';
+        const separatorStyle = hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
+        return html`
                         <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${() => this._toggleTask(t)}" style="${separatorStyle}">
                             <span class="task-name">${t.summary}</span>
                             ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
                             ${this.config.show_source ? (() => {
-                                const entity = this.hass.states[t.entity_id];
-                                if (!entity) return '';
-                                const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
-                                return html`
+            const entity = this.hass.states[t.entity_id];
+            if (!entity) return '';
+            const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+            return html`
                                     <div class="task-source" style=${style}>
                                         <ha-icon
                                             icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon>
                                         <span>${entity.attributes.friendly_name || t.entity_id}</span>
                                     </div>
                                 `;
-                            })() : ''}
+          })() : ''}
                         </div>
                       `;
-                  })}
+      })}
                 </div>
                 ${this.config.show_due_in_days && dueInDaysText ? html`
                     <div class="task-due-in ${this.config.due_in_days_separator_color ? 'separator' : ''}" style="${this.config.due_in_days_separator_color ? `border-left-color: ${this.config.due_in_days_separator_color};` : ''}">
@@ -349,7 +348,7 @@ class TaskListCard extends LitElement {
                 ` : ''}
               </div>
             `;
-          })}
+    })}
           ${this._items.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
         </div>
       </ha-card>
@@ -382,27 +381,19 @@ class TaskListCard extends LitElement {
     `;
   }
 
-  async updateTodos()
-  {
+  async updateTodos() {
     if (!this.hass || this._isLoading) return;
     this._isLoading = true;
     this._loadingAction = 'refresh';
 
-    const rawEntities = this._getEntities();
-
-      // Extrahiere nur die IDs
-      const entityIds = rawEntities.map(item => {
-        return typeof item === 'object' ? item.entity : item;
-      });
-
-
+    const entityIds = this._getEntities();
     if (entityIds.length === 0) return;
 
     // Erzwingt ein Update der Entitäten im Hintergrund
     try {
-    await this.hass.callService("homeassistant", "reload_config_entry", {
-      entity_id: entityIds
-    });
+      await this.hass.callService("homeassistant", "reload_config_entry", {
+        entity_id: entityIds
+      });
     } catch (e) {
       console.error("Error updating todo entities", e);
     } finally {
@@ -416,20 +407,13 @@ class TaskListCard extends LitElement {
     this._isLoading = true;
     this._loadingAction = 'delete';
 
-    const rawEntities = this._getEntities();
-
-      // Extrahiere nur die IDs
-      const entityIds = rawEntities.map(item => {
-        return typeof item === 'object' ? item.entity : item;
-      });
-
-      // Sicherheitscheck: Nur rufen, wenn IDs vorhanden sind
-      if (entityIds.length === 0) return;
+    const entityIds = this._getEntities();
+    if (entityIds.length === 0) return;
 
     try {
-        await this.hass.callService("todo", "remove_completed_items", {
-          entity_id: entityIds
-          });
+      await this.hass.callService("todo", "remove_completed_items", {
+        entity_id: entityIds
+      });
     } catch (e) {
       console.error("Error deleting completed tasks", e);
     } finally {
