@@ -94,7 +94,7 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.22">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.24">
       <div class="card-config">
         <div class="options">
           <ha-textfield
@@ -142,12 +142,6 @@ class TaskListCardEditor extends LitElement {
                 .configValue="${'default_due_date_color'}"
                 @input="${this._valueChanged}"
             ></ha-textfield>
-          <ha-textfield
-            label="Default Color"
-            .value="${this._config.default_due_date_color || ''}"
-            .configValue="${'default_due_date_color'}"
-            @input="${this._valueChanged}"
-          ></ha-textfield>
         </div>
 
         <div class="due-date-colors">
@@ -188,51 +182,12 @@ class TaskListCardEditor extends LitElement {
                     ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                 </div>
             `)}
-            <ha-button raised @click="${this._addDueDateColor}">
-                <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-                Add Rule
-            </ha-button>
-          <h3>Due Date Colors</h3>
-          ${due_date_colors.map((rule, index) => html`
-            <div class="due-date-color-row">
-              <ha-select
-                label="Operator"
-                .value="${rule.operator || '<='}"
-                @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
-                @closed="${(e) => e.stopPropagation()}"
-                fixedMenuPosition
-                naturalMenuWidth
-                style="width: 100px;"
-              >
-                <mwc-list-item value="=">=</mwc-list-item>
-                <mwc-list-item value="<>">&lt;&gt;</mwc-list-item>
-                <mwc-list-item value="<">&lt;</mwc-list-item>
-                <mwc-list-item value="<=">&lt;=</mwc-list-item>
-                <mwc-list-item value=">">&gt;</mwc-list-item>
-                <mwc-list-item value=">=">&gt;=</mwc-list-item>
-              </ha-select>
-              <ha-textfield
-                label="Days"
-                type="number"
-                .value="${rule.days}"
-                @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
-                style="width: 80px;"
-              ></ha-textfield>
-              <ha-textfield
-                label="Color"
-                .value="${rule.color}"
-                @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
-                style="flex-grow: 1;"
-              ></ha-textfield>
-              <ha-icon-button
-                @click="${() => this._removeDueDateColor(index)}"
-              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            <div class="add-button">
+                <ha-button raised @click="${this._addDueDateColor}">
+                    <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                    Add Rule
+                </ha-button>
             </div>
-          `)}
-          <ha-button raised @click="${this._addDueDateColor}">
-            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-            Add Rule
-          </ha-button>
         </div>
 
         <div class="entities-list">
@@ -250,28 +205,12 @@ class TaskListCardEditor extends LitElement {
                     ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                 </div>
             `)}
-            <ha-button raised @click="${this._addEntity}">
-                <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-                Add Entity
-            </ha-button>
-          <h3>Todo Entities</h3>
-          ${entities.map((entity, index) => html`
-            <div class="entity-row">
-              <ha-entity-picker
-                .hass="${this.hass}"
-                .value="${entity}"
-                .includeDomains="${['todo']}"
-                @value-changed="${(e) => this._entityChanged(e, index)}"
-              ></ha-entity-picker>
-              <ha-icon-button
-                @click="${() => this._removeEntity(index)}"
-              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            <div class="add-button">
+                <ha-button raised @click="${this._addEntity}">
+                    <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                    Add Entity
+                </ha-button>
             </div>
-          `)}
-          <ha-button raised @click="${this._addEntity}">
-            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-            Add Entity
-          </ha-button>
         </div>
       </div>
     `;
