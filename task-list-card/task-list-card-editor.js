@@ -94,10 +94,9 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.22">
       <div class="card-config">
-
-        <div class="options" style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div class="options">
           <ha-textfield
             label="Max Days"
             type="number"
@@ -111,6 +110,8 @@ class TaskListCardEditor extends LitElement {
             .configValue="${'date_separator_color'}"
             @input="${this._valueChanged}"
           ></ha-textfield>
+        </div>
+        <div class="options switches-grid">
           <ha-formfield label="Show no due date">
             <ha-switch
               .checked="${this._config.show_no_due_date !== false}"
@@ -134,16 +135,25 @@ class TaskListCardEditor extends LitElement {
           </ha-formfield>
         </div>
 
-        <div class="due-date-colors">
-            <h3>Due Date Colors</h3>
+        <div class="options">
             <ha-textfield
                 label="Default Color"
                 .value="${this._config.default_due_date_color || ''}"
                 .configValue="${'default_due_date_color'}"
                 @input="${this._valueChanged}"
             ></ha-textfield>
+          <ha-textfield
+            label="Default Color"
+            .value="${this._config.default_due_date_color || ''}"
+            .configValue="${'default_due_date_color'}"
+            @input="${this._valueChanged}"
+          ></ha-textfield>
+        </div>
+
+        <div class="due-date-colors">
+            <h3>Due Date Colors</h3>
             ${due_date_colors.map((rule, index) => html`
-                <div class="due-date-color-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <div class="due-date-color-row">
                     <ha-select
                         label="Operator"
                         .value="${rule.operator || '<='}"
@@ -182,18 +192,58 @@ class TaskListCardEditor extends LitElement {
                 <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
                 Add Rule
             </ha-button>
+          <h3>Due Date Colors</h3>
+          ${due_date_colors.map((rule, index) => html`
+            <div class="due-date-color-row">
+              <ha-select
+                label="Operator"
+                .value="${rule.operator || '<='}"
+                @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
+                @closed="${(e) => e.stopPropagation()}"
+                fixedMenuPosition
+                naturalMenuWidth
+                style="width: 100px;"
+              >
+                <mwc-list-item value="=">=</mwc-list-item>
+                <mwc-list-item value="<>">&lt;&gt;</mwc-list-item>
+                <mwc-list-item value="<">&lt;</mwc-list-item>
+                <mwc-list-item value="<=">&lt;=</mwc-list-item>
+                <mwc-list-item value=">">&gt;</mwc-list-item>
+                <mwc-list-item value=">=">&gt;=</mwc-list-item>
+              </ha-select>
+              <ha-textfield
+                label="Days"
+                type="number"
+                .value="${rule.days}"
+                @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
+                style="width: 80px;"
+              ></ha-textfield>
+              <ha-textfield
+                label="Color"
+                .value="${rule.color}"
+                @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
+                style="flex-grow: 1;"
+              ></ha-textfield>
+              <ha-icon-button
+                @click="${() => this._removeDueDateColor(index)}"
+              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            </div>
+          `)}
+          <ha-button raised @click="${this._addDueDateColor}">
+            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+            Add Rule
+          </ha-button>
         </div>
 
         <div class="entities-list">
             <h3>Todo Entities</h3>
             ${entities.map((entity, index) => html`
-                <div class="entity-row" style="display: flex; align-items: center; margin-bottom: 8px;">
+                <div class="entity-row">
                     <ha-entity-picker
                         .hass="${this.hass}"
                         .value="${entity}"
                         .includeDomains="${['todo']}"
                         @value-changed="${(e) => this._entityChanged(e, index)}"
-                        style="flex-grow: 1; margin-right: 8px;"
                     ></ha-entity-picker>
                     <ha-icon-button
                         @click="${() => this._removeEntity(index)}"
@@ -204,6 +254,24 @@ class TaskListCardEditor extends LitElement {
                 <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
                 Add Entity
             </ha-button>
+          <h3>Todo Entities</h3>
+          ${entities.map((entity, index) => html`
+            <div class="entity-row">
+              <ha-entity-picker
+                .hass="${this.hass}"
+                .value="${entity}"
+                .includeDomains="${['todo']}"
+                @value-changed="${(e) => this._entityChanged(e, index)}"
+              ></ha-entity-picker>
+              <ha-icon-button
+                @click="${() => this._removeEntity(index)}"
+              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            </div>
+          `)}
+          <ha-button raised @click="${this._addEntity}">
+            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+            Add Entity
+          </ha-button>
         </div>
       </div>
     `;

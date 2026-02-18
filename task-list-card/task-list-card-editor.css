@@ -1,14 +1,23 @@
-.card-config {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.due-date-color-row{
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
 }
-.task-editor-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+
+.entity-row{
+    display: flex !important;
+    align-items: center !important; 
+    margin-bottom: 8px !important;
 }
-.task-editor-row ha-textfield {
-    flex-grow: 1;
+
+.entity-row ha-entity-picker{
+    flex-grow: 1 !important; 
+    margin-right: 8px !important;
+}
+
+.switches-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
 }
