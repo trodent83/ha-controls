@@ -3,7 +3,7 @@ const html = LitElement.prototype.html;
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _items: { state: true } };
+    return { hass: {}, config: {}, _items: { state: true }, _isLoading: { state: true } };
   }
 
   static getConfigElement() {
@@ -66,50 +66,55 @@ class TaskListCard extends LitElement {
 
   async _fetchItems() {
     if (!this.hass) return;
-    const entities = this._getEntities();
-    let allItems = [];
-    for (const entity_id of entities) {
-      if (!this.hass.states[entity_id]) continue;
-      try {
-        const response = await this.hass.callWS({
-          type: "todo/item/list",
-          entity_id
-        });
-        if (response && response.items) {
-          const items = response.items.map(item => ({ ...item, entity_id }));
-          allItems = allItems.concat(items);
+    this._isLoading = true;
+    try {
+      const entities = this._getEntities();
+      let allItems = [];
+      for (const entity_id of entities) {
+        if (!this.hass.states[entity_id]) continue;
+        try {
+          const response = await this.hass.callWS({
+            type: "todo/item/list",
+            entity_id
+          });
+          if (response && response.items) {
+            const items = response.items.map(item => ({ ...item, entity_id }));
+            allItems = allItems.concat(items);
+          }
+        } catch (e) {
+          console.error("Error fetching items for", entity_id, e);
         }
-      } catch (e) {
-        console.error("Error fetching items for", entity_id, e);
-      }
-    }
-
-    const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
-    const showNoDueDate = this.config.show_no_due_date !== false;
-    const showCompleted = this.config.show_completed !== false;
-
-    if (maxDays !== null || !showNoDueDate || !showCompleted) {
-      const cutoff = new Date();
-      if (maxDays !== null) {
-        cutoff.setDate(cutoff.getDate() + maxDays);
-        cutoff.setHours(23, 59, 59, 999);
       }
 
-      allItems = allItems.filter(item => {
-        if (!showCompleted && item.status === 'completed') return false;
-        if (!item.due) return showNoDueDate;
-        if (maxDays !== null) return new Date(item.due) <= cutoff;
-        return true;
+      const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
+      const showNoDueDate = this.config.show_no_due_date !== false;
+      const showCompleted = this.config.show_completed !== false;
+
+      if (maxDays !== null || !showNoDueDate || !showCompleted) {
+        const cutoff = new Date();
+        if (maxDays !== null) {
+          cutoff.setDate(cutoff.getDate() + maxDays);
+          cutoff.setHours(23, 59, 59, 999);
+        }
+
+        allItems = allItems.filter(item => {
+          if (!showCompleted && item.status === 'completed') return false;
+          if (!item.due) return showNoDueDate;
+          if (maxDays !== null) return new Date(item.due) <= cutoff;
+          return true;
+        });
+      }
+
+      allItems.sort((a, b) => {
+        if (a.due === b.due) return 0;
+        if (!a.due) return -1;
+        if (!b.due) return 1;
+        return a.due < b.due ? -1 : 1;
       });
+      this._items = allItems;
+    } finally {
+      this._isLoading = false;
     }
-
-    allItems.sort((a, b) => {
-      if (a.due === b.due) return 0;
-      if (!a.due) return -1;
-      if (!b.due) return 1;
-      return a.due < b.due ? -1 : 1;
-    });
-    this._items = allItems;
   }
 
   _formatDate(dateStr) {
@@ -214,7 +219,7 @@ class TaskListCard extends LitElement {
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.21">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.19">
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -322,11 +327,11 @@ class TaskListCard extends LitElement {
         ${this.config.show_refresh_button ? html`
           <div class="tile-button" @click="${() => this._fetchItems()}">
             <div class="tile-icon-container">
-              <ha-icon icon="mdi:refresh"></ha-icon>
+              ${this._isLoading ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
             </div>
             <div class="tile-info">
               <span class="tile-name">Refresh</span>
-              <span class="tile-state">Update task list</span>
+              <span class="tile-state">${this._isLoading ? 'Updating...' : 'Update task list'}</span>
             </div>
           </div>
         ` : ''}
