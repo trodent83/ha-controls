@@ -30,6 +30,7 @@ class TaskListCard extends LitElement {
         date_separator_color: 'transparent',
         day_separator_color: '',
         due_in_days_separator_color: '',
+        merged_tasks_separator_color: 'var(--divider-color)',
         separator_mode: 'day',
         ...config
     };
@@ -259,7 +260,8 @@ class TaskListCard extends LitElement {
                 <div style="display: flex; flex-direction: column; flex-grow: 1;">
                   ${group.tasks.map((t, index) => {
                       const done = t.status === 'completed';
-                      const itemStyle = index < group.tasks.length - 1 ? 'border-bottom: 1px solid var(--divider-color); padding-bottom: 4px; margin-bottom: 4px;' : '';
+                      const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
+                      const itemStyle = index < group.tasks.length - 1 ? `border-bottom: 1px solid ${separatorColor}; padding-bottom: 4px; margin-bottom: 4px;` : '';
                       return html`
                         <div class="${done ? 'done' : ''}" @click="${() => this._toggleTask(t)}" style="cursor: pointer; ${itemStyle}">
                             <span class="task-name" style="font-weight: bold;">${t.summary}</span>

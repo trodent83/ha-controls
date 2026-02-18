@@ -135,6 +135,12 @@ class TaskListCardEditor extends LitElement {
             .configValue="${'due_in_days_separator_color'}"
             @input="${this._valueChanged}"
           ></ha-textfield>
+          <ha-textfield
+            label="Merged Tasks Separator Color"
+            .value="${this._config.merged_tasks_separator_color || ''}"
+            .configValue="${'merged_tasks_separator_color'}"
+            @input="${this._valueChanged}"
+          ></ha-textfield>
         </div>
         <div class="options switches-grid">
           <ha-formfield label="Show no due date">
