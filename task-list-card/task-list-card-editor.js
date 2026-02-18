@@ -159,6 +159,13 @@ class TaskListCardEditor extends LitElement {
               @change="${this._valueChanged}"
             ></ha-switch>
           </ha-formfield>
+          <ha-formfield label="Show due in days">
+            <ha-switch
+              .checked="${this._config.show_due_in_days === true}"
+              .configValue="${'show_due_in_days'}"
+              @change="${this._valueChanged}"
+            ></ha-switch>
+          </ha-formfield>
         </div>
 
         <div class="options">

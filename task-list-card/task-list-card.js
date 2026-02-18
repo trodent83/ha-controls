@@ -25,6 +25,7 @@ class TaskListCard extends LitElement {
         show_completed: true,
         show_due_date: true,
         show_description: false,
+        show_due_in_days: false,
         date_separator_color: 'transparent',
         day_separator_color: '',
         separator_mode: 'day',
@@ -120,9 +121,8 @@ class TaskListCard extends LitElement {
     };
   }
 
-  _getDueDateColor(task) {
-    if (!task.due || task.status === 'completed') return undefined;
-
+  _getDiffDays(task) {
+    if (!task.due) return null;
     const now = new Date();
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     let taskDate;
@@ -134,7 +134,13 @@ class TaskListCard extends LitElement {
         taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     }
     const diffTime = taskDate - today;
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  _getDueDateColor(task) {
+    if (!task.due || task.status === 'completed') return undefined;
+
+    const diffDays = this._getDiffDays(task);
 
     const colors = this.config.due_date_colors;
     if (colors && colors.length) {
@@ -211,6 +217,16 @@ class TaskListCard extends LitElement {
             }
             lastDate = taskDate;
 
+            let dueInDaysText = '';
+            const diffDays = this._getDiffDays(task);
+            if (diffDays !== null) {
+                if (diffDays === 0) dueInDaysText = 'Today';
+                else if (diffDays === 1) dueInDaysText = 'Tomorrow';
+                else if (diffDays > 1) dueInDaysText = `Due in ${diffDays} days`;
+                else if (diffDays === -1) dueInDaysText = 'Overdue by 1 day';
+                else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
+            }
+
             return html`
               ${daySeparator}
               <div class="task-row ${done ? 'done' : ''}" @click="${() => this._toggleTask(task)}">
@@ -221,10 +237,15 @@ class TaskListCard extends LitElement {
                         <div class="month">${dateParts.month}</div>
                     </div>
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
-                <div style="display: flex; flex-direction: column; width: 100%;">
+                <div style="display: flex; flex-direction: column; flex-grow: 1;">
                   <span class="task-name" style="font-weight: bold;">${task.summary}</span>
                   ${this.config.show_description && task.description ? html`<span class="task-description" style="font-size: 0.85em; color: var(--secondary-text-color);">${task.description}</span>` : ''}
                 </div>
+                ${this.config.show_due_in_days && dueInDaysText ? html`
+                    <div class="task-due-in" style="font-size: 0.85em; color: var(--secondary-text-color); margin-left: 8px; text-align: right; min-width: 80px;">
+                        ${dueInDaysText}
+                    </div>
+                ` : ''}
               </div>
             `;
           })}
