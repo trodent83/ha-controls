@@ -49,32 +49,25 @@ class TaskListCard extends LitElement {
 
   updated(changedProps) {
     if (changedProps.has("hass")) {
-      // Trace: Start der Prüfung
-      console.groupCollapsed("Card Update Trace: Checking Entities");
       const entities = this._getEntities();
+      let hasChanged = false;
 
-      const hasChanged = entities.some(entityId => {
+      for (const entityId of entities) {
         const oldState = changedProps.get("hass")?.states[entityId];
         const newState = this.hass.states[entityId];
-        return !oldState || oldState.last_updated !== newState?.last_updated;
-      });
 
-
-      if (hasChanged) {
-        const allReady = entities.every(entityId => {
-          const stateObj = this.hass.states[entityId];
-          return stateObj && !["unavailable", "unknown"].includes(stateObj.state);
-        });
-
-        if (!allReady) {
-          console.log("Card Trace: Waiting for all entities to become available...");
-          console.groupEnd();
+        if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
           return;
         }
-        console.log("Entities have changed, updating task list...");
-        // Lösche den alten Timer, falls einer läuft
+
+        if (!hasChanged && (!oldState || oldState.last_updated !== newState?.last_updated)) {
+          hasChanged = true;
+        }
+      }
+
+      if (hasChanged) {
         clearTimeout(this._debounceTimer);
-        // Starte einen neuen Timer (z.B. 100ms warten)
+
         this._debounceTimer = setTimeout(() => {
           console.groupCollapsed("fetching");
           console.log("Fetch");
@@ -82,7 +75,6 @@ class TaskListCard extends LitElement {
           console.groupEnd();
         }, 100);
       }
-      console.groupEnd();
     }
   }
 
