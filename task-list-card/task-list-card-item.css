@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.task-item {
+  cursor: pointer;
+}
+
+.task-item.done .task-name {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.task-item-separator {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.task-name {
+  font-weight: bold;
+}
+
+.task-description {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  display: block;
+}
+
+.task-source {
+  font-size: 0.85em;
+  color: var(--source-color, var(--secondary-text-color));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.task-source ha-icon {
+  --mdc-icon-size: 14px;
+}

@@ -1,6 +1,47 @@
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 
+class TaskListCardItem extends LitElement {
+  static get properties() {
+    return {
+      hass: { attribute: false },
+      config: { attribute: false },
+      task: { attribute: false },
+      hasSeparator: { type: Boolean }
+    };
+  }
+
+  _toggle() {
+    this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
+  }
+
+  render() {
+    if (!this.task || !this.config || !this.hass) return html``;
+
+    const t = this.task;
+    const done = t.status === 'completed';
+    const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
+    const separatorClass = this.hasSeparator ? 'task-item-separator' : '';
+    const separatorStyle = this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
+
+    return html`
+      <style>:host { display: block; }</style>
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.19">
+      <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${this._toggle}" style="${separatorStyle}">
+        <span class="task-name">${t.summary}</span>
+        ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
+        ${this.config.show_source ? (() => {
+          const entity = this.hass.states[t.entity_id];
+          if (!entity) return '';
+          const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+          return html`<div class="task-source" style=${style}><ha-icon icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon><span>${entity.attributes.friendly_name || t.entity_id}</span></div>`;
+        })() : ''}
+      </div>
+    `;
+  }
+}
+customElements.define("task-list-card-item", TaskListCardItem);
+
 class TaskListCard extends LitElement {
   static get properties() {
     return { hass: {}, config: {}, _items: { state: true } };
@@ -299,28 +340,14 @@ class TaskListCard extends LitElement {
                 ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
                 <div class="task-content">
                   ${group.tasks.map((t, index) => {
-        const done = t.status === 'completed';
-        const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
-        const hasSeparator = index < group.tasks.length - 1;
-        const separatorClass = hasSeparator ? 'task-item-separator' : '';
-        const separatorStyle = hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
         return html`
-                        <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${() => this._toggleTask(t)}" style="${separatorStyle}">
-                            <span class="task-name">${t.summary}</span>
-                            ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
-                            ${this.config.show_source ? (() => {
-            const entity = this.hass.states[t.entity_id];
-            if (!entity) return '';
-            const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
-            return html`
-                                    <div class="task-source" style=${style}>
-                                        <ha-icon
-                                            icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon>
-                                        <span>${entity.attributes.friendly_name || t.entity_id}</span>
-                                    </div>
-                                `;
-          })() : ''}
-                        </div>
+                        <task-list-card-item
+                          .hass=${this.hass}
+                          .config=${this.config}
+                          .task=${t}
+                          .hasSeparator=${index < group.tasks.length - 1}
+                          @toggle-task=${(e) => this._toggleTask(e.detail.task)}
+                        ></task-list-card-item>
                       `;
       })}
                 </div>
@@ -401,6 +428,19 @@ class TaskListCard extends LitElement {
       item: task.uid,
       status: newStatus
     });
+
+    const showCompleted = this.config.show_completed !== false;
+
+    if (!showCompleted && newStatus === 'completed') {
+      this._items = this._items.filter(item => item.uid !== task.uid);
+    } else {
+      this._items = this._items.map(item => {
+        if (item.uid === task.uid) {
+          return { ...item, status: newStatus };
+        }
+        return item;
+      });
+    }
   }
 }
 
@@ -409,6 +449,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "task-list-card",
   name: "Task List Card",
-  description: "A simple task list card.",
+  description: "This card will display tasks from a todo list entity, allowing you to see due dates and mark tasks as completed.",
   preview: true
 });
