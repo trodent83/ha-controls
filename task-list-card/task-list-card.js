@@ -3,7 +3,7 @@ const html = LitElement.prototype.html;
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _items: { state: true }, _isLoading: { state: true }, _loadingAction: { state: true } };
+    return { hass: {}, config: {}, _items: { state: true } };
   }
 
   static getConfigElement() {
@@ -41,41 +41,38 @@ class TaskListCard extends LitElement {
       ...config
     };
     this._items = [];
-    this._loadingAction = null;
     this._fetchItems();
   }
 
   _debounceTimer;
 
   updated(changedProps) {
-    if (changedProps.has("hass")) {
-      const entities = this._getEntities();
-      let hasChanged = false;
+    if (!changedProps.has("hass")) { return; }
+    const entities = this._getEntities();
+    let hasChanged = false;
 
-      for (const entityId of entities) {
-        const oldState = changedProps.get("hass")?.states[entityId];
-        const newState = this.hass.states[entityId];
+    for (const entityId of entities) {
+      const oldState = changedProps.get("hass")?.states[entityId];
+      const newState = this.hass.states[entityId];
 
-        if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
-          return;
-        }
-
-        if (!hasChanged && (!oldState || oldState.last_updated !== newState?.last_updated)) {
-          hasChanged = true;
-        }
+      if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
+        return;
       }
 
-      if (hasChanged) {
-        clearTimeout(this._debounceTimer);
-
-        this._debounceTimer = setTimeout(() => {
-          console.groupCollapsed("fetching");
-          console.log("Fetch");
-          this._fetchItems();
-          console.groupEnd();
-        }, 100);
+      if (!hasChanged && (!oldState || oldState.last_updated !== newState?.last_updated)) {
+        hasChanged = true;
       }
     }
+
+    if (!hasChanged) { return; }
+    clearTimeout(this._debounceTimer);
+
+    this._debounceTimer = setTimeout(() => {
+      console.groupCollapsed("fetching");
+      console.log("Fetch");
+      this._fetchItems();
+      console.groupEnd();
+    }, 100);
   }
 
   _getEntities() {
@@ -85,57 +82,51 @@ class TaskListCard extends LitElement {
 
   async _fetchItems() {
     if (!this.hass) return;
-    this._isLoading = true;
-    this._loadingAction = 'refresh';
-    try {
-      const entities = this._getEntities();
-      let allItems = [];
-      for (const entity_id of entities) {
-        if (!this.hass.states[entity_id]) continue;
-        try {
-          const response = await this.hass.callWS({
-            type: "todo/item/list",
-            entity_id
-          });
-          if (response && response.items) {
-            const items = response.items.map(item => ({ ...item, entity_id }));
-            allItems = allItems.concat(items);
-          }
-        } catch (e) {
-          console.error("Error fetching items for", entity_id, e);
-        }
-      }
 
-      const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
-      const showNoDueDate = this.config.show_no_due_date !== false;
-      const showCompleted = this.config.show_completed !== false;
-
-      if (maxDays !== null || !showNoDueDate || !showCompleted) {
-        const cutoff = new Date();
-        if (maxDays !== null) {
-          cutoff.setDate(cutoff.getDate() + maxDays);
-          cutoff.setHours(23, 59, 59, 999);
-        }
-
-        allItems = allItems.filter(item => {
-          if (!showCompleted && item.status === 'completed') return false;
-          if (!item.due) return showNoDueDate;
-          if (maxDays !== null) return new Date(item.due) <= cutoff;
-          return true;
+    const entities = this._getEntities();
+    let allItems = [];
+    for (const entity_id of entities) {
+      if (!this.hass.states[entity_id]) continue;
+      try {
+        const response = await this.hass.callWS({
+          type: "todo/item/list",
+          entity_id
         });
+        if (response && response.items) {
+          const items = response.items.map(item => ({ ...item, entity_id }));
+          allItems = allItems.concat(items);
+        }
+      } catch (e) {
+        console.error("Error fetching items for", entity_id, e);
+      }
+    }
+
+    const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
+    const showNoDueDate = this.config.show_no_due_date !== false;
+    const showCompleted = this.config.show_completed !== false;
+
+    if (maxDays !== null || !showNoDueDate || !showCompleted) {
+      const cutoff = new Date();
+      if (maxDays !== null) {
+        cutoff.setDate(cutoff.getDate() + maxDays);
+        cutoff.setHours(23, 59, 59, 999);
       }
 
-      allItems.sort((a, b) => {
-        if (a.due === b.due) return 0;
-        if (!a.due) return -1;
-        if (!b.due) return 1;
-        return a.due < b.due ? -1 : 1;
+      allItems = allItems.filter(item => {
+        if (!showCompleted && item.status === 'completed') return false;
+        if (!item.due) return showNoDueDate;
+        if (maxDays !== null) return new Date(item.due) <= cutoff;
+        return true;
       });
-      this._items = allItems;
-    } finally {
-      this._isLoading = false;
-      this._loadingAction = null;
     }
+
+    allItems.sort((a, b) => {
+      if (a.due === b.due) return 0;
+      if (!a.due) return -1;
+      if (!b.due) return 1;
+      return a.due < b.due ? -1 : 1;
+    });
+    this._items = allItems;
   }
 
   _formatDate(dateStr) {
@@ -346,26 +337,26 @@ class TaskListCard extends LitElement {
       </ha-card>
           ${this.config.show_delete_completed_button ? html`
           <ha-card>
-            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this._deleteCompletedTasks()}">
+            <div class="tile-button" @click="${() => this._deleteCompletedTasks()}">
               <div class="tile-icon-container">
-                ${this._isLoading && this._loadingAction === 'delete' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:delete-sweep"></ha-icon>`}
+                <ha-icon icon="mdi:delete-sweep"></ha-icon>
               </div>
               <div class="tile-info">
                 <span class="tile-name">Delete Completed</span>
-                <span class="tile-state">${this._isLoading && this._loadingAction === 'delete' ? 'Deleting...' : 'Delete all completed tasks'}</span>
+                <span class="tile-state">Delete all completed tasks</span>
               </div>
             </div>
           </ha-card>
           ` : ''}
           ${this.config.show_refresh_button ? html`
           <ha-card>
-            <div class="tile-button ${this._isLoading ? 'disabled' : ''}" @click="${() => this.updateTodos()}">
+            <div class="tile-button" @click="${() => this.updateTodos()}">
               <div class="tile-icon-container">
-                ${this._isLoading && this._loadingAction === 'refresh' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
+                <ha-icon icon="mdi:refresh"></ha-icon>
               </div>
               <div class="tile-info">
                 <span class="tile-name">Refresh</span>
-                <span class="tile-state">${this._isLoading && this._loadingAction === 'refresh' ? 'Updating...' : 'Update task list'}</span>
+                <span class="tile-state">Update task list</span>
               </div>
             </div>
           </ha-card>
@@ -374,30 +365,22 @@ class TaskListCard extends LitElement {
   }
 
   async updateTodos() {
-    if (!this.hass || this._isLoading) return;
-    this._isLoading = true;
-    this._loadingAction = 'refresh';
+    if (!this.hass) return;
 
     const entityIds = this._getEntities();
     if (entityIds.length === 0) return;
 
-    // Erzwingt ein Update der Entitäten im Hintergrund
     try {
       await this.hass.callService("homeassistant", "reload_config_entry", {
         entity_id: entityIds
       });
     } catch (e) {
       console.error("Error updating todo entities", e);
-    } finally {
-      this._isLoading = false;
-      this._loadingAction = null;
     }
   }
 
   async _deleteCompletedTasks() {
-    if (!this.hass || this._isLoading) return;
-    this._isLoading = true;
-    this._loadingAction = 'delete';
+    if (!this.hass) return;
 
     const entityIds = this._getEntities();
     if (entityIds.length === 0) return;
@@ -408,9 +391,6 @@ class TaskListCard extends LitElement {
       });
     } catch (e) {
       console.error("Error deleting completed tasks", e);
-    } finally {
-      this._isLoading = false;
-      this._loadingAction = null;
     }
   }
 
