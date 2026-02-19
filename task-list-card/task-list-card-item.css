@@ -7,7 +7,6 @@
 }
 
 .task-item.done .task-name {
-  text-decoration: line-through;
   opacity: 0.6;
 }
 
@@ -20,6 +19,22 @@
 
 .task-name {
   font-weight: bold;
+  position: relative;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.task-name::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.2s ease-in-out;
+}
+.task-item.done .task-name::after {
+  width: 100%;
 }
 
 .task-description {
