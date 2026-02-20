@@ -3,8 +3,8 @@
  * Injects CSS and additional JS into the document head.
  */
 
-const VERSION = "0.3.1";
-const SCRIPT_NAME = "task-list-loader.js";
+const VERSION = "0.3.2";
+const SCRIPT_NAME = "task-list-card-loader.js";
 
 // Dynamically determine the base path from the script tag loading this file
 const scriptElement = document.querySelector(`script[src*="${SCRIPT_NAME}"]`);
