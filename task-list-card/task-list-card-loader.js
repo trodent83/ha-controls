@@ -3,7 +3,7 @@
  * Injects CSS and additional JS into the document head.
  */
 
-const VERSION = "0.3.2";
+const VERSION = "0.3.5";
 const SCRIPT_NAME = "task-list-card-loader.js";
 
 // Dynamically determine the base path from the script tag loading this file
@@ -37,6 +37,6 @@ function loadJS(fileName) {
 
 // Execute loads
 ["task-list-card.css", "task-list-card-item.css", "task-list-card-editor.css"].forEach(loadCSS);
-["task-list-card.js", "task-list-card-item.js", "task-list-card-editor.js"].forEach(loadJS);
+["task-list-card.js", "task-list-card-item.js", "task-list-card-row.js", "task-list-card-editor.js"].forEach(loadJS);
 
 console.info(`%c ${SCRIPT_NAME} %c Version ${VERSION} loaded `, "color: white; background: #03a9f4; font-weight: 700;", "color: #03a9f4; background: white; font-weight: 700;");
