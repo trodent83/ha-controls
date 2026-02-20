@@ -1,47 +1,6 @@
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 
-class TaskListCardItem extends LitElement {
-  static get properties() {
-    return {
-      hass: { attribute: false },
-      config: { attribute: false },
-      task: { attribute: false },
-      hasSeparator: { type: Boolean }
-    };
-  }
-
-  _toggle() {
-    this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
-  }
-
-  render() {
-    if (!this.task || !this.config || !this.hass) return html``;
-
-    const t = this.task;
-    const done = t.status === 'completed';
-    const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
-    const separatorClass = this.hasSeparator ? 'task-item-separator' : '';
-    const separatorStyle = this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '';
-
-    return html`
-      <style>:host { display: block; }</style>
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.19">
-      <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${this._toggle}" style="${separatorStyle}">
-        <span class="task-name">${t.summary}</span>
-        ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
-        ${this.config.show_source ? (() => {
-          const entity = this.hass.states[t.entity_id];
-          if (!entity) return '';
-          const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
-          return html`<div class="task-source" style=${style}><ha-icon icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon><span>${entity.attributes.friendly_name || t.entity_id}</span></div>`;
-        })() : ''}
-      </div>
-    `;
-  }
-}
-customElements.define("task-list-card-item", TaskListCardItem);
-
 class TaskListCard extends LitElement {
   static get properties() {
     return { hass: {}, config: {}, _items: { state: true } };
@@ -109,11 +68,9 @@ class TaskListCard extends LitElement {
     clearTimeout(this._debounceTimer);
 
     this._debounceTimer = setTimeout(() => {
-      console.groupCollapsed("fetching");
-      console.log("Fetch");
       this._fetchItems();
       console.groupEnd();
-    }, 100);
+    }, 250);
   }
 
   _getEntities() {
@@ -272,7 +229,7 @@ class TaskListCard extends LitElement {
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=0.1.19">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css">
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">

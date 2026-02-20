@@ -99,7 +99,7 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=0.0.48">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css">
       <div class="card-config">
         <div class="options">
             <ha-textfield
