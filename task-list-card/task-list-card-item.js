@@ -19,13 +19,9 @@ class TaskListCardItem extends LitElement {
     if (!this.task || !this.config || !this.hass) return html``;
 
     const t = this.task;
-    const done = t.status === 'completed';
+    const done = t.isCompleted;
     
-    const showCompleted = this.config.show_completed !== false;
-    const showNoDueDate = this.config.show_no_due_date !== false;
-    let hidden = false;
-    if (!showCompleted && done) hidden = true;
-    if (!showNoDueDate && !t.due) hidden = true;
+    let hidden = !t.isVisible;
 
     const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
     const separatorClass = this.hasSeparator ? 'task-item-separator' : '';

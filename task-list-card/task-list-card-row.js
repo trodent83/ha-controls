@@ -6,7 +6,7 @@ class TaskListCardRow extends LitElement {
     return {
       hass: { attribute: false },
       config: { attribute: false },
-      tasks: { attribute: false }
+      day: { attribute: false }
     };
   }
 
@@ -33,26 +33,10 @@ class TaskListCardRow extends LitElement {
     };
   }
 
-  _getDiffDays(task) {
-    if (!task.due) return null;
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    let taskDate;
-    if (task.due.length === 10) {
-      const [year, month, day] = task.due.split('-').map(Number);
-      taskDate = new Date(Date.UTC(year, month - 1, day));
-    } else {
-      const d = new Date(task.due);
-      taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    }
-    const diffTime = taskDate - today;
-    return Math.round(diffTime / (1000 * 60 * 60 * 24));
-  }
+  _getDueDateColor() {
+    if (this.day.date === 'no-date' || this.day.allCompleted) return undefined;
 
-  _getDueDateColor(task) {
-    if (!task.due || task.status === 'completed') return undefined;
-
-    const diffDays = this._getDiffDays(task);
+    const diffDays = this.day.diffDays;
 
     const colors = this.config.due_date_colors;
     if (colors && colors.length) {
@@ -86,26 +70,18 @@ class TaskListCardRow extends LitElement {
   }
 
   render() {
-    if (!this.tasks || !this.config || !this.hass) return html``;
+    if (!this.day || !this.config || !this.hass) return html``;
 
-    const showCompleted = this.config.show_completed !== false;
-    const showNoDueDate = this.config.show_no_due_date !== false;
-    const isVisible = (task) => {
-      if (!showCompleted && task.status === 'completed') return false;
-      if (!showNoDueDate && !task.due) return false;
-      return true;
-    };
-    const hasVisibleTasks = this.tasks.some(isVisible);
-    const rowStyle = hasVisibleTasks ? '' : 'display: none;';
+    const rowStyle = this.day.isVisible ? '' : 'display: none;';
 
-    const task = this.tasks[0];
-    const dateParts = this._formatDate(task.due);
-    const dateColor = this._getDueDateColor(task);
+    const dateParts = this._formatDate(this.day.date);
+    const dateColor = this._getDueDateColor();
     const separatorColor = this.config.date_separator_color || 'transparent';
     const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
 
     let dueInDaysText = '';
-    const diffDays = this._getDiffDays(task);
+    const diffDays = this.day.diffDays;
+
     if (diffDays !== null) {
       if (diffDays === 0) dueInDaysText = 'Today';
       else if (diffDays === 1) dueInDaysText = 'Tomorrow';
@@ -114,11 +90,12 @@ class TaskListCardRow extends LitElement {
       else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
     }
 
-    const hasNextVisibleArray = new Array(this.tasks.length).fill(false);
+    const tasks = this.day.tasks;
+    const hasNextVisibleArray = new Array(tasks.length).fill(false);
     let nextTaskIsVisible = false;
-    for (let i = this.tasks.length - 1; i >= 0; i--) {
+    for (let i = tasks.length - 1; i >= 0; i--) {
       hasNextVisibleArray[i] = nextTaskIsVisible;
-      if (isVisible(this.tasks[i])) {
+      if (tasks[i].isVisible) {
         nextTaskIsVisible = true;
       }
     }
@@ -133,7 +110,7 @@ class TaskListCardRow extends LitElement {
             </div>
         ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
         <div class="task-content">
-          ${this.tasks.map((t, index) => {
+          ${tasks.map((t, index) => {
             return html`
                 <task-list-card-item
                   .hass=${this.hass}

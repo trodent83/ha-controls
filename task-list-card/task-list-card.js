@@ -1,6 +1,9 @@
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 
+import { Task } from "./task-list-dto-task.js";
+import { Day } from "./task-list-dto-day.js";
+
 class TaskListCard extends LitElement {
   static get properties() {
     return { hass: {}, config: {}, _items: { state: true }, _groups: { state: true } };
@@ -118,13 +121,15 @@ class TaskListCard extends LitElement {
       });
     }
 
-    allItems.sort((a, b) => {
+    const taskObjects = allItems.map(item => new Task(item, this.config));
+
+    taskObjects.sort((a, b) => {
       if (a.due === b.due) return 0;
       if (!a.due) return -1;
       if (!b.due) return 1;
       return a.due < b.due ? -1 : 1;
     });
-    this._items = allItems;
+    this._items = taskObjects;
 
     const groups = [];
 
@@ -134,13 +139,13 @@ class TaskListCard extends LitElement {
         if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
           groups[groups.length - 1].tasks.push(task);
         } else {
-          groups.push({ date: taskDate, tasks: [task] });
+          groups.push(new Day(taskDate, [task]));
         }
       });
     } else {
       this._items.forEach(task => {
         const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
-        groups.push({ date: taskDate, tasks: [task] });
+        groups.push(new Day(taskDate, [task]));
       });
     }
     this._groups = groups;
@@ -210,7 +215,7 @@ class TaskListCard extends LitElement {
               <task-list-card-row
                 .hass=${this.hass}
                 .config=${this.config}
-                .tasks=${group.tasks}
+                .day=${group}
                 @toggle-task=${(e) => this._toggleTask(e.detail.task)}
               ></task-list-card-row>
             `;
@@ -280,12 +285,8 @@ class TaskListCard extends LitElement {
   async _toggleTask(task) {
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
 
-    this._items = this._items.map(item => {
-      if (item.uid === task.uid) {
-        return { ...item, status: newStatus };
-      }
-      return item;
-    });
+    task.status = newStatus;
+    this.requestUpdate();
 
     try {
       await this.hass.callService("todo", "update_item", {
