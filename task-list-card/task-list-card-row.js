@@ -88,6 +88,16 @@ class TaskListCardRow extends LitElement {
   render() {
     if (!this.tasks || !this.config || !this.hass) return html``;
 
+    const showCompleted = this.config.show_completed !== false;
+    const showNoDueDate = this.config.show_no_due_date !== false;
+    const isVisible = (task) => {
+      if (!showCompleted && task.status === 'completed') return false;
+      if (!showNoDueDate && !task.due) return false;
+      return true;
+    };
+    const hasVisibleTasks = this.tasks.some(isVisible);
+    const rowStyle = hasVisibleTasks ? '' : 'display: none;';
+
     const task = this.tasks[0];
     const dateParts = this._formatDate(task.due);
     const dateColor = this._getDueDateColor(task);
@@ -104,8 +114,17 @@ class TaskListCardRow extends LitElement {
       else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
     }
 
+    const hasNextVisibleArray = new Array(this.tasks.length).fill(false);
+    let nextTaskIsVisible = false;
+    for (let i = this.tasks.length - 1; i >= 0; i--) {
+      hasNextVisibleArray[i] = nextTaskIsVisible;
+      if (isVisible(this.tasks[i])) {
+        nextTaskIsVisible = true;
+      }
+    }
+
     return html`
-      <div class="task-row">
+      <div class="task-row" style="${rowStyle}">
         ${this.config.show_due_date ? (dateParts ? html`
             <div class="task-date" style="${dateStyle}">
                 <div class="weekday">${dateParts.weekday}</div>
@@ -120,7 +139,7 @@ class TaskListCardRow extends LitElement {
                   .hass=${this.hass}
                   .config=${this.config}
                   .task=${t}
-                  .hasSeparator=${index < this.tasks.length - 1}
+                  .hasSeparator=${hasNextVisibleArray[index]}
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
                 ></task-list-card-item>
               `;

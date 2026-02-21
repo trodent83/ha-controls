@@ -3,7 +3,7 @@ const html = LitElement.prototype.html;
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _items: { state: true } };
+    return { hass: {}, config: {}, _items: { state: true }, _groups: { state: true } };
   }
 
   static getConfigElement() {
@@ -41,6 +41,7 @@ class TaskListCard extends LitElement {
       ...config
     };
     this._items = [];
+    this._groups = [];
     this._fetchItems();
   }
 
@@ -70,7 +71,7 @@ class TaskListCard extends LitElement {
     this._debounceTimer = setTimeout(() => {
       this._fetchItems();
       console.groupEnd();
-    }, 250);
+    }, 500);
   }
 
   _getEntities() {
@@ -78,11 +79,10 @@ class TaskListCard extends LitElement {
       .map(e => (typeof e === 'object' ? e.entity : e));
   }
 
-  async _fetchItems() {
+  async *_fetchItemsGenerator() {
     if (!this.hass) return;
 
     const entities = this._getEntities();
-    let allItems = [];
     for (const entity_id of entities) {
       if (!this.hass.states[entity_id]) continue;
       try {
@@ -91,29 +91,29 @@ class TaskListCard extends LitElement {
           entity_id
         });
         if (response && response.items) {
-          const items = response.items.map(item => ({ ...item, entity_id }));
-          allItems = allItems.concat(items);
+          yield response.items.map(item => ({ ...item, entity_id }));
         }
       } catch (e) {
         console.error("Error fetching items for", entity_id, e);
       }
     }
+  }
+
+  async _fetchItems() {
+    let allItems = [];
+    for await (const items of this._fetchItemsGenerator()) {
+      allItems = allItems.concat(items);
+    }
 
     const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
-    const showNoDueDate = this.config.show_no_due_date !== false;
-    const showCompleted = this.config.show_completed !== false;
 
-    if (maxDays !== null || !showNoDueDate || !showCompleted) {
+    if (maxDays !== null) {
       const cutoff = new Date();
-      if (maxDays !== null) {
-        cutoff.setDate(cutoff.getDate() + maxDays);
-        cutoff.setHours(23, 59, 59, 999);
-      }
+      cutoff.setDate(cutoff.getDate() + maxDays);
+      cutoff.setHours(23, 59, 59, 999);
 
       allItems = allItems.filter(item => {
-        if (!showCompleted && item.status === 'completed') return false;
-        if (!item.due) return showNoDueDate;
-        if (maxDays !== null) return new Date(item.due) <= cutoff;
+        if (maxDays !== null && item.due) return new Date(item.due) <= cutoff;
         return true;
       });
     }
@@ -125,22 +125,7 @@ class TaskListCard extends LitElement {
       return a.due < b.due ? -1 : 1;
     });
     this._items = allItems;
-  }
 
-  _getWeek(date) {
-    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const year = d.getUTCFullYear();
-    const yearStart = new Date(Date.UTC(year, 0, 1));
-    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return `${year}-${week}`;
-  }
-
-  render() {
-    if (!this.config || !this.hass) return html``;
-
-    let lastDate = null;
     const groups = [];
 
     if (this.config.merge_tasks_same_day) {
@@ -158,6 +143,24 @@ class TaskListCard extends LitElement {
         groups.push({ date: taskDate, tasks: [task] });
       });
     }
+    this._groups = groups;
+  }
+
+  _getWeek(date) {
+    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const year = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${year}-${week}`;
+  }
+
+  render() {
+    if (!this.config || !this.hass) return html``;
+
+    let lastDate = null;
+    const groups = this._groups || [];
 
     const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
@@ -212,7 +215,7 @@ class TaskListCard extends LitElement {
               ></task-list-card-row>
             `;
     })}
-          ${this._items.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
+          ${groups.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
         </div>
       </ha-card>
           ${this.config.show_delete_completed_button ? html`
@@ -274,25 +277,24 @@ class TaskListCard extends LitElement {
     }
   }
 
-  _toggleTask(task) {
+  async _toggleTask(task) {
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
-    this.hass.callService("todo", "update_item", {
-      entity_id: task.entity_id,
-      item: task.uid,
-      status: newStatus
+
+    this._items = this._items.map(item => {
+      if (item.uid === task.uid) {
+        return { ...item, status: newStatus };
+      }
+      return item;
     });
 
-    const showCompleted = this.config.show_completed !== false;
-
-    if (!showCompleted && newStatus === 'completed') {
-      this._items = this._items.filter(item => item.uid !== task.uid);
-    } else {
-      this._items = this._items.map(item => {
-        if (item.uid === task.uid) {
-          return { ...item, status: newStatus };
-        }
-        return item;
+    try {
+      await this.hass.callService("todo", "update_item", {
+        entity_id: task.entity_id,
+        item: task.uid,
+        status: newStatus
       });
+    } catch (e) {
+      console.error("Error updating task status", e);
     }
   }
 }
