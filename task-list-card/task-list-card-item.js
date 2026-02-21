@@ -11,6 +11,10 @@ class TaskListCardItem extends LitElement {
     };
   }
 
+  updateTask() {
+    this.requestUpdate();
+  }
+
   _toggle() {
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }

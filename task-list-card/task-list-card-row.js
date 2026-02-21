@@ -65,6 +65,16 @@ class TaskListCardRow extends LitElement {
     return this.config.default_due_date_color;
   }
 
+  updateTask(task) {
+    this.requestUpdate();
+    const items = this.querySelectorAll('task-list-card-item');
+    for (const item of items) {
+      if (item.task === task) {
+        item.updateTask();
+      }
+    }
+  }
+
   _toggleTask(task) {
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task } }));
   }

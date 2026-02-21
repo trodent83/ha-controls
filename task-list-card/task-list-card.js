@@ -6,7 +6,7 @@ import { Day } from "./task-list-dto-day.js";
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _items: { state: true }, _groups: { state: true } };
+    return { hass: {}, config: {}, _groups: { state: true } };
   }
 
   static getConfigElement() {
@@ -43,12 +43,50 @@ class TaskListCard extends LitElement {
       icon: 'mdi:calendar-check',
       ...config
     };
-    this._items = [];
     this._groups = [];
+    this._toggledItems = [];
     this._fetchItems();
   }
 
   _debounceTimer;
+  _toggledItems = [];
+
+  shouldUpdate(changedProps) {
+    if (!changedProps.has("hass")) {
+      return true;
+    }
+
+    const entities = this._getEntities();
+    let hasChanged = false;
+    let ignoredCount = 0;
+    let changeCount = 0;
+
+    for (const entityId of entities) {
+      const oldState = changedProps.get("hass")?.states[entityId];
+      const newState = this.hass.states[entityId];
+
+      if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
+        continue;
+      }
+
+      if (oldState && oldState.last_updated !== newState?.last_updated) {
+        hasChanged = true;
+        changeCount++;
+
+        const idx = this._toggledItems.findIndex(i => i.entity_id === entityId);
+        if (idx !== -1) {
+          this._toggledItems.splice(idx, 1);
+          ignoredCount++;
+        }
+      }
+    }
+
+    if (hasChanged && changeCount === ignoredCount) {
+      return false;
+    }
+
+    return true;
+  }
 
   updated(changedProps) {
     if (!changedProps.has("hass")) { return; }
@@ -129,12 +167,11 @@ class TaskListCard extends LitElement {
       if (!b.due) return 1;
       return a.due < b.due ? -1 : 1;
     });
-    this._items = taskObjects;
 
     const groups = [];
 
     if (this.config.merge_tasks_same_day) {
-      this._items.forEach(task => {
+      taskObjects.forEach(task => {
         const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
         if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
           groups[groups.length - 1].tasks.push(task);
@@ -143,7 +180,7 @@ class TaskListCard extends LitElement {
         }
       });
     } else {
-      this._items.forEach(task => {
+      taskObjects.forEach(task => {
         const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
         groups.push(new Day(taskDate, [task]));
       });
@@ -283,10 +320,28 @@ class TaskListCard extends LitElement {
   }
 
   async _toggleTask(task) {
+    this._toggledItems.push({ uid: task.uid, entity_id: task.entity_id });
+    const oldStatus = task.status;
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
 
+    const wasVisible = task.isVisible;
     task.status = newStatus;
-    this.requestUpdate();
+    const isVisible = task.isVisible;
+
+    // Always update the specific row and item to ensure UI reflects state change
+    // (Lit might skip update if object reference 'day' hasn't changed)
+    const rows = this.shadowRoot.querySelectorAll('task-list-card-row');
+    for (const row of rows) {
+      if (row.day && row.day.tasks.includes(task)) {
+        row.updateTask(task);
+        break;
+      }
+    }
+
+    // Only re-render the whole card if visibility changed (e.g. item needs to be hidden/shown)
+    if (wasVisible !== isVisible) {
+      this.requestUpdate();
+    }
 
     try {
       await this.hass.callService("todo", "update_item", {
@@ -296,6 +351,8 @@ class TaskListCard extends LitElement {
       });
     } catch (e) {
       console.error("Error updating task status", e);
+      task.status = oldStatus;
+      this.requestUpdate();
     }
   }
 }
