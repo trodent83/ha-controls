@@ -205,8 +205,6 @@ class TaskListCard extends LitElement {
     let lastDate = null;
     const groups = this._groups || [];
 
-    const taskCount = groups.reduce((total, group) => total + group.tasks.length, 0);
-
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css">
       <ha-card>
@@ -216,12 +214,6 @@ class TaskListCard extends LitElement {
               ${this.config.icon ? html`<ha-icon class="header-icon" icon="${this.config.icon}"></ha-icon>` : ""}
               ${this.config.title}
             </div>
-            ${taskCount > 0 ? html`
-              <div class="task-count-badge">
-                <ha-icon icon="mdi:calendar-check-outline"></ha-icon>
-                <span>${taskCount}</span>
-              </div>
-            ` : ""}
           </div>
         ` : ""}
         <div class="task-list">

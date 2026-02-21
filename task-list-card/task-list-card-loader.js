@@ -3,7 +3,7 @@
  * Injects CSS and additional JS into the document head.
  */
 
-const VERSION = "0.3.10";
+const VERSION = "0.3.13";
 const SCRIPT_NAME = "task-list-card-loader.js";
 
 // Dynamically determine the base path from the script tag loading this file
