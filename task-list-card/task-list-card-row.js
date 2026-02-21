@@ -6,7 +6,8 @@ class TaskListCardRow extends LitElement {
     return {
       hass: { attribute: false },
       config: { attribute: false },
-      day: { attribute: false }
+      day: { attribute: false },
+      readonly: { type: Boolean }
     };
   }
 
@@ -127,6 +128,7 @@ class TaskListCardRow extends LitElement {
                   .config=${this.config}
                   .task=${t}
                   .hasSeparator=${hasNextVisibleArray[index]}
+                  .readonly=${this.readonly}
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
                 ></task-list-card-item>
               `;

@@ -7,7 +7,8 @@ class TaskListCardItem extends LitElement {
       hass: { attribute: false },
       config: { attribute: false },
       task: { attribute: false },
-      hasSeparator: { type: Boolean }
+      hasSeparator: { type: Boolean },
+      readonly: { type: Boolean }
     };
   }
 
@@ -16,6 +17,7 @@ class TaskListCardItem extends LitElement {
   }
 
   _toggle() {
+    if (this.readonly) return;
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }
 
@@ -32,9 +34,15 @@ class TaskListCardItem extends LitElement {
     const separatorStyle = (this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '') + (hidden ? 'display: none;' : '');
 
     return html`
-      <style>:host { display: block; }</style>
+      <style>
+        :host { display: block; }
+        .task-item.readonly {
+          opacity: 0.5;
+          cursor: default;
+        }
+      </style>
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css">
-      <div class="task-item ${done ? 'done' : ''} ${separatorClass}" @click="${this._toggle}" style="${separatorStyle}">
+      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${this.readonly ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
         ${this.config.show_source ? (() => {

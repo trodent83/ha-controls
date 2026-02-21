@@ -6,7 +6,7 @@ import { Day } from "./task-list-dto-day.js";
 
 class TaskListCard extends LitElement {
   static get properties() {
-    return { hass: {}, config: {}, _groups: { state: true } };
+    return { hass: {}, config: {}, _groups: { state: true }, _processing: { state: true } };
   }
 
   static getConfigElement() {
@@ -45,6 +45,7 @@ class TaskListCard extends LitElement {
     };
     this._groups = [];
     this._toggledItems = [];
+    this._processing = null;
     this._fetchItems();
   }
 
@@ -253,6 +254,7 @@ class TaskListCard extends LitElement {
                 .hass=${this.hass}
                 .config=${this.config}
                 .day=${group}
+                .readonly=${!!this._processing}
                 @toggle-task=${(e) => this._toggleTask(e.detail.task)}
               ></task-list-card-row>
             `;
@@ -264,7 +266,7 @@ class TaskListCard extends LitElement {
           <ha-card>
             <div class="tile-button" @click="${() => this._deleteCompletedTasks()}">
               <div class="tile-icon-container">
-                <ha-icon icon="mdi:delete-sweep"></ha-icon>
+                ${this._processing === 'delete' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:delete-sweep"></ha-icon>`}
               </div>
               <div class="tile-info">
                 <span class="tile-name">Delete Completed</span>
@@ -277,7 +279,7 @@ class TaskListCard extends LitElement {
           <ha-card>
             <div class="tile-button" @click="${() => this.updateTodos()}">
               <div class="tile-icon-container">
-                <ha-icon icon="mdi:refresh"></ha-icon>
+                ${this._processing === 'refresh' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
               </div>
               <div class="tile-info">
                 <span class="tile-name">Refresh</span>
@@ -290,10 +292,14 @@ class TaskListCard extends LitElement {
   }
 
   async updateTodos() {
-    if (!this.hass) return;
+    if (!this.hass || this._processing) return;
+    this._processing = 'refresh';
 
     const entityIds = this._getEntities();
-    if (entityIds.length === 0) return;
+    if (entityIds.length === 0) {
+      this._processing = null;
+      return;
+    }
 
     try {
       await this.hass.callService("homeassistant", "reload_config_entry", {
@@ -301,14 +307,20 @@ class TaskListCard extends LitElement {
       });
     } catch (e) {
       console.error("Error updating todo entities", e);
+    } finally {
+      this._processing = null;
     }
   }
 
   async _deleteCompletedTasks() {
-    if (!this.hass) return;
+    if (!this.hass || this._processing) return;
+    this._processing = 'delete';
 
     const entityIds = this._getEntities();
-    if (entityIds.length === 0) return;
+    if (entityIds.length === 0) {
+      this._processing = null;
+      return;
+    }
 
     try {
       await this.hass.callService("todo", "remove_completed_items", {
@@ -316,10 +328,14 @@ class TaskListCard extends LitElement {
       });
     } catch (e) {
       console.error("Error deleting completed tasks", e);
+    } finally {
+      this._processing = null;
+      this.requestUpdate();
     }
   }
 
   async _toggleTask(task) {
+    if (this._processing) return;
     this._toggledItems.push({ uid: task.uid, entity_id: task.entity_id });
     const oldStatus = task.status;
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
