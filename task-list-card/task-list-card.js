@@ -207,6 +207,12 @@ class TaskListCard extends LitElement {
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css">
+      <style>
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      </style>
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -258,7 +264,7 @@ class TaskListCard extends LitElement {
           <ha-card>
             <div class="tile-button" @click="${() => this._deleteCompletedTasks()}">
               <div class="tile-icon-container">
-                ${this._processing === 'delete' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:delete-sweep"></ha-icon>`}
+                <ha-icon icon="${this._processing === 'delete' ? 'mdi:refresh' : 'mdi:delete-sweep'}" class="${this._processing === 'delete' ? 'spinning' : ''}"></ha-icon>
               </div>
               <div class="tile-info">
                 <span class="tile-name">Delete Completed</span>
@@ -271,7 +277,7 @@ class TaskListCard extends LitElement {
           <ha-card>
             <div class="tile-button" @click="${() => this.updateTodos()}">
               <div class="tile-icon-container">
-                ${this._processing === 'refresh' ? html`<ha-circular-progress active size="small"></ha-circular-progress>` : html`<ha-icon icon="mdi:refresh"></ha-icon>`}
+                <ha-icon icon="mdi:refresh" class="${this._processing === 'refresh' ? 'spinning' : ''}"></ha-icon>
               </div>
               <div class="tile-info">
                 <span class="tile-name">Refresh</span>
@@ -286,10 +292,12 @@ class TaskListCard extends LitElement {
   async updateTodos() {
     if (!this.hass || this._processing) return;
     this._processing = 'refresh';
+    this.requestUpdate();
 
     const entityIds = this._getEntities();
     if (entityIds.length === 0) {
       this._processing = null;
+      this.requestUpdate();
       return;
     }
 
@@ -301,21 +309,27 @@ class TaskListCard extends LitElement {
       console.error("Error updating todo entities", e);
     } finally {
       this._processing = null;
+      this.requestUpdate();
     }
   }
 
   async _deleteCompletedTasks() {
     if (!this.hass || this._processing) return;
     this._processing = 'delete';
+    this.requestUpdate();
 
     const entityIds = this._getEntities();
     if (entityIds.length === 0) {
       this._processing = null;
+      this.requestUpdate();
       return;
     }
 
     try {
       await this.hass.callService("todo", "remove_completed_items", {
+        entity_id: entityIds
+      });
+      await this.hass.callService("homeassistant", "reload_config_entry", {
         entity_id: entityIds
       });
     } catch (e) {
