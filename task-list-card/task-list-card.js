@@ -124,8 +124,9 @@ class TaskListCard extends LitElement {
   async *_fetchItemsGenerator() {
     if (!this.hass) return;
 
-    const entities = this._getEntities();
-    for (const entity_id of entities) {
+    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
+    for (const entityConf of entities) {
+      const entity_id = typeof entityConf === 'object' ? entityConf.entity : entityConf;
       if (!this.hass.states[entity_id]) continue;
       try {
         const response = await this.hass.callWS({
@@ -133,7 +134,31 @@ class TaskListCard extends LitElement {
           entity_id
         });
         if (response && response.items) {
-          yield response.items.map(item => ({ ...item, entity_id }));
+          let items = response.items;
+          if (typeof entityConf === 'object') {
+            const filters = [];
+            if (entityConf.filters) {
+              filters.push(...entityConf.filters);
+            }
+            if (entityConf.filter) {
+              filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
+            }
+
+            if (filters.length > 0) {
+              items = items.filter(item => {
+                return !filters.some(filter => {
+                  try {
+                    const flags = filter.case_sensitive === false ? 'i' : '';
+                    return new RegExp(filter.pattern, flags).test(item.summary || '');
+                  } catch (e) {
+                    console.warn(`Invalid regex filter for ${entity_id}: ${filter.pattern}`);
+                    return false;
+                  }
+                });
+              });
+            }
+          }
+          yield items.map(item => ({ ...item, entity_id }));
         }
       } catch (e) {
         console.error("Error fetching items for", entity_id, e);

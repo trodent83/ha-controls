@@ -34,7 +34,12 @@ class TaskListCardEditor extends LitElement {
 
   _entityChanged(ev, index) {
     const entities = this._getEntities();
-    entities[index] = ev.detail.value;
+    const newValue = ev.detail.value;
+    if (typeof entities[index] === 'object') {
+      entities[index] = { ...entities[index], entity: newValue };
+    } else {
+      entities[index] = newValue;
+    }
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -44,6 +49,59 @@ class TaskListCardEditor extends LitElement {
     entities.push("");
     this._config = { ...this._config, entities };
       this._fireConfigChanged();
+  }
+
+  _addFilter(index) {
+    const entities = this._getEntities();
+    let entityConf = typeof entities[index] === 'object' ? { ...entities[index] } : { entity: entities[index] };
+    
+    if (!entityConf.filters) {
+      entityConf.filters = [];
+      if (entityConf.filter) {
+        entityConf.filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
+        delete entityConf.filter;
+        delete entityConf.case_sensitive;
+      }
+    }
+    entityConf.filters.push({ pattern: '', case_sensitive: true });
+    entities[index] = entityConf;
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
+  _removeFilter(entityIndex, filterIndex) {
+    const entities = this._getEntities();
+    let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
+    
+    if (entityConf.filters) {
+      entityConf.filters.splice(filterIndex, 1);
+    } else if (entityConf.filter && filterIndex === 0) {
+      delete entityConf.filter;
+      delete entityConf.case_sensitive;
+    }
+    
+    entities[entityIndex] = entityConf;
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
+  _filterChanged(ev, entityIndex, filterIndex, prop) {
+    const entities = this._getEntities();
+    let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
+    
+    if (!entityConf.filters) {
+      entityConf.filters = [];
+      if (entityConf.filter) {
+        entityConf.filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
+        delete entityConf.filter;
+        delete entityConf.case_sensitive;
+      }
+    }
+    
+    entityConf.filters[filterIndex] = { ...entityConf.filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
+    entities[entityIndex] = entityConf;
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
   }
 
   _removeEntity(index) {
@@ -100,6 +158,27 @@ class TaskListCardEditor extends LitElement {
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css">
+      <style>
+        .entity-row-container {
+          border: 1px solid var(--divider-color);
+          border-radius: 4px;
+          padding: 8px;
+          margin-bottom: 8px;
+        }
+        .filter-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .filters-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-top: 8px;
+          padding-top: 8px;
+          border-top: 1px solid var(--divider-color);
+        }
+      </style>
       <div class="card-config">
         <div class="options">
             <ha-textfield
@@ -155,19 +234,54 @@ class TaskListCardEditor extends LitElement {
 
         <ha-expansion-panel header="Entities" outlined expanded class="panel">
           <div class="entities-list">
-            ${entities.map((entity, index) => html`
-              <div class="entity-row">
-                <ha-entity-picker
-                  .hass="${this.hass}"
-                  .value="${entity}"
-                  .includeDomains="${['todo']}"
-                  @value-changed="${(e) => this._entityChanged(e, index)}"
-                ></ha-entity-picker>
-                <ha-icon-button
-                  @click="${() => this._removeEntity(index)}"
-                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            ${entities.map((entityConf, index) => {
+              const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
+              let filters = [];
+              if (typeof entityConf === 'object') {
+                if (entityConf.filters) {
+                  filters = entityConf.filters;
+                } else if (entityConf.filter) {
+                  filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+                }
+              }
+
+              return html`
+              <div class="entity-row-container">
+                <div class="entity-row">
+                  <ha-entity-picker
+                    .hass="${this.hass}"
+                    .value="${entityId}"
+                    .includeDomains="${['todo']}"
+                    @value-changed="${(e) => this._entityChanged(e, index)}"
+                  ></ha-entity-picker>
+                  <ha-icon-button
+                    @click="${() => this._removeEntity(index)}"
+                  ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                </div>
+                <div class="filters-list">
+                  ${filters.map((filter, filterIndex) => html`
+                    <div class="filter-row">
+                      <ha-textfield
+                        label="Filter (Regex)"
+                        .value="${filter.pattern || ''}"
+                        @input="${(e) => this._filterChanged(e, index, filterIndex, 'pattern')}"
+                        style="flex-grow: 1;"
+                      ></ha-textfield>
+                      <ha-formfield label="Case Sensitive">
+                        <ha-switch
+                          .checked="${filter.case_sensitive !== false}"
+                          @change="${(e) => this._filterChanged(e, index, filterIndex, 'case_sensitive')}"
+                        ></ha-switch>
+                      </ha-formfield>
+                      <ha-icon-button
+                        @click="${() => this._removeFilter(index, filterIndex)}"
+                      ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
+                    </div>
+                  `)}
+                  <ha-button @click="${() => this._addFilter(index)}">Add Filter</ha-button>
+                </div>
               </div>
-            `)}
+            `})}
             <div class="add-button">
               <ha-button raised @click="${this._addEntity}">
                 <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
