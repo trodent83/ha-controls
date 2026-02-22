@@ -225,6 +225,25 @@ class TaskListCard extends LitElement {
     return `${year}-${week}`;
   }
 
+  _shouldShowSeparator(lastDate, taskDate) {
+    if (!this.config.day_separator_color || !lastDate || lastDate === taskDate) {
+      return false;
+    }
+    const mode = this.config.separator_mode || 'day';
+    if (lastDate === 'no-date' || taskDate === 'no-date') {
+      return true;
+    } else if (mode === 'day') {
+      return true;
+    } else if (mode === 'month') {
+      return lastDate.substring(0, 7) !== taskDate.substring(0, 7);
+    } else if (mode === 'week') {
+      const d1 = new Date(lastDate);
+      const d2 = new Date(taskDate);
+      return this._getWeek(d1) !== this._getWeek(d2);
+    }
+    return false;
+  }
+
   render() {
     if (!this.config || !this.hass) return html``;
 
@@ -250,26 +269,10 @@ class TaskListCard extends LitElement {
         ` : ""}
         <div class="task-list">
           ${groups.map((group) => {
-      let daySeparator = html``;
       const taskDate = group.date;
-      if (this.config.day_separator_color && lastDate && lastDate !== taskDate) {
-        let showSeparator = false;
-        const mode = this.config.separator_mode || 'day';
-        if (lastDate === 'no-date' || taskDate === 'no-date') {
-          showSeparator = true;
-        } else if (mode === 'day') {
-          showSeparator = true;
-        } else if (mode === 'month') {
-          showSeparator = lastDate.substring(0, 7) !== taskDate.substring(0, 7);
-        } else if (mode === 'week') {
-          const d1 = new Date(lastDate);
-          const d2 = new Date(taskDate);
-          showSeparator = this._getWeek(d1) !== this._getWeek(d2);
-        }
-        if (showSeparator) {
-          daySeparator = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
-        }
-      }
+      const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
+        ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
+        : html``;
       lastDate = taskDate;
 
       return html`
