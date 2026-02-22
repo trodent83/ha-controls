@@ -147,6 +147,7 @@ class TaskListCard extends LitElement {
             if (filters.length > 0) {
               items = items.filter(item => {
                 return !filters.some(filter => {
+                  if (!filter || !filter.pattern) return false;
                   try {
                     const flags = filter.case_sensitive === false ? 'i' : '';
                     return new RegExp(filter.pattern, flags).test(item.summary || '');
