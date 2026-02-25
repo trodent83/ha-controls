@@ -1,0 +1,21 @@
+.card-config {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.entities {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.entity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+ha-entity-picker {
+    flex-grow: 1;
+}
+ha-textfield {
+    width: 100%;
+}
