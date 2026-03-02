@@ -13,6 +13,21 @@
     align-items: center;
     gap: 8px;
 }
+.entity-row-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--divider-color);
+    padding: 8px;
+    border-radius: 4px;
+}
+.entity-options {
+    display: flex;
+    gap: 8px;
+}
+.entity-options ha-textfield {
+    flex: 1;
+}
 ha-entity-picker {
     flex-grow: 1;
 }

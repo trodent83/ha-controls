@@ -59,25 +59,48 @@ class CalendarGridCardEditor extends LitElement {
     const entities = this._config.entities || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.26">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.28">
       <div class="card-config">
         <div class="option">
             <div class="heading">Entities</div>
             <div class="entities">
                 ${entities.map((entityConf, index) => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+                    const color = typeof entityConf === "object" ? entityConf.color : "";
+                    const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
+                    const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
+
                     return html`
-                        <div class="entity-row">
-                            <ha-entity-picker
-                                .hass=${this.hass}
-                                .value=${entityId}
-                                .includeDomains=${["calendar"]}
-                                @value-changed=${(ev) => this._entityChanged(ev, index)}
-                                allow-custom-entity
-                            ></ha-entity-picker>
-                            <ha-icon-button
-                                @click=${() => this._removeEntity(index)}
-                            ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                        <div class="entity-row-container">
+                            <div class="entity-row">
+                                <ha-entity-picker
+                                    .hass=${this.hass}
+                                    .value=${entityId}
+                                    .includeDomains=${["calendar"]}
+                                    @value-changed=${(ev) => this._entityChanged(ev, index)}
+                                    allow-custom-entity
+                                ></ha-entity-picker>
+                                <ha-icon-button
+                                    @click=${() => this._removeEntity(index)}
+                                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                            </div>
+                            <div class="entity-options">
+                                <ha-textfield
+                                    label="Foreground"
+                                    .value=${color || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'color')}
+                                ></ha-textfield>
+                                <ha-textfield
+                                    label="Background"
+                                    .value=${backgroundColor || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'backgroundColor')}
+                                ></ha-textfield>
+                                <ha-textfield
+                                    label="Icon Color"
+                                    .value=${iconColor || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
+                                ></ha-textfield>
+                            </div>
                         </div>
                     `;
                 })}
@@ -109,6 +132,21 @@ class CalendarGridCardEditor extends LitElement {
       } else {
           newEntities[index] = newValue;
       }
+      this._config = { ...this._config, entities: newEntities };
+      this._fireConfigChanged();
+  }
+
+  _entityColorChanged(ev, index, prop) {
+      const newValue = ev.target.value;
+      const newEntities = [...(this._config.entities || [])];
+      let entityConf = newEntities[index];
+      if (typeof entityConf === 'string') {
+          entityConf = { entity: entityConf };
+      } else {
+          entityConf = { ...entityConf };
+      }
+      entityConf[prop] = newValue;
+      newEntities[index] = entityConf;
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
   }

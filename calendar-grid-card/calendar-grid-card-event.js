@@ -6,6 +6,9 @@ class CalendarGridCardEvent extends LitElement {
         return {
             event: { attribute: false },
             day: { attribute: false },
+            color: { attribute: false },
+            backgroundColor: { attribute: false },
+            iconColor: { attribute: false },
             _expanded: { state: true }
         };
     }
@@ -27,11 +30,16 @@ class CalendarGridCardEvent extends LitElement {
         const icon = isPast ? "mdi:circle-outline" : "mdi:circle";
         const hasDescription = !!this.event.originEvent.description;
 
+        const style = [];
+        if (this.color) style.push(`color: ${this.color}`);
+        if (this.backgroundColor) style.push(`background-color: ${this.backgroundColor}`);
+        const iconStyle = this.iconColor ? `color: ${this.iconColor}` : "";
+
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.26">
-            <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" @click=${this._handleClick}>
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.28">
+            <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
-                    <ha-icon class="event-icon" icon="${icon}"></ha-icon>
+                    <ha-icon class="event-icon" icon="${icon}" style="${iconStyle}"></ha-icon>
                     ${timeStr ? html`<span class="event-time">${timeStr}</span>` : ''}
                     <span class="event-title">${this.event.summary}</span>
                     ${hasDescription ? html`<ha-icon class="description-icon" icon="mdi:text-short"></ha-icon>` : ''}

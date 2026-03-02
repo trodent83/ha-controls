@@ -200,7 +200,7 @@ class CalendarGridCard extends LitElement {
     const rowCount = Math.ceil(days.length / 7);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.26">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.28">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -230,12 +230,24 @@ class CalendarGridCard extends LitElement {
                     <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
                         <div class="day-number">${day.getDate()}</div>
                         <div class="events-container">
-                            ${dayEvents.map(event => html`
+                            ${dayEvents.map(event => {
+                                const entityConf = this.config.entities.find(e => 
+                                    (typeof e === 'object' ? e.entity : e) === event.entity_id
+                                );
+                                const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : undefined;
+                                const backgroundColor = (typeof entityConf === 'object' && entityConf.backgroundColor) ? entityConf.backgroundColor : undefined;
+                                const iconColor = (typeof entityConf === 'object' && entityConf.iconColor) ? entityConf.iconColor : undefined;
+
+                                return html`
                                 <calendar-grid-card-event 
                                     .event=${event} 
                                     .day=${day}
+                                    .color=${color}
+                                    .iconColor=${iconColor}
+                                    .backgroundColor=${backgroundColor}
                                     @event-click=${this._onEventClick}
-                                ></calendar-grid-card-event>`)}
+                                ></calendar-grid-card-event>`
+                            })}
                         </div>
                     </div>
                 `;
