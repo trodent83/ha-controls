@@ -240,24 +240,29 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.50">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.1">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
-            <div class="controls">
-                <div class="control-button" @click=${this._prevMonth}>
-                    <ha-icon icon="mdi:chevron-left"></ha-icon>
+            <div class="header-right">
+                <div class="controls">
+                    <div class="control-button" @click=${this._prevMonth}>
+                        <ha-icon icon="mdi:chevron-left"></ha-icon>
+                    </div>
+                    <div class="control-button today" @click=${this._today}>
+                        Today
+                    </div>
+                    <div class="control-button" @click=${this._nextMonth}>
+                        <ha-icon icon="mdi:chevron-right"></ha-icon>
+                    </div>
                 </div>
-                <div class="control-button today" @click=${this._today}>
-                    Today
+                ${sidebarPos !== 'hidden' ? html`
+                <div class="controls">
+                    <div class="control-button ${this._sidebarOpen ? 'active' : ''}" @click=${this._toggleSidebar}>
+                        <ha-icon icon="mdi:format-list-checks"></ha-icon>
+                    </div>
                 </div>
-                <div class="control-button" @click=${this._nextMonth}>
-                    <ha-icon icon="mdi:chevron-right"></ha-icon>
-                </div>
-                <div class="separator"></div>
-                <div class="control-button ${this._sidebarOpen ? 'active' : ''}" @click=${this._toggleSidebar}>
-                    <ha-icon icon="mdi:format-list-checks"></ha-icon>
-                </div>
+                ` : ''}
             </div>
         </div>
 
@@ -320,7 +325,7 @@ class CalendarGridCard extends LitElement {
                 `;
             })}
           </div>
-          ${this._sidebarOpen ? html`
+          ${this._sidebarOpen && sidebarPos !== 'hidden' ? html`
             <div class="sidebar">
                 ${this.config.entities.map(entityConf => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;

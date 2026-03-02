@@ -28,6 +28,12 @@ ha-card {
     font-weight: 500;
 }
 
+.header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .controls {
     display: flex;
     background-color: var(--secondary-background-color);
@@ -67,15 +73,6 @@ ha-card {
     font-size: 0.85rem;
     border-left: 1px solid var(--divider-color);
     border-right: 1px solid var(--divider-color);
-}
-
-.controls .separator {
-    width: 1px;
-    background-color: var(--primary-text-color);
-    opacity: 0.2;
-    height: 24px;
-    margin: 0 10px;
-    align-self: center;
 }
 
 .control-button ha-icon {
