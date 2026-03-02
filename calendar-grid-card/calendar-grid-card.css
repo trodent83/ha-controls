@@ -68,6 +68,27 @@ ha-card {
     --mdc-icon-size: 20px;
 }
 
+.main-content {
+    display: flex;
+    flex-grow: 1;
+    min-height: 0;
+    overflow: hidden;
+    gap: 16px;
+    flex-direction: row;
+}
+
+.main-content.pos-left {
+    flex-direction: row-reverse;
+}
+
+.main-content.pos-top {
+    flex-direction: column-reverse;
+}
+
+.main-content.pos-bottom {
+    flex-direction: column;
+}
+
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -137,4 +158,76 @@ ha-card {
 .events-container::-webkit-scrollbar-thumb {
     background-color: var(--divider-color);
     border-radius: 2px;
+}
+
+.sidebar {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-left: 1px solid var(--divider-color);
+    padding-left: 16px;
+}
+
+.main-content.pos-left .sidebar {
+    border-left: none;
+    border-right: 1px solid var(--divider-color);
+    padding-left: 0;
+    padding-right: 16px;
+}
+
+.main-content.pos-top .sidebar,
+.main-content.pos-bottom .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 150px;
+    border-left: none;
+    padding-left: 0;
+    border-bottom: 1px solid var(--divider-color);
+    padding-bottom: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.main-content.pos-bottom .sidebar {
+    border-bottom: none;
+    border-top: 1px solid var(--divider-color);
+    padding-bottom: 0;
+    padding-top: 16px;
+}
+
+.calendar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: var(--secondary-background-color);
+    color: var(--secondary-text-color);
+    border: 1px solid var(--divider-color);
+    user-select: none;
+    margin-bottom: 4px;
+}
+
+.calendar-toggle:hover {
+    background-color: var(--divider-color);
+}
+
+.calendar-toggle.active {
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border-color: var(--primary-color);
+}
+
+.calendar-name {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
 }

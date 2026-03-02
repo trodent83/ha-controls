@@ -9,7 +9,9 @@ class CalendarGridCard extends LitElement {
       hass: {},
       config: {},
       _events: { state: true },
-      _currentDate: { state: true }
+      _currentDate: { state: true },
+      _sidebarOpen: { state: true },
+      _disabledCalendars: { state: true }
     };
   }
 
@@ -29,6 +31,8 @@ class CalendarGridCard extends LitElement {
     this._events = [];
     this._currentDate = new Date();
     this._fetchedRange = { start: null, end: null };
+    this._sidebarOpen = false;
+    this._disabledCalendars = new Set();
   }
 
   setConfig(config) {
@@ -39,6 +43,7 @@ class CalendarGridCard extends LitElement {
     // Reset fetch state on config change
     this._fetchedRange = { start: null, end: null };
     this._events = [];
+    this._disabledCalendars = this._loadDisabledCalendars();
   }
 
   updated(changedProps) {
@@ -171,6 +176,7 @@ class CalendarGridCard extends LitElement {
     const showFinished = this.config.show_finished_events !== false;
 
     return allEvents.filter(event => {
+        if (this._disabledCalendars.has(event.entity_id)) return false;
         if (!showFinished && event.end < now) return false;
         return event.start <= targetEnd && event.end > targetDate;
     });
@@ -202,9 +208,10 @@ class CalendarGridCard extends LitElement {
     }
 
     const rowCount = Math.ceil(days.length / 7);
+    const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.34">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.42">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -218,10 +225,14 @@ class CalendarGridCard extends LitElement {
                 <div class="control-button" @click=${this._nextMonth}>
                     <ha-icon icon="mdi:chevron-right"></ha-icon>
                 </div>
+                <div class="control-button" @click=${this._toggleSidebar}>
+                    <ha-icon icon="mdi:format-list-checks"></ha-icon>
+                </div>
             </div>
         </div>
 
-        <div class="calendar-grid" style="grid-template-rows: min-content repeat(${rowCount}, 1fr);">
+        <div class="main-content pos-${sidebarPos}">
+          <div class="calendar-grid" style="grid-template-rows: min-content repeat(${rowCount}, 1fr);">
             ${weekDays.map(d => html`<div class="day-header">${d}</div>`)}
             
             ${days.map(day => {
@@ -278,9 +289,81 @@ class CalendarGridCard extends LitElement {
                     </div>
                 `;
             })}
+          </div>
+          ${this._sidebarOpen ? html`
+            <div class="sidebar">
+                ${this.config.entities.map(entityConf => {
+                    const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+                    const entityState = this.hass.states[entityId];
+                    const friendlyName = entityState ? entityState.attributes.friendly_name : entityId;
+                    const isChecked = !this._disabledCalendars.has(entityId);
+                    
+                    const color = typeof entityConf === "object" ? entityConf.color : undefined;
+                    const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : undefined;
+
+                    const style = [];
+                    if (isChecked) {
+                        if (color) style.push(`color: ${color}`);
+                        if (backgroundColor) {
+                            style.push(`background-color: ${backgroundColor}`);
+                            style.push(`border-color: ${backgroundColor}`);
+                        }
+                    }
+                    
+                    return html`
+                        <div class="calendar-toggle ${isChecked ? 'active' : ''}" style="${style.join(';')}" @click=${() => this._toggleCalendar(entityId, !isChecked)}>
+                            <span class="calendar-name">${friendlyName}</span>
+                        </div>
+                    `;
+                })}
+            </div>
+          ` : ''}
         </div>
       </ha-card>
     `;
+  }
+
+  _toggleSidebar() {
+    this._sidebarOpen = !this._sidebarOpen;
+  }
+
+  _toggleCalendar(entityId, checked) {
+    const newDisabled = new Set(this._disabledCalendars);
+    if (checked) {
+        newDisabled.delete(entityId);
+    } else {
+        newDisabled.add(entityId);
+    }
+    this._disabledCalendars = newDisabled;
+    this._saveDisabledCalendars();
+  }
+
+  _getStorageKey() {
+    if (!this.config || !this.config.entities) return null;
+    const entityIds = this.config.entities.map(e => typeof e === 'object' ? e.entity : e).sort();
+    return `calendar-grid-disabled-${entityIds.join('_')}`;
+  }
+
+  _loadDisabledCalendars() {
+    const key = this._getStorageKey();
+    if (key) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            try {
+                return new Set(JSON.parse(stored));
+            } catch (e) {
+                console.error("Error loading disabled calendars", e);
+            }
+        }
+    }
+    return new Set();
+  }
+
+  _saveDisabledCalendars() {
+    const key = this._getStorageKey();
+    if (key) {
+        localStorage.setItem(key, JSON.stringify(Array.from(this._disabledCalendars)));
+    }
   }
 
   _onEventClick(e) {
