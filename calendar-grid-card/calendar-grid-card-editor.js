@@ -59,7 +59,7 @@ class CalendarGridCardEditor extends LitElement {
     const entities = this._config.entities || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.43">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.46">
       <div class="card-config">
         <ha-textfield
             label="First day of week (0=Sun, 1=Mon)"
@@ -108,6 +108,7 @@ class CalendarGridCardEditor extends LitElement {
             <div class="entities">
                 ${entities.map((entityConf, index) => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+                    const name = typeof entityConf === "object" ? entityConf.name : "";
                     const color = typeof entityConf === "object" ? entityConf.color : "";
                     const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
                     const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
@@ -131,6 +132,11 @@ class CalendarGridCardEditor extends LitElement {
                             </div>
                             <div class="separator"></div>
                             <div class="entity-options">
+                                <ha-textfield
+                                    label="Name"
+                                    .value=${name || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'name')}
+                                ></ha-textfield>
                                 <ha-textfield
                                     label="Foreground"
                                     .value=${color || ''}

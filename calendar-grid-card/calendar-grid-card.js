@@ -46,6 +46,34 @@ class CalendarGridCard extends LitElement {
     this._disabledCalendars = this._loadDisabledCalendars();
   }
 
+  shouldUpdate(changedProps) {
+    if (changedProps.has('_events') || 
+        changedProps.has('_currentDate') || 
+        changedProps.has('_sidebarOpen') || 
+        changedProps.has('_disabledCalendars') ||
+        changedProps.has('config')) {
+      return true;
+    }
+
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.hass || !this.config) {
+        return true;
+      }
+
+      const entities = this.config.entities || [];
+      for (const entityConf of entities) {
+        const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+        if (oldHass.states[entityId] !== this.hass.states[entityId]) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   updated(changedProps) {
     if (changedProps.has('hass') || changedProps.has('_currentDate')) {
       this._checkAndFetch();
@@ -211,7 +239,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.43">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.46">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -295,7 +323,7 @@ class CalendarGridCard extends LitElement {
                 ${this.config.entities.map(entityConf => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
                     const entityState = this.hass.states[entityId];
-                    const friendlyName = entityState ? entityState.attributes.friendly_name : entityId;
+                    const friendlyName = (typeof entityConf === "object" && entityConf.name) ? entityConf.name : (entityState ? entityState.attributes.friendly_name : entityId);
                     const isChecked = !this._disabledCalendars.has(entityId);
                     
                     const color = typeof entityConf === "object" ? entityConf.color : undefined;
