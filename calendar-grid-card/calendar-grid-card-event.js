@@ -27,6 +27,7 @@ class CalendarGridCardEvent extends LitElement {
         return html`
             <div class="event-entry ${this._expanded ? 'expanded' : ''}" @click=${this._handleClick}>
                 <div class="event-header">
+                    <ha-icon class="event-icon" icon="mdi:circle-medium"></ha-icon>
                     ${timeStr ? html`<span class="event-time">${timeStr}</span>` : ''}
                     <span class="event-title">${this.event.summary}</span>
                 </div>

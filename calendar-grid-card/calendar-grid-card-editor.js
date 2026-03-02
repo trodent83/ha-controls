@@ -59,10 +59,10 @@ class CalendarGridCardEditor extends LitElement {
     const entities = this._config.entities || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.15">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.17">
       <div class="card-config">
         <div class="option">
-            <h3>Entities</h3>
+            <div class="heading">Entities</div>
             <div class="entities">
                 ${entities.map((entityConf, index) => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;

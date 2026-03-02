@@ -269,6 +269,7 @@ class TaskListCard extends LitElement {
         ` : ""}
         <div class="task-list">
           ${groups.map((group) => {
+      if (!group.isVisible) return html``;
       const taskDate = group.date;
       const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
         ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
