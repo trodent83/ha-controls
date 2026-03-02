@@ -59,7 +59,7 @@ class CalendarGridCardEditor extends LitElement {
     const entities = this._config.entities || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.32">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.34">
       <div class="card-config">
         <ha-textfield
             label="First day of week (0=Sun, 1=Mon)"
@@ -80,6 +80,14 @@ class CalendarGridCardEditor extends LitElement {
             .configValue=${"today_border"}
             @input=${this._valueChanged}
         ></ha-textfield>
+        <ha-formfield label="Show finished events">
+            <ha-switch
+                .checked=${this._config.show_finished_events !== false}
+                .configValue=${"show_finished_events"}
+                .value=${"on"}
+                @change=${this._valueChanged}
+            ></ha-switch>
+        </ha-formfield>
         <div class="separator"></div>
         <div class="option">
             <div class="heading">Entities</div>
@@ -89,6 +97,9 @@ class CalendarGridCardEditor extends LitElement {
                     const color = typeof entityConf === "object" ? entityConf.color : "";
                     const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
                     const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
+                    const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
+                    const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
+                    const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
 
                     return html`
                         <div class="entity-row-container">
@@ -104,6 +115,7 @@ class CalendarGridCardEditor extends LitElement {
                                     @click=${() => this._removeEntity(index)}
                                 ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                             </div>
+                            <div class="separator"></div>
                             <div class="entity-options">
                                 <ha-textfield
                                     label="Foreground"
@@ -120,6 +132,29 @@ class CalendarGridCardEditor extends LitElement {
                                     .value=${iconColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
                                 ></ha-textfield>
+                                <div class="separator"></div>
+                                <ha-textfield
+                                    label="Active Foreground"
+                                    .value=${activeColor || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'activeColor')}
+                                ></ha-textfield>
+                                <ha-textfield
+                                    label="Active Background"
+                                    .value=${activeBackgroundColor || ''}
+                                    @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
+                                ></ha-textfield>
+                                <ha-select
+                                    label="Active Icon Animation"
+                                    .value=${activeIconAnimation || ''}
+                                    @selected=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
+                                    @closed=${(e) => e.stopPropagation()}
+                                    fixedMenuPosition
+                                    naturalMenuWidth
+                                >
+                                    <mwc-list-item value=""></mwc-list-item>
+                                    <mwc-list-item value="spinning">Spinning</mwc-list-item>
+                                    <mwc-list-item value="pulsing">Pulsing</mwc-list-item>
+                                </ha-select>
                             </div>
                         </div>
                     `;

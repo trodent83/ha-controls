@@ -9,6 +9,9 @@ class CalendarGridCardEvent extends LitElement {
             color: { attribute: false },
             backgroundColor: { attribute: false },
             iconColor: { attribute: false },
+            activeColor: { attribute: false },
+            activeBackgroundColor: { attribute: false },
+            activeIconAnimation: { attribute: false },
             _expanded: { state: true }
         };
     }
@@ -26,20 +29,31 @@ class CalendarGridCardEvent extends LitElement {
         if (!this.event || !this.day) return html``;
         
         const timeStr = this.event.getTimeStr(this.day);
-        const isPast = this.event.end < new Date();
+        const now = new Date();
+        const isPast = this.event.end < now;
+        const isActive = this.event.start <= now && this.event.end >= now;
         const icon = isPast ? "mdi:circle-outline" : "mdi:circle";
         const hasDescription = !!this.event.originEvent.description;
 
         const style = [];
-        if (this.color) style.push(`color: ${this.color}`);
-        if (this.backgroundColor) style.push(`background-color: ${this.backgroundColor}`);
+        if (isActive && this.activeColor) {
+            style.push(`color: ${this.activeColor}`);
+        } else if (this.color) {
+            style.push(`color: ${this.color}`);
+        }
+        if (isActive && this.activeBackgroundColor) {
+            style.push(`background-color: ${this.activeBackgroundColor}`);
+        } else if (this.backgroundColor) {
+            style.push(`background-color: ${this.backgroundColor}`);
+        }
         const iconStyle = this.iconColor ? `color: ${this.iconColor}` : "color: var(--primary-color)";
+        const animationClass = (isActive && this.activeIconAnimation) ? this.activeIconAnimation : '';
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.32">
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.34">
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
-                    <ha-icon class="event-icon" icon="${icon}" style="${iconStyle}"></ha-icon>
+                    <ha-icon class="event-icon ${animationClass}" icon="${icon}" style="${iconStyle}"></ha-icon>
                     ${timeStr ? html`<span class="event-time">${timeStr}</span>` : ''}
                     <span class="event-title">${this.event.summary}</span>
                     ${hasDescription ? html`<ha-icon class="description-icon" icon="mdi:text-short"></ha-icon>` : ''}

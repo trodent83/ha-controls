@@ -166,8 +166,12 @@ class CalendarGridCard extends LitElement {
     targetDate.setHours(0,0,0,0);
     const targetEnd = new Date(targetDate);
     targetEnd.setHours(23,59,59,999);
+    
+    const now = new Date();
+    const showFinished = this.config.show_finished_events !== false;
 
     return allEvents.filter(event => {
+        if (!showFinished && event.end < now) return false;
         return event.start <= targetEnd && event.end > targetDate;
     });
   }
@@ -200,7 +204,7 @@ class CalendarGridCard extends LitElement {
     const rowCount = Math.ceil(days.length / 7);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.32">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.34">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -253,12 +257,18 @@ class CalendarGridCard extends LitElement {
                                 const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : undefined;
                                 const backgroundColor = (typeof entityConf === 'object' && entityConf.backgroundColor) ? entityConf.backgroundColor : undefined;
                                 const iconColor = (typeof entityConf === 'object' && entityConf.iconColor) ? entityConf.iconColor : undefined;
+                                const activeColor = (typeof entityConf === 'object' && entityConf.activeColor) ? entityConf.activeColor : undefined;
+                                const activeBackgroundColor = (typeof entityConf === 'object' && entityConf.activeBackgroundColor) ? entityConf.activeBackgroundColor : undefined;
+                                const activeIconAnimation = (typeof entityConf === 'object' && entityConf.activeIconAnimation) ? entityConf.activeIconAnimation : undefined;
 
                                 return html`
                                 <calendar-grid-card-event 
                                     .event=${event} 
                                     .day=${day}
                                     .color=${color}
+                                    .activeColor=${activeColor}
+                                    .activeBackgroundColor=${activeBackgroundColor}
+                                    .activeIconAnimation=${activeIconAnimation}
                                     .iconColor=${iconColor}
                                     .backgroundColor=${backgroundColor}
                                     @event-click=${this._onEventClick}
