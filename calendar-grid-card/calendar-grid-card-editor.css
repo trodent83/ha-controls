@@ -23,10 +23,14 @@
 }
 .entity-options {
     display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 .entity-options ha-textfield {
     flex: 1;
+}
+.separator {
+    border-bottom: 1px solid var(--divider-color);
 }
 ha-entity-picker {
     flex-grow: 1;

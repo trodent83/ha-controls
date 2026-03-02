@@ -200,7 +200,7 @@ class CalendarGridCard extends LitElement {
     const rowCount = Math.ceil(days.length / 7);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.28">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.32">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -222,12 +222,28 @@ class CalendarGridCard extends LitElement {
             
             ${days.map(day => {
                 const dateStr = day.toISOString().split('T')[0];
-                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                const now = new Date();
+                const isToday = day.getDate() === now.getDate() && 
+                                day.getMonth() === now.getMonth() && 
+                                day.getFullYear() === now.getFullYear();
                 const isCurrentMonth = day.getMonth() === this._currentDate.getMonth();
                 const dayEvents = this._getEventsForDay(dateStr, this._events);
 
+                const cellStyle = [];
+                if (isToday) {
+                    if (this.config.today_background) cellStyle.push(`background: ${this.config.today_background}`);
+                    if (this.config.today_border) {
+                        const borderVal = this.config.today_border;
+                        if (/(solid|dashed|dotted|double|groove|ridge|inset|outset)/i.test(borderVal)) {
+                            cellStyle.push(`border: ${borderVal}`);
+                        } else {
+                            cellStyle.push(`border-color: ${borderVal}`);
+                        }
+                    }
+                }
+
                 return html`
-                    <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
+                    <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" style="${cellStyle.join(';')}">
                         <div class="day-number">${day.getDate()}</div>
                         <div class="events-container">
                             ${dayEvents.map(event => {

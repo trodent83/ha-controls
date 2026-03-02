@@ -33,10 +33,10 @@ class CalendarGridCardEvent extends LitElement {
         const style = [];
         if (this.color) style.push(`color: ${this.color}`);
         if (this.backgroundColor) style.push(`background-color: ${this.backgroundColor}`);
-        const iconStyle = this.iconColor ? `color: ${this.iconColor}` : "";
+        const iconStyle = this.iconColor ? `color: ${this.iconColor}` : "color: var(--primary-color)";
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.28">
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.32">
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon" icon="${icon}" style="${iconStyle}"></ha-icon>

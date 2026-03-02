@@ -59,8 +59,28 @@ class CalendarGridCardEditor extends LitElement {
     const entities = this._config.entities || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.28">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.0.32">
       <div class="card-config">
+        <ha-textfield
+            label="First day of week (0=Sun, 1=Mon)"
+            type="number"
+            .value=${this._config.first_day_of_week !== undefined ? this._config.first_day_of_week : 1}
+            .configValue=${"first_day_of_week"}
+            @input=${this._valueChanged}
+        ></ha-textfield>
+        <ha-textfield
+            label="Today Background"
+            .value=${this._config.today_background || ''}
+            .configValue=${"today_background"}
+            @input=${this._valueChanged}
+        ></ha-textfield>
+        <ha-textfield
+            label="Today Border"
+            .value=${this._config.today_border || ''}
+            .configValue=${"today_border"}
+            @input=${this._valueChanged}
+        ></ha-textfield>
+        <div class="separator"></div>
         <div class="option">
             <div class="heading">Entities</div>
             <div class="entities">
@@ -112,14 +132,6 @@ class CalendarGridCardEditor extends LitElement {
                 ></ha-entity-picker>
             </div>
         </div>
-        
-        <ha-textfield
-            label="First day of week (0=Sun, 1=Mon)"
-            type="number"
-            .value=${this._config.first_day_of_week !== undefined ? this._config.first_day_of_week : 1}
-            .configValue=${"first_day_of_week"}
-            @input=${this._valueChanged}
-        ></ha-textfield>
       </div>
     `;
   }
