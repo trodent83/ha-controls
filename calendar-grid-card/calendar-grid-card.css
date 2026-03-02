@@ -69,6 +69,15 @@ ha-card {
     border-right: 1px solid var(--divider-color);
 }
 
+.controls .separator {
+    width: 1px;
+    background-color: var(--primary-text-color);
+    opacity: 0.2;
+    height: 24px;
+    margin: 0 10px;
+    align-self: center;
+}
+
 .control-button ha-icon {
     --mdc-icon-size: 20px;
 }

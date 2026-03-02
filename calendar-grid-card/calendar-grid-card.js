@@ -33,6 +33,14 @@ class CalendarGridCard extends LitElement {
     this._fetchedRange = { start: null, end: null };
     this._sidebarOpen = false;
     this._disabledCalendars = new Set();
+    this._fetchTimer = null;
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._fetchTimer) {
+      clearTimeout(this._fetchTimer);
+    }
   }
 
   setConfig(config) {
@@ -83,20 +91,13 @@ class CalendarGridCard extends LitElement {
   _checkAndFetch() {
     if (!this.hass || !this.config) return;
 
-    // Calculate the range we need to display
-    const { start, end } = this._getViewDateRange();
-
-    // Simple check: if we haven't fetched for this range roughly, fetch again.
-    // For simplicity, we fetch if the current view range is outside the previously fetched range
-    // or if we haven't fetched at all.
-    // To be safe and simple, we just fetch whenever the month changes.
-    
-    const startStr = start.toISOString();
-    const endStr = end.toISOString();
-
-    if (this._fetchedRange.start !== startStr || this._fetchedRange.end !== endStr) {
-      this._fetchEvents(start, end);
+    if (this._fetchTimer) {
+      clearTimeout(this._fetchTimer);
     }
+    this._fetchTimer = setTimeout(() => {
+      const { start, end } = this._getViewDateRange();
+      this._fetchEvents(start, end);
+    }, 500);
   }
 
   _getViewDateRange() {
@@ -239,7 +240,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.46">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.50">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -253,6 +254,7 @@ class CalendarGridCard extends LitElement {
                 <div class="control-button" @click=${this._nextMonth}>
                     <ha-icon icon="mdi:chevron-right"></ha-icon>
                 </div>
+                <div class="separator"></div>
                 <div class="control-button ${this._sidebarOpen ? 'active' : ''}" @click=${this._toggleSidebar}>
                     <ha-icon icon="mdi:format-list-checks"></ha-icon>
                 </div>
