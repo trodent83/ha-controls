@@ -56,6 +56,11 @@ ha-card {
     background-color: rgba(var(--rgb-primary-text-color), 0.1);
 }
 
+.control-button.active {
+    color: var(--primary-color);
+    background-color: rgba(var(--rgb-primary-text-color), 0.1);
+}
+
 .control-button.today {
     padding: 0 16px;
     font-weight: 500;

@@ -211,7 +211,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.42">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.43">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -225,7 +225,7 @@ class CalendarGridCard extends LitElement {
                 <div class="control-button" @click=${this._nextMonth}>
                     <ha-icon icon="mdi:chevron-right"></ha-icon>
                 </div>
-                <div class="control-button" @click=${this._toggleSidebar}>
+                <div class="control-button ${this._sidebarOpen ? 'active' : ''}" @click=${this._toggleSidebar}>
                     <ha-icon icon="mdi:format-list-checks"></ha-icon>
                 </div>
             </div>
