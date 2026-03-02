@@ -130,55 +130,6 @@ ha-card {
     min-height: 0;
 }
 
-.event-entry {
-    font-size: 0.75rem;
-    padding: 2px 4px;
-    border-radius: 2px;
-    color: var(--primary-text-color);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.event-header {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.event-header::before {
-    content: "•";
-    flex-shrink: 0;
-}
-
-.event-entry.expanded {
-    white-space: normal;
-}
-
-.event-description {
-    font-size: 0.7rem;
-    opacity: 0.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-top: 2px;
-    margin-top: 2px;
-}
-
-.event-time {
-    font-size: 0.7rem;
-    opacity: 0.9;
-    flex-shrink: 0;
-}
-
-.event-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* Scrollbar styling for events container */
 .events-container::-webkit-scrollbar {
     width: 4px;

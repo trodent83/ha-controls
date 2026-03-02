@@ -23,13 +23,18 @@ class CalendarGridCardEvent extends LitElement {
         if (!this.event || !this.day) return html``;
         
         const timeStr = this.event.getTimeStr(this.day);
+        const isPast = this.event.end < new Date();
+        const icon = isPast ? "mdi:circle-outline" : "mdi:circle";
+        const hasDescription = !!this.event.originEvent.description;
 
         return html`
-            <div class="event-entry ${this._expanded ? 'expanded' : ''}" @click=${this._handleClick}>
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.25">
+            <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" @click=${this._handleClick}>
                 <div class="event-header">
-                    <ha-icon class="event-icon" icon="mdi:circle-medium"></ha-icon>
+                    <ha-icon class="event-icon" icon="${icon}"></ha-icon>
                     ${timeStr ? html`<span class="event-time">${timeStr}</span>` : ''}
                     <span class="event-title">${this.event.summary}</span>
+                    ${hasDescription ? html`<ha-icon class="description-icon" icon="mdi:text-short"></ha-icon>` : ''}
                 </div>
                 ${this._expanded && this.event.originEvent.description ? html`<div class="event-description">${this.event.originEvent.description}</div>` : ''}
             </div>

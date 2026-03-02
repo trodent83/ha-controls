@@ -200,7 +200,7 @@ class CalendarGridCard extends LitElement {
     const rowCount = Math.ceil(days.length / 7);
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.17">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.0.25">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

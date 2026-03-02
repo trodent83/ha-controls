@@ -1,0 +1,66 @@
+.event-entry {
+    font-size: 0.75rem;
+    padding: 0px 2px;
+    border-radius: 2px;
+    color: var(--primary-text-color);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.event-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-icon {
+    --mdc-icon-size: 12px;
+}
+
+.event-header::before {
+    flex-shrink: 0;
+}
+
+.event-entry.expanded {
+    white-space: normal;
+}
+
+.event-description {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-top: 4px;
+    margin-top: 4px;
+    padding-bottom: 4px;
+    border-top: 1px solid var(--divider-color);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.event-time {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    flex-shrink: 0;
+}
+
+.event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+}
+
+.description-icon {
+    --mdc-icon-size: 12px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.event-entry.past .event-title, .event-entry.past .event-time {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
