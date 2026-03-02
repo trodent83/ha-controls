@@ -28,7 +28,7 @@ class CalendarGridCardEvent extends LitElement {
         const hasDescription = !!this.event.originEvent.description;
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.25">
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.0.26">
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon" icon="${icon}"></ha-icon>
