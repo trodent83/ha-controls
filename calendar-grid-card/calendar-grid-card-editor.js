@@ -3,7 +3,7 @@ const html = LitElement.prototype.html;
 
 class CalendarGridCardEditor extends LitElement {
   static get properties() {
-    return { hass: {}, _config: {} };
+    return { hass: {}, _config: {}, _dayNamesExpanded: { state: true } };
   }
 
   connectedCallback() {
@@ -23,18 +23,19 @@ class CalendarGridCardEditor extends LitElement {
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
     const target = ev.target;
-    if (this[`_${target.configValue}`] === target.value) {
-      return;
-    }
     if (target.configValue) {
       if (target.value === "") {
         const newConfig = { ...this._config };
         delete newConfig[target.configValue];
         this._config = newConfig;
       } else {
+        let newValue = target.checked !== undefined ? target.checked : target.value;
+        if (target.configValue === "day_names") {
+            newValue = newValue.split(',').map(v => v.trim());
+        }
         this._config = {
           ...this._config,
-          [target.configValue]: target.checked !== undefined ? target.checked : target.value,
+          [target.configValue]: newValue,
         };
       }
     }
@@ -58,8 +59,21 @@ class CalendarGridCardEditor extends LitElement {
 
     const entities = this._config.entities || [];
 
+    let dayNames = this._config.day_names;
+    if (typeof dayNames === 'string') {
+        dayNames = dayNames.split(',').map(v => v.trim());
+    }
+    if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
+        const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
+        const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayNames = [];
+        for (let i = 0; i < 7; i++) {
+            dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
+        }
+    }
+
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.1">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.5">
       <div class="card-config">
         <ha-textfield
             label="First day of week (0=Sun, 1=Mon)"
@@ -68,6 +82,23 @@ class CalendarGridCardEditor extends LitElement {
             .configValue=${"first_day_of_week"}
             @input=${this._valueChanged}
         ></ha-textfield>
+        <div class="day-names-container" style="margin-top: 8px; margin-bottom: 8px;">
+            <div class="header" @click=${this._toggleDayNames} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <span style="font-weight: bold;">Day Names</span>
+                <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
+            </div>
+            ${this._dayNamesExpanded ? html`
+                <div class="day-names-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    ${dayNames.map((day, index) => html`
+                        <ha-textfield
+                            label="Day ${index + 1}"
+                            .value=${day}
+                            @input=${(ev) => this._dayNameChanged(ev, index)}
+                        ></ha-textfield>
+                    `)}
+                </div>
+            ` : ''}
+        </div>
         <ha-textfield
             label="Today Background"
             .value=${this._config.today_background || ''}
@@ -190,6 +221,30 @@ class CalendarGridCardEditor extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  _toggleDayNames() {
+      this._dayNamesExpanded = !this._dayNamesExpanded;
+  }
+
+  _dayNameChanged(ev, index) {
+      const newValue = ev.target.value;
+      let dayNames = this._config.day_names;
+      if (typeof dayNames === 'string') {
+          dayNames = dayNames.split(',').map(v => v.trim());
+      }
+      if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
+          const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
+          const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          dayNames = [];
+          for (let i = 0; i < 7; i++) {
+              dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
+          }
+      }
+      const newDayNames = [...dayNames];
+      newDayNames[index] = newValue;
+      this._config = { ...this._config, day_names: newDayNames };
+      this._fireConfigChanged();
   }
 
   _entityChanged(ev, index) {

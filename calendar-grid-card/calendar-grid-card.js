@@ -225,8 +225,12 @@ class CalendarGridCard extends LitElement {
 
     const monthName = this._currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
     
-    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? this.config.first_day_of_week : 1;
+    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? parseInt(this.config.first_day_of_week) : 1;
     let weekDays = this.config.day_names;
+
+    if (typeof weekDays === 'string') {
+        weekDays = weekDays.split(',').map(v => v.trim());
+    }
 
     if (!weekDays || weekDays.length !== 7) {
         const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -240,7 +244,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.1">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.5">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
