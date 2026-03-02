@@ -244,7 +244,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.5">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.6">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

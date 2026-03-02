@@ -73,15 +73,25 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.5">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.6">
       <div class="card-config">
-        <ha-textfield
-            label="First day of week (0=Sun, 1=Mon)"
-            type="number"
-            .value=${this._config.first_day_of_week !== undefined ? this._config.first_day_of_week : 1}
+        <ha-select
+            label="First day of week"
+            .value=${this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1"}
             .configValue=${"first_day_of_week"}
-            @input=${this._valueChanged}
-        ></ha-textfield>
+            @selected=${this._valueChanged}
+            @closed=${(e) => e.stopPropagation()}
+            fixedMenuPosition
+            naturalMenuWidth
+        >
+            <mwc-list-item value="0">Sunday</mwc-list-item>
+            <mwc-list-item value="1">Monday</mwc-list-item>
+            <mwc-list-item value="2">Tuesday</mwc-list-item>
+            <mwc-list-item value="3">Wednesday</mwc-list-item>
+            <mwc-list-item value="4">Thursday</mwc-list-item>
+            <mwc-list-item value="5">Friday</mwc-list-item>
+            <mwc-list-item value="6">Saturday</mwc-list-item>
+        </ha-select>
         <div class="day-names-container" style="margin-top: 8px; margin-bottom: 8px;">
             <div class="header" @click=${this._toggleDayNames} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                 <span style="font-weight: bold;">Day Names</span>
