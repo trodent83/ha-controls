@@ -22,7 +22,8 @@ class CalendarGridCard extends LitElement {
   static getStubConfig() {
     return {
       entities: [],
-      first_day_of_week: 1
+      first_day_of_week: 1,
+      default_view: 'month'
     };
   }
 
@@ -101,6 +102,23 @@ class CalendarGridCard extends LitElement {
   }
 
   _getViewDateRange() {
+    const view = this.config.default_view || 'month';
+    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? this.config.first_day_of_week : 1;
+
+    if (view === 'week') {
+        const startView = new Date(this._currentDate);
+        const dayOfWeek = startView.getDay();
+        const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
+        startView.setDate(startView.getDate() - diff);
+        startView.setHours(0, 0, 0, 0);
+
+        const endView = new Date(startView);
+        endView.setDate(endView.getDate() + 6);
+        endView.setHours(23, 59, 59, 999);
+        
+        return { start: startView, end: endView };
+    }
+
     const year = this._currentDate.getFullYear();
     const month = this._currentDate.getMonth();
     
@@ -108,8 +126,6 @@ class CalendarGridCard extends LitElement {
     const startOfMonth = new Date(year, month, 1);
     // End of the month
     const endOfMonth = new Date(year, month + 1, 0);
-
-    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? this.config.first_day_of_week : 1;
 
     // We need to include days from previous month to fill the first week row
     const startView = new Date(startOfMonth);
@@ -184,12 +200,26 @@ class CalendarGridCard extends LitElement {
     this._fetchEvents(start, end);
   }
 
-  _prevMonth() {
-    this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() - 1, 1);
+  _prev() {
+    const view = this.config.default_view || 'month';
+    if (view === 'week') {
+        const newDate = new Date(this._currentDate);
+        newDate.setDate(newDate.getDate() - 7);
+        this._currentDate = newDate;
+    } else {
+        this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() - 1, 1);
+    }
   }
 
-  _nextMonth() {
-    this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() + 1, 1);
+  _next() {
+    const view = this.config.default_view || 'month';
+    if (view === 'week') {
+        const newDate = new Date(this._currentDate);
+        newDate.setDate(newDate.getDate() + 7);
+        this._currentDate = newDate;
+    } else {
+        this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() + 1, 1);
+    }
   }
 
   _today() {
@@ -228,7 +258,15 @@ class CalendarGridCard extends LitElement {
         iter.setDate(iter.getDate() + 1);
     }
 
-    const monthName = this._currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const view = this.config.default_view || 'month';
+    let monthName;
+    if (view === 'week') {
+        const startDateStr = start.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+        const endDateStr = end.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
+        monthName = `Week of ${startDateStr} - ${endDateStr}`;
+    } else {
+        monthName = this._currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
     
     const firstDayOfWeek = this.config.first_day_of_week !== undefined ? parseInt(this.config.first_day_of_week) : 1;
     let weekDays = this.config.day_names;
@@ -249,19 +287,19 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.8">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.2.4">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
             <div class="header-right">
                 <div class="controls">
-                    <div class="control-button" @click=${this._prevMonth}>
+                    <div class="control-button" @click=${this._prev}>
                         <ha-icon icon="mdi:chevron-left"></ha-icon>
                     </div>
                     <div class="control-button today" @click=${this._today}>
                         Today
                     </div>
-                    <div class="control-button" @click=${this._nextMonth}>
+                    <div class="control-button" @click=${this._next}>
                         <ha-icon icon="mdi:chevron-right"></ha-icon>
                     </div>
                 </div>

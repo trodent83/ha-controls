@@ -42,6 +42,15 @@ class CalendarGridCardEditor extends LitElement {
     this._fireConfigChanged();
   }
 
+  _viewChanged(ev) {
+    if (!this._config || !this.hass) return;
+    this._config = {
+      ...this._config,
+      default_view: ev.target.checked ? 'week' : 'month',
+    };
+    this._fireConfigChanged();
+  }
+
   _fireConfigChanged() {
     this.dispatchEvent(
       new CustomEvent("config-changed", {
@@ -73,7 +82,7 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.8">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.2.4">
       <div class="card-config">
         <ha-select
             label="First day of week"
@@ -92,6 +101,12 @@ class CalendarGridCardEditor extends LitElement {
             <mwc-list-item value="5">Friday</mwc-list-item>
             <mwc-list-item value="6">Saturday</mwc-list-item>
         </ha-select>
+        <ha-formfield label="Week View">
+            <ha-switch
+                .checked=${this._config.default_view === 'week'}
+                @change=${this._viewChanged}
+            ></ha-switch>
+        </ha-formfield>
         <div class="day-names-container" style="margin-top: 8px; margin-bottom: 8px;">
             <div class="header" @click=${this._toggleDayNames} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                 <span style="font-weight: bold;">Day Names</span>
