@@ -73,7 +73,7 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.1.8">
       <div class="card-config">
         <ha-select
             label="First day of week"
@@ -125,6 +125,14 @@ class CalendarGridCardEditor extends LitElement {
             <ha-switch
                 .checked=${this._config.show_finished_events !== false}
                 .configValue=${"show_finished_events"}
+                .value=${"on"}
+                @change=${this._valueChanged}
+            ></ha-switch>
+        </ha-formfield>
+        <ha-formfield label="Show refresh button">
+            <ha-switch
+                .checked=${this._config.show_refresh_button !== false}
+                .configValue=${"show_refresh_button"}
                 .value=${"on"}
                 @change=${this._valueChanged}
             ></ha-switch>

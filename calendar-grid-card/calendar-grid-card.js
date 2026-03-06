@@ -179,6 +179,11 @@ class CalendarGridCard extends LitElement {
     this._events = allEvents;
   }
 
+  _refresh() {
+    const { start, end } = this._getViewDateRange();
+    this._fetchEvents(start, end);
+  }
+
   _prevMonth() {
     this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() - 1, 1);
   }
@@ -244,7 +249,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.1.8">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -260,11 +265,18 @@ class CalendarGridCard extends LitElement {
                         <ha-icon icon="mdi:chevron-right"></ha-icon>
                     </div>
                 </div>
-                ${sidebarPos !== 'hidden' ? html`
+                ${(this.config.show_refresh_button !== false || sidebarPos !== 'hidden') ? html`
                 <div class="controls">
+                    ${this.config.show_refresh_button !== false ? html`
+                    <div class="control-button" @click=${this._refresh}>
+                        <ha-icon icon="mdi:refresh"></ha-icon>
+                    </div>
+                    ` : ''}
+                    ${sidebarPos !== 'hidden' ? html`
                     <div class="control-button ${this._sidebarOpen ? 'active' : ''}" @click=${this._toggleSidebar}>
                         <ha-icon icon="mdi:format-list-checks"></ha-icon>
                     </div>
+                    ` : ''}
                 </div>
                 ` : ''}
             </div>
