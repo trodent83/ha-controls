@@ -1,20 +1,16 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js";
 
 import { CalendarEventModel } from "./calendar-event-model.js";
+import { VERSION } from "./calendar-grid-card-const.js";
 
-const translationCache = {};
-
-class CalendarGridCard extends LitElement {
+class CalendarGridCard extends HAControlBase {
   static get properties() {
     return {
-      hass: {},
       config: {},
       _events: { state: true },
       _currentDate: { state: true },
       _sidebarOpen: { state: true },
-      _disabledCalendars: { state: true },
-      _strings: { state: true }
+      _disabledCalendars: { state: true }
     };
   }
 
@@ -38,8 +34,6 @@ class CalendarGridCard extends LitElement {
     this._sidebarOpen = false;
     this._disabledCalendars = new Set();
     this._fetchTimer = null;
-    this._strings = {};
-    this._loadedLang = null;
   }
 
   disconnectedCallback() {
@@ -47,6 +41,14 @@ class CalendarGridCard extends LitElement {
     if (this._fetchTimer) {
       clearTimeout(this._fetchTimer);
     }
+  }
+
+  get translationPath() {
+    return "/local/ha-controls/calendar-grid-card/translations";
+  }
+
+  get translationVersion() {
+    return VERSION;
   }
 
   setConfig(config) {
@@ -91,12 +93,7 @@ class CalendarGridCard extends LitElement {
   }
 
   updated(changedProps) {
-    if (changedProps.has('hass') && this.hass) {
-        const lang = this.hass.language;
-        if (lang !== this._loadedLang) {
-            this._loadTranslations(lang);
-        }
-    }
+    super.updated(changedProps);
     if (changedProps.has('hass') || changedProps.has('_currentDate')) {
       this._checkAndFetch();
     }
@@ -287,57 +284,6 @@ class CalendarGridCard extends LitElement {
     });
   }
 
-  async _loadTranslations(lang) {
-      this._loadedLang = lang;
-      const languages = [lang];
-      if (lang.includes('-')) {
-          languages.push(lang.split('-')[0]);
-      }
-      if (!languages.includes('en')) {
-          languages.push('en');
-      }
-
-      let setStrings = false;
-
-      for (const l of languages) {
-          if (!translationCache[l]) {
-              try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.7`);
-                  if (response.ok) {
-                      translationCache[l] = await response.json();
-                  }
-              } catch (e) {
-                  // Ignore
-              }
-          }
-          
-          if (!translationCache[l]) continue;
-
-          if (!setStrings) {
-              this._strings = translationCache[l];
-              setStrings = true;
-          }
-          if (l === 'en') return;
-          if (translationCache['en']) return;
-      }
-  }
-
-  _localize(key, replace = {}) {
-    let translated = this._strings ? this._strings[key] : undefined;
-    if (translated === undefined) {
-        // Try fallback to en if current is not en and we have en loaded
-        if (this._loadedLang !== 'en' && translationCache['en']) {
-            translated = translationCache['en'][key];
-        }
-    }
-    if (translated === undefined) return key;
-
-    for (const [k, v] of Object.entries(replace)) {
-        translated = translated.replace(`{${k}}`, v);
-    }
-    return translated;
-  }
-
   _getWeekDays() {
     let weekDays = this.config.day_names;
     if (typeof weekDays === 'string') {
@@ -395,7 +341,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.4.7">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=${this.translationVersion}">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

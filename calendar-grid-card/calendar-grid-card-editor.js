@@ -1,17 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js";
+import { VERSION } from "./calendar-grid-card-const.js";
 
-const translationCache = {};
-
-class CalendarGridCardEditor extends LitElement {
+class CalendarGridCardEditor extends HAControlBase {
   static get properties() {
-    return { hass: {}, _config: {}, _dayNamesExpanded: { state: true }, _strings: { state: true } };
+    return { _config: {}, _dayNamesExpanded: { state: true } };
   }
 
   constructor() {
     super();
-    this._strings = {};
-    this._loadedLang = null;
   }
 
   connectedCallback() {
@@ -22,6 +18,14 @@ class CalendarGridCardEditor extends LitElement {
         card.getConfigElement();
       }
     }
+  }
+
+  get translationPath() {
+    return "/local/ha-controls/calendar-grid-card/translations";
+  }
+
+  get translationVersion() {
+    return VERSION;
   }
 
   setConfig(config) {
@@ -71,66 +75,6 @@ class CalendarGridCardEditor extends LitElement {
     );
   }
 
-  updated(changedProps) {
-    if (changedProps.has('hass') && this.hass) {
-        const lang = this.hass.language;
-        if (lang !== this._loadedLang) {
-            this._loadTranslations(lang);
-        }
-    }
-  }
-
-  async _loadTranslations(lang) {
-      this._loadedLang = lang;
-      const languages = [lang];
-      if (lang.includes('-')) {
-          languages.push(lang.split('-')[0]);
-      }
-      if (!languages.includes('en')) {
-          languages.push('en');
-      }
-
-      let setStrings = false;
-
-      for (const l of languages) {
-          if (!translationCache[l]) {
-              try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.7`);
-                  if (response.ok) {
-                      translationCache[l] = await response.json();
-                  }
-              } catch (e) {
-                  // Ignore
-              }
-          }
-          
-          if (translationCache[l]) {
-              if (!setStrings) {
-                  this._strings = translationCache[l];
-                  setStrings = true;
-              }
-              if (l === 'en') return;
-              if (translationCache['en']) return;
-          }
-      }
-  }
-
-  _localize(key, replace = {}) {
-    let translated = this._strings ? this._strings[key] : undefined;
-    if (translated === undefined) {
-        // Try fallback to en if current is not en and we have en loaded
-        if (this._loadedLang !== 'en' && translationCache['en']) {
-            translated = translationCache['en'][key];
-        }
-    }
-    if (translated === undefined) return key;
-
-    for (const [k, v] of Object.entries(replace)) {
-        translated = translated.replace(`{${k}}`, v);
-    }
-    return translated;
-  }
-
   _formValueChanged(ev) {
     this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
@@ -172,7 +116,7 @@ class CalendarGridCardEditor extends LitElement {
     const dayNames = this._getDayNames();
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.7">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=${this.translationVersion}">
       <div class="card-config">
         <ha-form
             .hass=${this.hass}

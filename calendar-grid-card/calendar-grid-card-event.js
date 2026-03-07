@@ -1,3 +1,5 @@
+import { VERSION } from "./calendar-grid-card-const.js";
+
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 
@@ -52,7 +54,7 @@ class CalendarGridCardEvent extends LitElement {
         const animationClass = (isActive && this.activeIconAnimation) ? this.activeIconAnimation : '';
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.4.7">
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=${VERSION}">
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon ${animationClass}" icon="${icon}" style="${iconStyle}"></ha-icon>
