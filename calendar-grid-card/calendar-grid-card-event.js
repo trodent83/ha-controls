@@ -1,4 +1,4 @@
-import { VERSION } from "./calendar-grid-card-const.js";
+import { VERSION } from "./calendar-grid-card-loader.js";
 
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;

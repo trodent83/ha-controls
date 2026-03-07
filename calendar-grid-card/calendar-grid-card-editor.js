@@ -1,5 +1,5 @@
 import { HAControlBase, html } from "../ha-control-base.js";
-import { VERSION } from "./calendar-grid-card-const.js";
+import { VERSION } from "./calendar-grid-card-loader.js";
 
 class CalendarGridCardEditor extends HAControlBase {
   static get properties() {

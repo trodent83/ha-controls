@@ -1,7 +1,7 @@
 import { HAControlBase, html } from "../ha-control-base.js";
 
-import { CalendarEventModel } from "./calendar-event-model.js";
-import { VERSION } from "./calendar-grid-card-const.js";
+import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js";
+import { VERSION } from "./calendar-grid-card-loader.js";
 
 class CalendarGridCard extends HAControlBase {
   static get properties() {
@@ -163,33 +163,6 @@ class CalendarGridCard extends HAControlBase {
     return { start: startView, end: endView };
   }
 
-  _filterEvents(events, entityConf) {
-    if (typeof entityConf !== 'object') return events;
-
-    const filters = [];
-    if (entityConf.filters) {
-      filters.push(...entityConf.filters);
-    }
-    if (entityConf.filter) {
-      filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
-    }
-
-    if (filters.length === 0) return events;
-
-    return events.filter(event => {
-      return !filters.some(filter => {
-        if (!filter || !filter.pattern) return false;
-        try {
-          const flags = filter.case_sensitive === false ? 'i' : '';
-          return new RegExp(filter.pattern, flags).test(event.summary || '');
-        } catch (e) {
-          console.warn(`Invalid regex filter: ${filter.pattern}`);
-          return false;
-        }
-      });
-    });
-  }
-
   async _fetchEvents(start, end) {
     if (!this.hass || !this.config) return;
 
@@ -197,40 +170,8 @@ class CalendarGridCard extends HAControlBase {
     this._fetchedRange = { start: start.toISOString(), end: end.toISOString() };
 
     const entities = this.config.entities || [this.config.entity];
-    const startStr = start.toISOString();
-    const endStr = end.toISOString();
-
-    let allEvents = [];
-    const fetchedEntityIds = new Set();
-
-    for (const entityConf of entities) {
-      const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
-
-      if (fetchedEntityIds.has(entityId)) {
-        continue;
-      }
-
-      try {
-        const path = `calendars/${entityId}?start=${startStr}&end=${endStr}`;
-        const events = await this.hass.callApi("GET", path);
-
-        if (events && Array.isArray(events)) {
-          const filteredEvents = this._filterEvents(events, entityConf);
-          allEvents = allEvents.concat(
-            filteredEvents.map((e) => new CalendarEventModel({ ...e, entity_id: entityId }))
-          );
-        }
-        fetchedEntityIds.add(entityId);
-      } catch (e) {
-        console.error(`Error fetching calendar events for ${entityId}`, e);
-      }
-    }
-
-    allEvents.sort((a, b) => {
-      return a.start - b.start;
-    });
-
-    this._events = allEvents;
+    const dataManager = new CalendarDataManager(this.hass);
+    this._events = await dataManager.fetchEvents(entities, start, end);
   }
 
   _refresh() {
