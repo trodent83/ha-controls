@@ -31,19 +31,20 @@ class CalendarGridCardEditor extends LitElement {
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
     const target = ev.target;
-    if (target.configValue) {
+    const configValue = target.configValue || target.getAttribute('configValue');
+    if (configValue) {
       if (target.value === "") {
         const newConfig = { ...this._config };
-        delete newConfig[target.configValue];
+        delete newConfig[configValue];
         this._config = newConfig;
       } else {
         let newValue = target.checked !== undefined ? target.checked : target.value;
-        if (target.configValue === "day_names") {
+        if (configValue === "day_names") {
             newValue = newValue.split(',').map(v => v.trim());
         }
         this._config = {
           ...this._config,
-          [target.configValue]: newValue,
+          [configValue]: newValue,
         };
       }
     }
@@ -158,13 +159,13 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.9">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.0">
       <div class="card-config">
         <ha-select
             label="${this._localize('cgc.editor.first_day_of_week')}"
             .value=${this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1"}
             .configValue=${"first_day_of_week"}
-            @change=${(ev) => this._valueChanged(ev)}
+            @selected=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
@@ -232,7 +233,7 @@ class CalendarGridCardEditor extends LitElement {
             label="${this._localize('cgc.editor.sidebar_position')}"
             .value=${this._config.sidebar_position || 'right'}
             .configValue=${"sidebar_position"}
-            @change=${(ev) => this._valueChanged(ev)}
+            @selected=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
@@ -316,7 +317,7 @@ class CalendarGridCardEditor extends LitElement {
                                 <ha-select
                                     label="${this._localize('cgc.editor.active_icon_animation')}"
                                     .value=${activeIconAnimation || ''}
-                                    @change=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
+                                    @selected=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
                                     @closed=${(e) => e.stopPropagation()}
                                     fixedMenuPosition
                                     naturalMenuWidth
