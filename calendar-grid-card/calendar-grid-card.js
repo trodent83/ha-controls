@@ -70,23 +70,24 @@ class CalendarGridCard extends LitElement {
       return true;
     }
 
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config) {
-        return true;
-      }
-
-      const entities = this.config.entities || [];
-      for (const entityConf of entities) {
-        const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
-        if (oldHass.states[entityId] !== this.hass.states[entityId]) {
-          return true;
-        }
-      }
-      return false;
+    if (!changedProps.has('hass')) {
+      return true;
     }
 
-    return true;
+    const oldHass = changedProps.get('hass');
+    if (!oldHass || !this.hass || !this.config) {
+      return true;
+    }
+
+    const entities = this.config.entities || [];
+    for (const entityConf of entities) {
+      const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+      if (oldHass.states[entityId] !== this.hass.states[entityId]) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   updated(changedProps) {
@@ -165,6 +166,33 @@ class CalendarGridCard extends LitElement {
     return { start: startView, end: endView };
   }
 
+  _filterEvents(events, entityConf) {
+    if (typeof entityConf !== 'object') return events;
+
+    const filters = [];
+    if (entityConf.filters) {
+      filters.push(...entityConf.filters);
+    }
+    if (entityConf.filter) {
+      filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
+    }
+
+    if (filters.length === 0) return events;
+
+    return events.filter(event => {
+      return !filters.some(filter => {
+        if (!filter || !filter.pattern) return false;
+        try {
+          const flags = filter.case_sensitive === false ? 'i' : '';
+          return new RegExp(filter.pattern, flags).test(event.summary || '');
+        } catch (e) {
+          console.warn(`Invalid regex filter: ${filter.pattern}`);
+          return false;
+        }
+      });
+    });
+  }
+
   async _fetchEvents(start, end) {
     if (!this.hass || !this.config) return;
 
@@ -190,31 +218,7 @@ class CalendarGridCard extends LitElement {
         const events = await this.hass.callApi("GET", path);
 
         if (events && Array.isArray(events)) {
-          let filteredEvents = events;
-          if (typeof entityConf === 'object') {
-            const filters = [];
-            if (entityConf.filters) {
-                filters.push(...entityConf.filters);
-            }
-            if (entityConf.filter) {
-                filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
-            }
-
-            if (filters.length > 0) {
-                filteredEvents = events.filter(event => {
-                    return !filters.some(filter => {
-                        if (!filter || !filter.pattern) return false;
-                        try {
-                            const flags = filter.case_sensitive === false ? 'i' : '';
-                            return new RegExp(filter.pattern, flags).test(event.summary || '');
-                        } catch (e) {
-                            console.warn(`Invalid regex filter for ${entityId}: ${filter.pattern}`);
-                            return false;
-                        }
-                    });
-                });
-            }
-          }
+          const filteredEvents = this._filterEvents(events, entityConf);
           allEvents = allEvents.concat(
             filteredEvents.map((e) => new CalendarEventModel({ ...e, entity_id: entityId }))
           );
@@ -298,7 +302,7 @@ class CalendarGridCard extends LitElement {
       for (const l of languages) {
           if (!translationCache[l]) {
               try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.6`);
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.7`);
                   if (response.ok) {
                       translationCache[l] = await response.json();
                   }
@@ -307,14 +311,14 @@ class CalendarGridCard extends LitElement {
               }
           }
           
-          if (translationCache[l]) {
-              if (!setStrings) {
-                  this._strings = translationCache[l];
-                  setStrings = true;
-              }
-              if (l === 'en') return;
-              if (translationCache['en']) return;
+          if (!translationCache[l]) continue;
+
+          if (!setStrings) {
+              this._strings = translationCache[l];
+              setStrings = true;
           }
+          if (l === 'en') return;
+          if (translationCache['en']) return;
       }
   }
 
@@ -332,6 +336,33 @@ class CalendarGridCard extends LitElement {
         translated = translated.replace(`{${k}}`, v);
     }
     return translated;
+  }
+
+  _getWeekDays() {
+    let weekDays = this.config.day_names;
+    if (typeof weekDays === 'string') {
+      weekDays = weekDays.split(',').map(v => v.trim());
+    }
+
+    if (weekDays && Array.isArray(weekDays) && weekDays.length === 7) {
+      return weekDays;
+    }
+
+    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? parseInt(this.config.first_day_of_week) : 1;
+    const defaultDayNames = [
+      this._localize('cgc.days.short_sun'),
+      this._localize('cgc.days.short_mon'),
+      this._localize('cgc.days.short_tue'),
+      this._localize('cgc.days.short_wed'),
+      this._localize('cgc.days.short_thu'),
+      this._localize('cgc.days.short_fri'),
+      this._localize('cgc.days.short_sat')
+    ];
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      result.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
+    }
+    return result;
   }
 
   render() {
@@ -358,34 +389,13 @@ class CalendarGridCard extends LitElement {
         monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
     }
     
-    const firstDayOfWeek = this.config.first_day_of_week !== undefined ? parseInt(this.config.first_day_of_week) : 1;
-    let weekDays = this.config.day_names;
-
-    if (typeof weekDays === 'string') {
-        weekDays = weekDays.split(',').map(v => v.trim());
-    }
-
-    if (!weekDays || weekDays.length !== 7) {
-        const defaultDayNames = [
-            this._localize('cgc.days.short_sun'),
-            this._localize('cgc.days.short_mon'),
-            this._localize('cgc.days.short_tue'),
-            this._localize('cgc.days.short_wed'),
-            this._localize('cgc.days.short_thu'),
-            this._localize('cgc.days.short_fri'),
-            this._localize('cgc.days.short_sat')
-        ];
-        weekDays = [];
-        for (let i = 0; i < 7; i++) {
-            weekDays.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
-        }
-    }
+    const weekDays = this._getWeekDays();
 
     const rowCount = Math.ceil(days.length / 7);
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.4.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.4.7">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

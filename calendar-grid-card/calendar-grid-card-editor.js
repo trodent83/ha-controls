@@ -32,21 +32,22 @@ class CalendarGridCardEditor extends LitElement {
     if (!this._config || !this.hass) return;
     const target = ev.target;
     const configValue = target.configValue || target.getAttribute('configValue');
-    if (configValue) {
-      if (target.value === "") {
-        const newConfig = { ...this._config };
-        delete newConfig[configValue];
-        this._config = newConfig;
-      } else {
-        let newValue = target.checked !== undefined ? target.checked : target.value;
-        if (configValue === "day_names") {
-            newValue = newValue.split(',').map(v => v.trim());
-        }
-        this._config = {
-          ...this._config,
-          [configValue]: newValue,
-        };
+
+    if (!configValue) return;
+
+    if (target.value === "") {
+      const newConfig = { ...this._config };
+      delete newConfig[configValue];
+      this._config = newConfig;
+    } else {
+      let newValue = target.checked !== undefined ? target.checked : target.value;
+      if (configValue === "day_names") {
+          newValue = newValue.split(',').map(v => v.trim());
       }
+      this._config = {
+        ...this._config,
+        [configValue]: newValue,
+      };
     }
     this._fireConfigChanged();
   }
@@ -94,7 +95,7 @@ class CalendarGridCardEditor extends LitElement {
       for (const l of languages) {
           if (!translationCache[l]) {
               try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.6`);
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.7`);
                   if (response.ok) {
                       translationCache[l] = await response.json();
                   }
@@ -135,36 +136,43 @@ class CalendarGridCardEditor extends LitElement {
     this._fireConfigChanged();
   }
 
+  _getDayNames() {
+    let dayNames = this._config.day_names;
+    if (typeof dayNames === 'string') {
+      dayNames = dayNames.split(',').map(v => v.trim());
+    }
+
+    if (dayNames && Array.isArray(dayNames) && dayNames.length === 7) {
+      return dayNames;
+    }
+
+    const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
+    const defaultDayNames = [
+      this._localize('cgc.days.short_sun'),
+      this._localize('cgc.days.short_mon'),
+      this._localize('cgc.days.short_tue'),
+      this._localize('cgc.days.short_wed'),
+      this._localize('cgc.days.short_thu'),
+      this._localize('cgc.days.short_fri'),
+      this._localize('cgc.days.short_sat')
+    ];
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      result.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
+    }
+    return result;
+  }
+
   render() {
     if (!this.hass || !this._config) {
       return html``;
     }
 
     const entities = this._config.entities || [];
-
-    let dayNames = this._config.day_names;
-    if (typeof dayNames === 'string') {
-        dayNames = dayNames.split(',').map(v => v.trim());
-    }
-    if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
-        const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
-        const defaultDayNames = [
-            this._localize('cgc.days.short_sun'),
-            this._localize('cgc.days.short_mon'),
-            this._localize('cgc.days.short_tue'),
-            this._localize('cgc.days.short_wed'),
-            this._localize('cgc.days.short_thu'),
-            this._localize('cgc.days.short_fri'),
-            this._localize('cgc.days.short_sat')
-        ];
-        dayNames = [];
-        for (let i = 0; i < 7; i++) {
-            dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
-        }
-    }
+    const dayNames = this._getDayNames();
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.7">
       <div class="card-config">
         <ha-form
             .hass=${this.hass}
@@ -406,57 +414,39 @@ class CalendarGridCardEditor extends LitElement {
 
   _dayNameChanged(ev, index) {
       const newValue = ev.target.value;
-      let dayNames = this._config.day_names;
-      if (typeof dayNames === 'string') {
-          dayNames = dayNames.split(',').map(v => v.trim());
-      }
-      if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
-          const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
-          const defaultDayNames = [
-            this._localize('cgc.days.short_sun'),
-            this._localize('cgc.days.short_mon'),
-            this._localize('cgc.days.short_tue'),
-            this._localize('cgc.days.short_wed'),
-            this._localize('cgc.days.short_thu'),
-            this._localize('cgc.days.short_fri'),
-            this._localize('cgc.days.short_sat')
-          ];
-          dayNames = [];
-          for (let i = 0; i < 7; i++) {
-              dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
-          }
-      }
+      const dayNames = this._getDayNames();
       const newDayNames = [...dayNames];
       newDayNames[index] = newValue;
       this._config = { ...this._config, day_names: newDayNames };
       this._fireConfigChanged();
   }
 
+  _updateEntity(index, updateFn) {
+    const newEntities = [...(this._config.entities || [])];
+    let entityConf = newEntities[index];
+    if (typeof entityConf === 'string') {
+      entityConf = { entity: entityConf };
+    } else {
+      entityConf = { ...entityConf };
+    }
+
+    const updatedConf = updateFn(entityConf);
+    newEntities[index] = updatedConf;
+
+    this._config = { ...this._config, entities: newEntities };
+    this._fireConfigChanged();
+  }
+
   _entityChanged(ev, index) {
-      const newValue = ev.detail.value;
-      const newEntities = [...(this._config.entities || [])];
-      if (typeof newEntities[index] === 'object') {
-          newEntities[index] = { ...newEntities[index], entity: newValue };
-      } else {
-          newEntities[index] = newValue;
-      }
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
+    this._updateEntity(index, (entityConf) => {
+      return { ...entityConf, entity: ev.detail.value };
+    });
   }
 
   _entityColorChanged(ev, index, prop) {
-      const newValue = ev.target.value;
-      const newEntities = [...(this._config.entities || [])];
-      let entityConf = newEntities[index];
-      if (typeof entityConf === 'string') {
-          entityConf = { entity: entityConf };
-      } else {
-          entityConf = { ...entityConf };
-      }
-      entityConf[prop] = newValue;
-      newEntities[index] = entityConf;
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
+    this._updateEntity(index, (entityConf) => {
+      return { ...entityConf, [prop]: ev.target.value };
+    });
   }
 
   _removeEntity(index) {
@@ -467,72 +457,49 @@ class CalendarGridCardEditor extends LitElement {
   }
 
   _addFilter(index) {
-      const newEntities = [...(this._config.entities || [])];
-      let entityConf = newEntities[index];
-      if (typeof entityConf === 'string') {
-          entityConf = { entity: entityConf };
-      } else {
-          entityConf = { ...entityConf };
-      }
-      
+    this._updateEntity(index, (entityConf) => {
       const filters = entityConf.filters ? [...entityConf.filters] : [];
       if (entityConf.filter) {
-          filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
-          delete entityConf.filter;
-          delete entityConf.case_sensitive;
-      }
-      filters.push({ pattern: '', case_sensitive: true });
-      entityConf.filters = filters;
-      newEntities[index] = entityConf;
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
-  }
-
-  _removeFilter(entityIndex, filterIndex) {
-      const newEntities = [...(this._config.entities || [])];
-      let entityConf = newEntities[entityIndex];
-      if (typeof entityConf === 'string') {
-          entityConf = { entity: entityConf };
-      } else {
-          entityConf = { ...entityConf };
-      }
-      
-      if (entityConf.filters) {
-        const newFilters = [...entityConf.filters];
-        newFilters.splice(filterIndex, 1);
-        entityConf.filters = newFilters;
-      } else if (entityConf.filter && filterIndex === 0) {
+        filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete entityConf.filter;
         delete entityConf.case_sensitive;
       }
-      
-      newEntities[entityIndex] = entityConf;
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
+      filters.push({ pattern: '', case_sensitive: true });
+      return { ...entityConf, filters };
+    });
+  }
+
+  _removeFilter(entityIndex, filterIndex) {
+    this._updateEntity(entityIndex, (entityConf) => {
+      if (entityConf.filters) {
+        const newFilters = [...entityConf.filters];
+        newFilters.splice(filterIndex, 1);
+        return { ...entityConf, filters: newFilters };
+      } else if (entityConf.filter && filterIndex === 0) {
+        const newConf = { ...entityConf };
+        delete newConf.filter;
+        delete newConf.case_sensitive;
+        return newConf;
+      }
+      return entityConf;
+    });
   }
 
   _filterChanged(ev, entityIndex, filterIndex, prop) {
-      const newEntities = [...(this._config.entities || [])];
-      let entityConf = newEntities[entityIndex];
-      if (typeof entityConf === 'string') {
-          entityConf = { entity: entityConf };
-      } else {
-          entityConf = { ...entityConf };
-      }
-      
+    this._updateEntity(entityIndex, (entityConf) => {
       let filters = entityConf.filters ? [...entityConf.filters] : [];
-      if (!entityConf.filters && entityConf.filter) {
-          filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
-          delete entityConf.filter;
-          delete entityConf.case_sensitive;
-      }
-      
-      filters[filterIndex] = { ...filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
-      entityConf.filters = filters;
+      const newConf = { ...entityConf };
 
-      newEntities[entityIndex] = entityConf;
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
+      if (!entityConf.filters && entityConf.filter) {
+        filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
+        delete newConf.filter;
+        delete newConf.case_sensitive;
+      }
+
+      filters[filterIndex] = { ...filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
+      newConf.filters = filters;
+      return newConf;
+    });
   }
 
   _addEntity(ev) {
