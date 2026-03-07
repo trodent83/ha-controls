@@ -3,6 +3,8 @@ const html = LitElement.prototype.html;
 
 import { CalendarEventModel } from "./calendar-event-model.js";
 
+const translationCache = {};
+
 class CalendarGridCard extends LitElement {
   static get properties() {
     return {
@@ -11,7 +13,8 @@ class CalendarGridCard extends LitElement {
       _events: { state: true },
       _currentDate: { state: true },
       _sidebarOpen: { state: true },
-      _disabledCalendars: { state: true }
+      _disabledCalendars: { state: true },
+      _strings: { state: true }
     };
   }
 
@@ -35,6 +38,8 @@ class CalendarGridCard extends LitElement {
     this._sidebarOpen = false;
     this._disabledCalendars = new Set();
     this._fetchTimer = null;
+    this._strings = {};
+    this._loadedLang = null;
   }
 
   disconnectedCallback() {
@@ -60,7 +65,8 @@ class CalendarGridCard extends LitElement {
         changedProps.has('_currentDate') || 
         changedProps.has('_sidebarOpen') || 
         changedProps.has('_disabledCalendars') ||
-        changedProps.has('config')) {
+        changedProps.has('config') ||
+        changedProps.has('_strings')) {
       return true;
     }
 
@@ -84,6 +90,12 @@ class CalendarGridCard extends LitElement {
   }
 
   updated(changedProps) {
+    if (changedProps.has('hass') && this.hass) {
+        const lang = this.hass.language;
+        if (lang !== this._loadedLang) {
+            this._loadTranslations(lang);
+        }
+    }
     if (changedProps.has('hass') || changedProps.has('_currentDate')) {
       this._checkAndFetch();
     }
@@ -271,6 +283,57 @@ class CalendarGridCard extends LitElement {
     });
   }
 
+  async _loadTranslations(lang) {
+      this._loadedLang = lang;
+      const languages = [lang];
+      if (lang.includes('-')) {
+          languages.push(lang.split('-')[0]);
+      }
+      if (!languages.includes('en')) {
+          languages.push('en');
+      }
+
+      let setStrings = false;
+
+      for (const l of languages) {
+          if (!translationCache[l]) {
+              try {
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json`);
+                  if (response.ok) {
+                      translationCache[l] = await response.json();
+                  }
+              } catch (e) {
+                  // Ignore
+              }
+          }
+          
+          if (translationCache[l]) {
+              if (!setStrings) {
+                  this._strings = translationCache[l];
+                  setStrings = true;
+              }
+              if (l === 'en') return;
+              if (translationCache['en']) return;
+          }
+      }
+  }
+
+  _localize(key, replace = {}) {
+    let translated = this._strings ? this._strings[key] : undefined;
+    if (translated === undefined) {
+        // Try fallback to en if current is not en and we have en loaded
+        if (this._loadedLang !== 'en' && translationCache['en']) {
+            translated = translationCache['en'][key];
+        }
+    }
+    if (translated === undefined) return key;
+
+    for (const [k, v] of Object.entries(replace)) {
+        translated = translated.replace(`{${k}}`, v);
+    }
+    return translated;
+  }
+
   render() {
     if (!this.hass || !this.config) return html``;
 
@@ -290,6 +353,7 @@ class CalendarGridCard extends LitElement {
         const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
         const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
         monthName = `Week of ${startDateStr} - ${endDateStr}`;
+        monthName = this._localize('cgc.card.week_of', { start: startDateStr, end: endDateStr });
     } else {
         monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
     }
@@ -302,7 +366,15 @@ class CalendarGridCard extends LitElement {
     }
 
     if (!weekDays || weekDays.length !== 7) {
-        const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const defaultDayNames = [
+            this._localize('cgc.days.short_sun'),
+            this._localize('cgc.days.short_mon'),
+            this._localize('cgc.days.short_tue'),
+            this._localize('cgc.days.short_wed'),
+            this._localize('cgc.days.short_thu'),
+            this._localize('cgc.days.short_fri'),
+            this._localize('cgc.days.short_sat')
+        ];
         weekDays = [];
         for (let i = 0; i < 7; i++) {
             weekDays.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
@@ -313,7 +385,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.3.2">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.3.6">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -323,7 +395,7 @@ class CalendarGridCard extends LitElement {
                         <ha-icon icon="mdi:chevron-left"></ha-icon>
                     </div>
                     <div class="control-button today" @click=${this._today}>
-                        Today
+                        ${this._localize('cgc.card.today')}
                     </div>
                     <div class="control-button" @click=${this._next}>
                         <ha-icon icon="mdi:chevron-right"></ha-icon>

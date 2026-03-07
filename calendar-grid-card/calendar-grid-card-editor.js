@@ -1,9 +1,17 @@
 const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 
+const translationCache = {};
+
 class CalendarGridCardEditor extends LitElement {
   static get properties() {
-    return { hass: {}, _config: {}, _dayNamesExpanded: { state: true } };
+    return { hass: {}, _config: {}, _dayNamesExpanded: { state: true }, _strings: { state: true } };
+  }
+
+  constructor() {
+    super();
+    this._strings = {};
+    this._loadedLang = null;
   }
 
   connectedCallback() {
@@ -61,6 +69,66 @@ class CalendarGridCardEditor extends LitElement {
     );
   }
 
+  updated(changedProps) {
+    if (changedProps.has('hass') && this.hass) {
+        const lang = this.hass.language;
+        if (lang !== this._loadedLang) {
+            this._loadTranslations(lang);
+        }
+    }
+  }
+
+  async _loadTranslations(lang) {
+      this._loadedLang = lang;
+      const languages = [lang];
+      if (lang.includes('-')) {
+          languages.push(lang.split('-')[0]);
+      }
+      if (!languages.includes('en')) {
+          languages.push('en');
+      }
+
+      let setStrings = false;
+
+      for (const l of languages) {
+          if (!translationCache[l]) {
+              try {
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json`);
+                  if (response.ok) {
+                      translationCache[l] = await response.json();
+                  }
+              } catch (e) {
+                  // Ignore
+              }
+          }
+          
+          if (translationCache[l]) {
+              if (!setStrings) {
+                  this._strings = translationCache[l];
+                  setStrings = true;
+              }
+              if (l === 'en') return;
+              if (translationCache['en']) return;
+          }
+      }
+  }
+
+  _localize(key, replace = {}) {
+    let translated = this._strings ? this._strings[key] : undefined;
+    if (translated === undefined) {
+        // Try fallback to en if current is not en and we have en loaded
+        if (this._loadedLang !== 'en' && translationCache['en']) {
+            translated = translationCache['en'][key];
+        }
+    }
+    if (translated === undefined) return key;
+
+    for (const [k, v] of Object.entries(replace)) {
+        translated = translated.replace(`{${k}}`, v);
+    }
+    return translated;
+  }
+
   render() {
     if (!this.hass || !this._config) {
       return html``;
@@ -74,7 +142,15 @@ class CalendarGridCardEditor extends LitElement {
     }
     if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
         const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
-        const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const defaultDayNames = [
+            this._localize('cgc.days.short_sun'),
+            this._localize('cgc.days.short_mon'),
+            this._localize('cgc.days.short_tue'),
+            this._localize('cgc.days.short_wed'),
+            this._localize('cgc.days.short_thu'),
+            this._localize('cgc.days.short_fri'),
+            this._localize('cgc.days.short_sat')
+        ];
         dayNames = [];
         for (let i = 0; i < 7; i++) {
             dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
@@ -82,26 +158,26 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.2">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.6">
       <div class="card-config">
         <ha-select
-            label="First day of week"
+            label="${this._localize('cgc.editor.first_day_of_week')}"
             .value=${this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1"}
             .configValue=${"first_day_of_week"}
-            @selected=${(ev) => this._valueChanged(ev)}
+            @change=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
         >
-            <mwc-list-item value="0">Sunday</mwc-list-item>
-            <mwc-list-item value="1">Monday</mwc-list-item>
-            <mwc-list-item value="2">Tuesday</mwc-list-item>
-            <mwc-list-item value="3">Wednesday</mwc-list-item>
-            <mwc-list-item value="4">Thursday</mwc-list-item>
-            <mwc-list-item value="5">Friday</mwc-list-item>
-            <mwc-list-item value="6">Saturday</mwc-list-item>
+            <mwc-list-item value="0">${this._localize('cgc.editor.sunday')}</mwc-list-item>
+            <mwc-list-item value="1">${this._localize('cgc.editor.monday')}</mwc-list-item>
+            <mwc-list-item value="2">${this._localize('cgc.editor.tuesday')}</mwc-list-item>
+            <mwc-list-item value="3">${this._localize('cgc.editor.wednesday')}</mwc-list-item>
+            <mwc-list-item value="4">${this._localize('cgc.editor.thursday')}</mwc-list-item>
+            <mwc-list-item value="5">${this._localize('cgc.editor.friday')}</mwc-list-item>
+            <mwc-list-item value="6">${this._localize('cgc.editor.saturday')}</mwc-list-item>
         </ha-select>
-        <ha-formfield label="Week View">
+        <ha-formfield label="${this._localize('cgc.editor.week_view')}">
             <ha-switch
                 .checked=${this._config.default_view === 'week'}
                 @change=${(ev) => this._viewChanged(ev)}
@@ -109,14 +185,14 @@ class CalendarGridCardEditor extends LitElement {
         </ha-formfield>
         <div class="day-names-container">
             <div class="header" @click=${() => this._toggleDayNames()}>
-                <span>Day Names</span>
+                <span>${this._localize('cgc.editor.day_names')}</span>
                 <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
             </div>
             ${this._dayNamesExpanded ? html`
                 <div class="day-names-list">
                     ${dayNames.map((day, index) => html`
                         <ha-textfield
-                            label="Day ${index + 1}"
+                            label="${this._localize('cgc.editor.day_n', { n: index + 1 })}"
                             .value=${day}
                             @input=${(ev) => this._dayNameChanged(ev, index)}
                         ></ha-textfield>
@@ -125,18 +201,18 @@ class CalendarGridCardEditor extends LitElement {
             ` : ''}
         </div>
         <ha-textfield
-            label="Today Background"
+            label="${this._localize('cgc.editor.today_background')}"
             .value=${this._config.today_background || ''}
             .configValue=${"today_background"}
             @input=${(ev) => this._valueChanged(ev)}
         ></ha-textfield>
         <ha-textfield
-            label="Today Border"
+            label="${this._localize('cgc.editor.today_border')}"
             .value=${this._config.today_border || ''}
             .configValue=${"today_border"}
             @input=${(ev) => this._valueChanged(ev)}
         ></ha-textfield>
-        <ha-formfield label="Show finished events">
+        <ha-formfield label="${this._localize('cgc.editor.show_finished_events')}">
             <ha-switch
                 .checked=${this._config.show_finished_events !== false}
                 .configValue=${"show_finished_events"}
@@ -144,7 +220,7 @@ class CalendarGridCardEditor extends LitElement {
                 @change=${(ev) => this._valueChanged(ev)}
             ></ha-switch>
         </ha-formfield>
-        <ha-formfield label="Show refresh button">
+        <ha-formfield label="${this._localize('cgc.editor.show_refresh_button')}">
             <ha-switch
                 .checked=${this._config.show_refresh_button !== false}
                 .configValue=${"show_refresh_button"}
@@ -153,23 +229,23 @@ class CalendarGridCardEditor extends LitElement {
             ></ha-switch>
         </ha-formfield>
         <ha-select
-            label="Sidebar Position"
+            label="${this._localize('cgc.editor.sidebar_position')}"
             .value=${this._config.sidebar_position || 'right'}
             .configValue=${"sidebar_position"}
-            @selected=${(ev) => this._valueChanged(ev)}
+            @change=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
         >
-            <mwc-list-item value="right">Right</mwc-list-item>
-            <mwc-list-item value="left">Left</mwc-list-item>
-            <mwc-list-item value="top">Top</mwc-list-item>
-            <mwc-list-item value="bottom">Bottom</mwc-list-item>
-            <mwc-list-item value="hidden">Hidden</mwc-list-item>
+            <mwc-list-item value="right">${this._localize('cgc.editor.pos_right')}</mwc-list-item>
+            <mwc-list-item value="left">${this._localize('cgc.editor.pos_left')}</mwc-list-item>
+            <mwc-list-item value="top">${this._localize('cgc.editor.pos_top')}</mwc-list-item>
+            <mwc-list-item value="bottom">${this._localize('cgc.editor.pos_bottom')}</mwc-list-item>
+            <mwc-list-item value="hidden">${this._localize('cgc.editor.pos_hidden')}</mwc-list-item>
         </ha-select>
         <div class="separator"></div>
         <div class="option">
-            <div class="heading">Entities</div>
+            <div class="heading">${this._localize('cgc.editor.entities')}</div>
             <div class="entities">
                 ${entities.map((entityConf, index) => {
                     const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
@@ -207,60 +283,60 @@ class CalendarGridCardEditor extends LitElement {
                             <div class="separator"></div>
                             <div class="entity-options">
                                 <ha-textfield
-                                    label="Name"
+                                    label="${this._localize('cgc.editor.name')}"
                                     .value=${name || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'name')}
                                 ></ha-textfield>
                                 <ha-textfield
-                                    label="Foreground"
+                                    label="${this._localize('cgc.editor.foreground')}"
                                     .value=${color || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'color')}
                                 ></ha-textfield>
                                 <ha-textfield
-                                    label="Background"
+                                    label="${this._localize('cgc.editor.background')}"
                                     .value=${backgroundColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'backgroundColor')}
                                 ></ha-textfield>
                                 <ha-textfield
-                                    label="Icon Color"
+                                    label="${this._localize('cgc.editor.icon_color')}"
                                     .value=${iconColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
                                 ></ha-textfield>
                                 <div class="separator"></div>
                                 <ha-textfield
-                                    label="Active Foreground"
+                                    label="${this._localize('cgc.editor.active_foreground')}"
                                     .value=${activeColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'activeColor')}
                                 ></ha-textfield>
                                 <ha-textfield
-                                    label="Active Background"
+                                    label="${this._localize('cgc.editor.active_background')}"
                                     .value=${activeBackgroundColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
                                 ></ha-textfield>
                                 <ha-select
-                                    label="Active Icon Animation"
+                                    label="${this._localize('cgc.editor.active_icon_animation')}"
                                     .value=${activeIconAnimation || ''}
-                                    @selected=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
+                                    @change=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
                                     @closed=${(e) => e.stopPropagation()}
                                     fixedMenuPosition
                                     naturalMenuWidth
                                 >
                                     <mwc-list-item value=""></mwc-list-item>
-                                    <mwc-list-item value="spinning">Spinning</mwc-list-item>
-                                    <mwc-list-item value="pulsing">Pulsing</mwc-list-item>
+                                    <mwc-list-item value="spinning">${this._localize('cgc.editor.anim_spinning')}</mwc-list-item>
+                                    <mwc-list-item value="pulsing">${this._localize('cgc.editor.anim_pulsing')}</mwc-list-item>
                                 </ha-select>
                             </div>
                             <div class="filters-list">
-                                <div class="filters-header">Filters (Regex Exclude)</div>
+                                <div class="filters-header">${this._localize('cgc.editor.filters_header')}</div>
                                 ${filters.map((filter, filterIndex) => html`
                                     <div class="filter-row">
                                         <ha-textfield
                                             class="filter-pattern"
-                                            label="Pattern"
+                                            label="${this._localize('cgc.editor.pattern')}"
                                             .value=${filter.pattern || ''}
                                             @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
                                         ></ha-textfield>
-                                        <ha-formfield label="Case Sensitive">
+                                        <ha-formfield label="${this._localize('cgc.editor.case_sensitive')}">
                                             <ha-switch
                                                 .checked=${filter.case_sensitive !== false}
                                                 @change=${(ev) => this._filterChanged(ev, index, filterIndex, 'case_sensitive')}
@@ -271,11 +347,12 @@ class CalendarGridCardEditor extends LitElement {
                                         ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
                                     </div>
                                 `)}
-                                <ha-button @click=${() => this._addFilter(index)}>Add Filter</ha-button>
+                                <ha-button @click=${() => this._addFilter(index)}>${this._localize('cgc.editor.add_filter')}</ha-button>
                             </div>
                         </div>
                     `;
                 })}
+                <div class="separator"></div>
                 <ha-entity-picker
                     .hass=${this.hass}
                     .includeDomains=${["calendar"]}
@@ -300,7 +377,15 @@ class CalendarGridCardEditor extends LitElement {
       }
       if (!dayNames || !Array.isArray(dayNames) || dayNames.length !== 7) {
           const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
-          const defaultDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const defaultDayNames = [
+            this._localize('cgc.days.short_sun'),
+            this._localize('cgc.days.short_mon'),
+            this._localize('cgc.days.short_tue'),
+            this._localize('cgc.days.short_wed'),
+            this._localize('cgc.days.short_thu'),
+            this._localize('cgc.days.short_fri'),
+            this._localize('cgc.days.short_sat')
+          ];
           dayNames = [];
           for (let i = 0; i < 7; i++) {
               dayNames.push(defaultDayNames[(firstDayOfWeek + i) % 7]);
