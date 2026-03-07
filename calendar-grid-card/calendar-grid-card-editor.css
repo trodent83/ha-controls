@@ -50,3 +50,23 @@
   margin-bottom: 8px;
   width: 100%;
 }
+.entity-row {
+  display: flex;
+  align-items: center;
+}
+.entity-row ha-entity-picker {
+  flex-grow: 1;
+}
+.separator {
+  border-bottom: 1px solid var(--divider-color);
+  margin: 16px 0;
+}
+.filters-list ha-button {
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.add-entity-header {
+  font-weight: 500;
+  margin-bottom: 8px;
+}

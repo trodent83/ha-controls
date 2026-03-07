@@ -298,7 +298,7 @@ class CalendarGridCard extends LitElement {
       for (const l of languages) {
           if (!translationCache[l]) {
               try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json`);
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.3.9`);
                   if (response.ok) {
                       translationCache[l] = await response.json();
                   }
@@ -385,7 +385,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.3.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.3.9">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

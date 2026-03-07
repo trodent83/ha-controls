@@ -93,7 +93,7 @@ class CalendarGridCardEditor extends LitElement {
       for (const l of languages) {
           if (!translationCache[l]) {
               try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json`);
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.3.9`);
                   if (response.ok) {
                       translationCache[l] = await response.json();
                   }
@@ -158,7 +158,7 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.6">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.9">
       <div class="card-config">
         <ha-select
             label="${this._localize('cgc.editor.first_day_of_week')}"
@@ -353,6 +353,7 @@ class CalendarGridCardEditor extends LitElement {
                     `;
                 })}
                 <div class="separator"></div>
+                <div class="add-entity-header">${this._localize('cgc.editor.add_new_calendar')}</div>
                 <ha-entity-picker
                     .hass=${this.hass}
                     .includeDomains=${["calendar"]}

@@ -42,5 +42,6 @@
   "cgc.days.short_fri": "Fri",
   "cgc.days.short_sat": "Sat",
   "cgc.card.today": "Today",
-  "cgc.card.week_of": "Week of {start} - {end}"
+  "cgc.card.week_of": "Week of {start} - {end}",
+  "cgc.editor.add_new_calendar": "Add new calendar"
 }
