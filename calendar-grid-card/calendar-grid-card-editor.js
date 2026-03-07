@@ -82,20 +82,7 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.0">
-      <style>
-        .filter-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
-        }
-        .filters-list {
-          margin-top: 8px;
-          border-top: 1px solid var(--divider-color);
-          padding-top: 8px;
-        }
-      </style>
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.3.2">
       <div class="card-config">
         <ha-select
             label="First day of week"
@@ -120,13 +107,13 @@ class CalendarGridCardEditor extends LitElement {
                 @change=${(ev) => this._viewChanged(ev)}
             ></ha-switch>
         </ha-formfield>
-        <div class="day-names-container" style="margin-top: 8px; margin-bottom: 8px;">
-            <div class="header" @click=${() => this._toggleDayNames()} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                <span style="font-weight: bold;">Day Names</span>
+        <div class="day-names-container">
+            <div class="header" @click=${() => this._toggleDayNames()}>
+                <span>Day Names</span>
                 <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
             </div>
             ${this._dayNamesExpanded ? html`
-                <div class="day-names-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                <div class="day-names-list">
                     ${dayNames.map((day, index) => html`
                         <ha-textfield
                             label="Day ${index + 1}"
@@ -264,14 +251,14 @@ class CalendarGridCardEditor extends LitElement {
                                 </ha-select>
                             </div>
                             <div class="filters-list">
-                                <div style="font-weight: 500; margin-bottom: 8px;">Filters (Regex Exclude)</div>
+                                <div class="filters-header">Filters (Regex Exclude)</div>
                                 ${filters.map((filter, filterIndex) => html`
                                     <div class="filter-row">
                                         <ha-textfield
+                                            class="filter-pattern"
                                             label="Pattern"
                                             .value=${filter.pattern || ''}
                                             @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
-                                            style="flex-grow: 1;"
                                         ></ha-textfield>
                                         <ha-formfield label="Case Sensitive">
                                             <ha-switch

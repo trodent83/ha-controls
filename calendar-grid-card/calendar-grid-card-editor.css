@@ -1,43 +1,52 @@
-.card-config {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
-.entities {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.filters-list {
+  margin-top: 8px;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 8px;
 }
-.entity-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.day-names-container {
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
-.entity-row-container {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    border: 1px solid var(--divider-color);
-    padding: 8px;
-    border-radius: 4px;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
 }
-.entity-options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.header span {
+  font-weight: bold;
 }
-.entity-options ha-textfield {
-    flex: 1;
+.day-names-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
 }
-.separator {
-    border-bottom: 1px solid var(--divider-color);
+.filters-header {
+  font-weight: 500;
+  margin-bottom: 8px;
 }
-ha-entity-picker {
-    flex-grow: 1;
+.filter-pattern {
+  flex-grow: 1;
 }
-ha-textfield {
-    width: 100%;
+.card-config > ha-select,
+.card-config > ha-textfield,
+.card-config > ha-formfield {
+  display: block;
+  margin-bottom: 16px;
 }
-ha-select {
-    width: 100%;
+.day-names-list ha-textfield {
+  width: 100%;
+}
+.entity-options ha-textfield,
+.entity-options ha-select {
+  display: block;
+  margin-bottom: 8px;
+  width: 100%;
 }
