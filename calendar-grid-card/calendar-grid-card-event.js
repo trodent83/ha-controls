@@ -4,6 +4,7 @@ const html = LitElement.prototype.html;
 class CalendarGridCardEvent extends LitElement {
     static get properties() {
         return {
+            hass: { attribute: false },
             event: { attribute: false },
             day: { attribute: false },
             color: { attribute: false },
@@ -28,7 +29,8 @@ class CalendarGridCardEvent extends LitElement {
     render() {
         if (!this.event || !this.day) return html``;
         
-        const timeStr = this.event.getTimeStr(this.day);
+        const lang = this.hass ? this.hass.language : undefined;
+        const timeStr = this.event.getTimeStr(this.day, lang);
         const now = new Date();
         const isPast = this.event.end < now;
         const isActive = this.event.start <= now && this.event.end >= now;
@@ -50,7 +52,7 @@ class CalendarGridCardEvent extends LitElement {
         const animationClass = (isActive && this.activeIconAnimation) ? this.activeIconAnimation : '';
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.2.8">
+            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=0.3.0">
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon ${animationClass}" icon="${icon}" style="${iconStyle}"></ha-icon>

@@ -14,10 +14,10 @@ export class CalendarEventModel {
         return !this.originEvent.start.dateTime;
     }
 
-    getTimeStr(dayDate) {
+    getTimeStr(dayDate, locale = []) {
         if (this.isAllDay) return "";
         if (this.start.toDateString() === dayDate.toDateString()) {
-            return this.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return this.start.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
         }
         return "";
     }

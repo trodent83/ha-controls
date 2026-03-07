@@ -284,13 +284,14 @@ class CalendarGridCard extends LitElement {
     }
 
     const view = this.config.default_view || 'month';
+    const lang = this.hass.language || 'en';
     let monthName;
     if (view === 'week') {
-        const startDateStr = start.toLocaleDateString('default', { month: 'short', day: 'numeric' });
-        const endDateStr = end.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
+        const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
+        const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
         monthName = `Week of ${startDateStr} - ${endDateStr}`;
     } else {
-        monthName = this._currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
     }
     
     const firstDayOfWeek = this.config.first_day_of_week !== undefined ? parseInt(this.config.first_day_of_week) : 1;
@@ -312,7 +313,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.2.8">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.3.0">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
@@ -388,6 +389,7 @@ class CalendarGridCard extends LitElement {
 
                                 return html`
                                 <calendar-grid-card-event 
+                                    .hass=${this.hass}
                                     .event=${event} 
                                     .day=${day}
                                     .color=${color}
