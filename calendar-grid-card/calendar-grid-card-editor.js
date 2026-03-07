@@ -94,7 +94,7 @@ class CalendarGridCardEditor extends LitElement {
       for (const l of languages) {
           if (!translationCache[l]) {
               try {
-                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.3.9`);
+                  const response = await fetch(`/local/ha-controls/calendar-grid-card/translations/${l}.json?v=0.4.6`);
                   if (response.ok) {
                       translationCache[l] = await response.json();
                   }
@@ -130,6 +130,11 @@ class CalendarGridCardEditor extends LitElement {
     return translated;
   }
 
+  _formValueChanged(ev) {
+    this._config = { ...this._config, ...ev.detail.value };
+    this._fireConfigChanged();
+  }
+
   render() {
     if (!this.hass || !this._config) {
       return html``;
@@ -159,25 +164,34 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.0">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.4.6">
       <div class="card-config">
-        <ha-select
-            label="${this._localize('cgc.editor.first_day_of_week')}"
-            .value=${this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1"}
-            .configValue=${"first_day_of_week"}
-            @selected=${(ev) => this._valueChanged(ev)}
-            @closed=${(e) => e.stopPropagation()}
-            fixedMenuPosition
-            naturalMenuWidth
-        >
-            <mwc-list-item value="0">${this._localize('cgc.editor.sunday')}</mwc-list-item>
-            <mwc-list-item value="1">${this._localize('cgc.editor.monday')}</mwc-list-item>
-            <mwc-list-item value="2">${this._localize('cgc.editor.tuesday')}</mwc-list-item>
-            <mwc-list-item value="3">${this._localize('cgc.editor.wednesday')}</mwc-list-item>
-            <mwc-list-item value="4">${this._localize('cgc.editor.thursday')}</mwc-list-item>
-            <mwc-list-item value="5">${this._localize('cgc.editor.friday')}</mwc-list-item>
-            <mwc-list-item value="6">${this._localize('cgc.editor.saturday')}</mwc-list-item>
-        </ha-select>
+        <ha-form
+            .hass=${this.hass}
+            .data=${{ first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1" }}
+            .schema=${[
+                {
+                    name: "first_day_of_week",
+                    label: this._localize('cgc.editor.first_day_of_week'),
+                    selector: {
+                        select: {
+                            options: [
+                                { value: "0", label: this._localize('cgc.editor.sunday') },
+                                { value: "1", label: this._localize('cgc.editor.monday') },
+                                { value: "2", label: this._localize('cgc.editor.tuesday') },
+                                { value: "3", label: this._localize('cgc.editor.wednesday') },
+                                { value: "4", label: this._localize('cgc.editor.thursday') },
+                                { value: "5", label: this._localize('cgc.editor.friday') },
+                                { value: "6", label: this._localize('cgc.editor.saturday') }
+                            ],
+                            mode: "dropdown"
+                        }
+                    }
+                }
+            ]}
+            .computeLabel=${(s) => s.label}
+            @value-changed=${(ev) => this._formValueChanged(ev)}
+        ></ha-form>
         <ha-formfield label="${this._localize('cgc.editor.week_view')}">
             <ha-switch
                 .checked=${this._config.default_view === 'week'}
@@ -229,21 +243,30 @@ class CalendarGridCardEditor extends LitElement {
                 @change=${(ev) => this._valueChanged(ev)}
             ></ha-switch>
         </ha-formfield>
-        <ha-select
-            label="${this._localize('cgc.editor.sidebar_position')}"
-            .value=${this._config.sidebar_position || 'right'}
-            .configValue=${"sidebar_position"}
-            @selected=${(ev) => this._valueChanged(ev)}
-            @closed=${(e) => e.stopPropagation()}
-            fixedMenuPosition
-            naturalMenuWidth
-        >
-            <mwc-list-item value="right">${this._localize('cgc.editor.pos_right')}</mwc-list-item>
-            <mwc-list-item value="left">${this._localize('cgc.editor.pos_left')}</mwc-list-item>
-            <mwc-list-item value="top">${this._localize('cgc.editor.pos_top')}</mwc-list-item>
-            <mwc-list-item value="bottom">${this._localize('cgc.editor.pos_bottom')}</mwc-list-item>
-            <mwc-list-item value="hidden">${this._localize('cgc.editor.pos_hidden')}</mwc-list-item>
-        </ha-select>
+        <ha-form
+            .hass=${this.hass}
+            .data=${{ sidebar_position: this._config.sidebar_position || 'right' }}
+            .schema=${[
+                {
+                    name: "sidebar_position",
+                    label: this._localize('cgc.editor.sidebar_position'),
+                    selector: {
+                        select: {
+                            options: [
+                                { value: "right", label: this._localize('cgc.editor.pos_right') },
+                                { value: "left", label: this._localize('cgc.editor.pos_left') },
+                                { value: "top", label: this._localize('cgc.editor.pos_top') },
+                                { value: "bottom", label: this._localize('cgc.editor.pos_bottom') },
+                                { value: "hidden", label: this._localize('cgc.editor.pos_hidden') }
+                            ],
+                            mode: "dropdown"
+                        }
+                    }
+                }
+            ]}
+            .computeLabel=${(s) => s.label}
+            @value-changed=${(ev) => this._formValueChanged(ev)}
+        ></ha-form>
         <div class="separator"></div>
         <div class="option">
             <div class="heading">${this._localize('cgc.editor.entities')}</div>
@@ -314,18 +337,28 @@ class CalendarGridCardEditor extends LitElement {
                                     .value=${activeBackgroundColor || ''}
                                     @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
                                 ></ha-textfield>
-                                <ha-select
-                                    label="${this._localize('cgc.editor.active_icon_animation')}"
-                                    .value=${activeIconAnimation || ''}
-                                    @selected=${(ev) => this._entityColorChanged(ev, index, 'activeIconAnimation')}
-                                    @closed=${(e) => e.stopPropagation()}
-                                    fixedMenuPosition
-                                    naturalMenuWidth
-                                >
-                                    <mwc-list-item value=""></mwc-list-item>
-                                    <mwc-list-item value="spinning">${this._localize('cgc.editor.anim_spinning')}</mwc-list-item>
-                                    <mwc-list-item value="pulsing">${this._localize('cgc.editor.anim_pulsing')}</mwc-list-item>
-                                </ha-select>
+                                <ha-form
+                                    .hass=${this.hass}
+                                    .data=${{ activeIconAnimation: activeIconAnimation || '' }}
+                                    .schema=${[
+                                        {
+                                            name: "activeIconAnimation",
+                                            label: this._localize('cgc.editor.active_icon_animation'),
+                                            selector: {
+                                                select: {
+                                                    options: [
+                                                        { value: "", label: "" },
+                                                        { value: "spinning", label: this._localize('cgc.editor.anim_spinning') },
+                                                        { value: "pulsing", label: this._localize('cgc.editor.anim_pulsing') }
+                                                    ],
+                                                    mode: "dropdown"
+                                                }
+                                            }
+                                        }
+                                    ]}
+                                    .computeLabel=${(s) => s.label}
+                                    @value-changed=${(ev) => this._entityColorChanged({ target: { value: ev.detail.value.activeIconAnimation } }, index, 'activeIconAnimation')}
+                                ></ha-form>
                             </div>
                             <div class="filters-list">
                                 <div class="filters-header">${this._localize('cgc.editor.filters_header')}</div>
