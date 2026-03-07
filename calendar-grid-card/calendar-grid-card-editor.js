@@ -82,13 +82,26 @@ class CalendarGridCardEditor extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.2.4">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=0.2.8">
+      <style>
+        .filter-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+        .filters-list {
+          margin-top: 8px;
+          border-top: 1px solid var(--divider-color);
+          padding-top: 8px;
+        }
+      </style>
       <div class="card-config">
         <ha-select
             label="First day of week"
             .value=${this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1"}
             .configValue=${"first_day_of_week"}
-            @selected=${this._valueChanged}
+            @selected=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
@@ -104,11 +117,11 @@ class CalendarGridCardEditor extends LitElement {
         <ha-formfield label="Week View">
             <ha-switch
                 .checked=${this._config.default_view === 'week'}
-                @change=${this._viewChanged}
+                @change=${(ev) => this._viewChanged(ev)}
             ></ha-switch>
         </ha-formfield>
         <div class="day-names-container" style="margin-top: 8px; margin-bottom: 8px;">
-            <div class="header" @click=${this._toggleDayNames} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+            <div class="header" @click=${() => this._toggleDayNames()} style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                 <span style="font-weight: bold;">Day Names</span>
                 <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
             </div>
@@ -128,20 +141,20 @@ class CalendarGridCardEditor extends LitElement {
             label="Today Background"
             .value=${this._config.today_background || ''}
             .configValue=${"today_background"}
-            @input=${this._valueChanged}
+            @input=${(ev) => this._valueChanged(ev)}
         ></ha-textfield>
         <ha-textfield
             label="Today Border"
             .value=${this._config.today_border || ''}
             .configValue=${"today_border"}
-            @input=${this._valueChanged}
+            @input=${(ev) => this._valueChanged(ev)}
         ></ha-textfield>
         <ha-formfield label="Show finished events">
             <ha-switch
                 .checked=${this._config.show_finished_events !== false}
                 .configValue=${"show_finished_events"}
                 .value=${"on"}
-                @change=${this._valueChanged}
+                @change=${(ev) => this._valueChanged(ev)}
             ></ha-switch>
         </ha-formfield>
         <ha-formfield label="Show refresh button">
@@ -149,14 +162,14 @@ class CalendarGridCardEditor extends LitElement {
                 .checked=${this._config.show_refresh_button !== false}
                 .configValue=${"show_refresh_button"}
                 .value=${"on"}
-                @change=${this._valueChanged}
+                @change=${(ev) => this._valueChanged(ev)}
             ></ha-switch>
         </ha-formfield>
         <ha-select
             label="Sidebar Position"
             .value=${this._config.sidebar_position || 'right'}
             .configValue=${"sidebar_position"}
-            @selected=${this._valueChanged}
+            @selected=${(ev) => this._valueChanged(ev)}
             @closed=${(e) => e.stopPropagation()}
             fixedMenuPosition
             naturalMenuWidth
@@ -180,6 +193,15 @@ class CalendarGridCardEditor extends LitElement {
                     const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
                     const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
                     const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
+
+                    let filters = [];
+                    if (typeof entityConf === 'object') {
+                        if (entityConf.filters) {
+                            filters = entityConf.filters;
+                        } else if (entityConf.filter) {
+                            filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+                        }
+                    }
 
                     return html`
                         <div class="entity-row-container">
@@ -241,13 +263,36 @@ class CalendarGridCardEditor extends LitElement {
                                     <mwc-list-item value="pulsing">Pulsing</mwc-list-item>
                                 </ha-select>
                             </div>
+                            <div class="filters-list">
+                                <div style="font-weight: 500; margin-bottom: 8px;">Filters (Regex Exclude)</div>
+                                ${filters.map((filter, filterIndex) => html`
+                                    <div class="filter-row">
+                                        <ha-textfield
+                                            label="Pattern"
+                                            .value=${filter.pattern || ''}
+                                            @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
+                                            style="flex-grow: 1;"
+                                        ></ha-textfield>
+                                        <ha-formfield label="Case Sensitive">
+                                            <ha-switch
+                                                .checked=${filter.case_sensitive !== false}
+                                                @change=${(ev) => this._filterChanged(ev, index, filterIndex, 'case_sensitive')}
+                                            ></ha-switch>
+                                        </ha-formfield>
+                                        <ha-icon-button
+                                            @click=${() => this._removeFilter(index, filterIndex)}
+                                        ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
+                                    </div>
+                                `)}
+                                <ha-button @click=${() => this._addFilter(index)}>Add Filter</ha-button>
+                            </div>
                         </div>
                     `;
                 })}
                 <ha-entity-picker
                     .hass=${this.hass}
                     .includeDomains=${["calendar"]}
-                    @value-changed=${this._addEntity}
+                    @value-changed=${(ev) => this._addEntity(ev)}
                     allow-custom-entity
                 ></ha-entity-picker>
             </div>
@@ -310,6 +355,75 @@ class CalendarGridCardEditor extends LitElement {
   _removeEntity(index) {
       const newEntities = [...(this._config.entities || [])];
       newEntities.splice(index, 1);
+      this._config = { ...this._config, entities: newEntities };
+      this._fireConfigChanged();
+  }
+
+  _addFilter(index) {
+      const newEntities = [...(this._config.entities || [])];
+      let entityConf = newEntities[index];
+      if (typeof entityConf === 'string') {
+          entityConf = { entity: entityConf };
+      } else {
+          entityConf = { ...entityConf };
+      }
+      
+      const filters = entityConf.filters ? [...entityConf.filters] : [];
+      if (entityConf.filter) {
+          filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
+          delete entityConf.filter;
+          delete entityConf.case_sensitive;
+      }
+      filters.push({ pattern: '', case_sensitive: true });
+      entityConf.filters = filters;
+      newEntities[index] = entityConf;
+      this._config = { ...this._config, entities: newEntities };
+      this._fireConfigChanged();
+  }
+
+  _removeFilter(entityIndex, filterIndex) {
+      const newEntities = [...(this._config.entities || [])];
+      let entityConf = newEntities[entityIndex];
+      if (typeof entityConf === 'string') {
+          entityConf = { entity: entityConf };
+      } else {
+          entityConf = { ...entityConf };
+      }
+      
+      if (entityConf.filters) {
+        const newFilters = [...entityConf.filters];
+        newFilters.splice(filterIndex, 1);
+        entityConf.filters = newFilters;
+      } else if (entityConf.filter && filterIndex === 0) {
+        delete entityConf.filter;
+        delete entityConf.case_sensitive;
+      }
+      
+      newEntities[entityIndex] = entityConf;
+      this._config = { ...this._config, entities: newEntities };
+      this._fireConfigChanged();
+  }
+
+  _filterChanged(ev, entityIndex, filterIndex, prop) {
+      const newEntities = [...(this._config.entities || [])];
+      let entityConf = newEntities[entityIndex];
+      if (typeof entityConf === 'string') {
+          entityConf = { entity: entityConf };
+      } else {
+          entityConf = { ...entityConf };
+      }
+      
+      let filters = entityConf.filters ? [...entityConf.filters] : [];
+      if (!entityConf.filters && entityConf.filter) {
+          filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
+          delete entityConf.filter;
+          delete entityConf.case_sensitive;
+      }
+      
+      filters[filterIndex] = { ...filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
+      entityConf.filters = filters;
+
+      newEntities[entityIndex] = entityConf;
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
   }

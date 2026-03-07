@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
-const VERSION = "0.2.4";
+const VERSION = "0.2.8";
 const SCRIPT_NAME = "calendar-grid-card-loader.js";
 
 const loader = new HAControlLoader(SCRIPT_NAME, VERSION);

@@ -178,8 +178,33 @@ class CalendarGridCard extends LitElement {
         const events = await this.hass.callApi("GET", path);
 
         if (events && Array.isArray(events)) {
+          let filteredEvents = events;
+          if (typeof entityConf === 'object') {
+            const filters = [];
+            if (entityConf.filters) {
+                filters.push(...entityConf.filters);
+            }
+            if (entityConf.filter) {
+                filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
+            }
+
+            if (filters.length > 0) {
+                filteredEvents = events.filter(event => {
+                    return !filters.some(filter => {
+                        if (!filter || !filter.pattern) return false;
+                        try {
+                            const flags = filter.case_sensitive === false ? 'i' : '';
+                            return new RegExp(filter.pattern, flags).test(event.summary || '');
+                        } catch (e) {
+                            console.warn(`Invalid regex filter for ${entityId}: ${filter.pattern}`);
+                            return false;
+                        }
+                    });
+                });
+            }
+          }
           allEvents = allEvents.concat(
-            events.map((e) => new CalendarEventModel({ ...e, entity_id: entityId }))
+            filteredEvents.map((e) => new CalendarEventModel({ ...e, entity_id: entityId }))
           );
         }
         fetchedEntityIds.add(entityId);
@@ -287,7 +312,7 @@ class CalendarGridCard extends LitElement {
     const sidebarPos = this.config.sidebar_position || 'right';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.2.4">
+      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=0.2.8">
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>
