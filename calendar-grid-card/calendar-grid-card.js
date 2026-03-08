@@ -1,11 +1,12 @@
-import { HAControlBase, html } from "../ha-control-base.js";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
 
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js";
-import { VERSION } from "./calendar-grid-card-loader.js";
+import { VERSION } from "./version.js";
 
 class CalendarGridCard extends HAControlBase {
   static get properties() {
     return {
+      ...super.properties,
       config: {},
       _events: { state: true },
       _currentDate: { state: true },
@@ -28,7 +29,8 @@ class CalendarGridCard extends HAControlBase {
     return {
       entities: [],
       first_day_of_week: 1,
-      default_view: 'month'
+      default_view: 'month',
+      orientation: 'horizontal'
     };
   }
 
@@ -346,6 +348,14 @@ class CalendarGridCard extends HAControlBase {
 
     const rowCount = Math.ceil(days.length / 7);
     const sidebarPos = this.config.sidebar_position || 'right';
+    const orientation = this.config.orientation || 'horizontal';
+    
+    let gridStyle = '';
+    if (orientation === 'vertical') {
+        gridStyle = `grid-template-columns: min-content repeat(${rowCount}, 1fr); grid-template-rows: repeat(7, 1fr); grid-auto-flow: column;`;
+    } else {
+        gridStyle = `grid-template-rows: min-content repeat(${rowCount}, 1fr); grid-template-columns: repeat(7, 1fr);`;
+    }
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=${this.translationVersion}">
@@ -382,7 +392,7 @@ class CalendarGridCard extends HAControlBase {
         </div>
 
         <div class="main-content pos-${sidebarPos}">
-          <div class="calendar-grid" style="grid-template-rows: min-content repeat(${rowCount}, 1fr);">
+          <div class="calendar-grid" style="${gridStyle}">
             ${weekDays.map(d => html`<div class="day-header">${d}</div>`)}
             
             ${days.map(day => {

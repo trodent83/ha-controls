@@ -2,19 +2,19 @@ const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get
 export const html = LitElement.prototype.html;
 export const css = LitElement.prototype.css;
 
-const globalTranslationCache = {};
-
 export class HAControlBase extends LitElement {
   static get properties() {
     return {
       hass: {},
       _strings: { state: true },
+      _fallbackStrings: { state: true },
     };
   }
 
   constructor() {
     super();
     this._strings = {};
+    this._fallbackStrings = {};
     this._loadedLang = null;
   }
 
@@ -70,38 +70,25 @@ export class HAControlBase extends LitElement {
       }
 
       let setStrings = false;
-      const cacheKeyBase = this.translationPath;
 
       for (const l of languages) {
-          const cacheKey = `${cacheKeyBase}:${l}:${this.translationVersion}`;
-          
-          // Check global cache to avoid re-fetching
-          if (!globalTranslationCache[cacheKey]) {
-              try {
-                  const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
-                  if (response.ok) {
-                      globalTranslationCache[cacheKey] = await response.json();
-                  } else {
-                      // Log warning if translation file is missing (404, etc.)
-                      console.warn(`[HAControlBase] Failed to fetch translation for '${l}' from ${this.translationPath}: ${response.status} ${response.statusText}`);
+          try {
+              const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
+              if (response.ok) {
+                  const json = await response.json();
+                  if (!setStrings) {
+                      this._strings = json;
+                      setStrings = true;
                   }
-              } catch (e) {
-                  // Log error if fetch fails (network error, etc.)
-                  console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
+                  if (l === 'en') {
+                      this._fallbackStrings = json;
+                  }
+              } else {
+                  console.warn(`[HAControlBase] Failed to fetch translation for '${l}' from ${this.translationPath}: ${response.status} ${response.statusText}`);
               }
+          } catch (e) {
+              console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
           }
-          
-          if (!globalTranslationCache[cacheKey]) continue;
-
-          // Use the first available language (most specific) as the primary strings
-          if (!setStrings) {
-              this._strings = globalTranslationCache[cacheKey];
-              setStrings = true;
-          }
-          // If we have English (either requested or fallback), we are done
-          if (l === 'en') return;
-          // If we have the specific language and English is already cached, we are done
-          if (globalTranslationCache[`${cacheKeyBase}:en:${this.translationVersion}`]) return;
       }
   }
 
@@ -115,9 +102,8 @@ export class HAControlBase extends LitElement {
     let translated = this._strings ? this._strings[key] : undefined;
     // If translation is missing in current language, try English fallback from cache
     if (translated === undefined && this._loadedLang !== 'en') {
-         const enCacheKey = `${this.translationPath}:en:${this.translationVersion}`;
-         if (globalTranslationCache[enCacheKey]) {
-            translated = globalTranslationCache[enCacheKey][key];
+         if (this._fallbackStrings) {
+            translated = this._fallbackStrings[key];
          }
     }
     // If still undefined, return the key itself

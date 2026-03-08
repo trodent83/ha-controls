@@ -1,9 +1,9 @@
-import { HAControlBase, html } from "../ha-control-base.js";
-import { VERSION } from "./calendar-grid-card-loader.js";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
 class CalendarGridCardEditor extends HAControlBase {
   static get properties() {
-    return { _config: {}, _dayNamesExpanded: { state: true } };
+    return { ...super.properties, _config: {}, _dayNamesExpanded: { state: true } };
   }
 
   /**
@@ -164,7 +164,10 @@ class CalendarGridCardEditor extends HAControlBase {
       <div class="card-config">
         <ha-form
             .hass=${this.hass}
-            .data=${{ first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1" }}
+            .data=${{ 
+                first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1",
+                orientation: this._config.orientation || "horizontal"
+            }}
             .schema=${[
                 {
                     name: "first_day_of_week",
@@ -179,6 +182,19 @@ class CalendarGridCardEditor extends HAControlBase {
                                 { value: "4", label: this._localize('cgc.editor.thursday') },
                                 { value: "5", label: this._localize('cgc.editor.friday') },
                                 { value: "6", label: this._localize('cgc.editor.saturday') }
+                            ],
+                            mode: "dropdown"
+                        }
+                    }
+                },
+                {
+                    name: "orientation",
+                    label: this._localize('cgc.editor.orientation'),
+                    selector: {
+                        select: {
+                            options: [
+                                { value: "horizontal", label: this._localize('cgc.editor.horizontal') },
+                                { value: "vertical", label: this._localize('cgc.editor.vertical') }
                             ],
                             mode: "dropdown"
                         }
