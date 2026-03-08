@@ -24,10 +24,18 @@ class CalendarGridCardEvent extends LitElement {
         this._expanded = false;
     }
 
+    /**
+     * Creates the render root.
+     * @returns {HTMLElement} The render root.
+     */
     createRenderRoot() {
         return this;
     }
 
+    /**
+     * Renders the event.
+     * @returns {TemplateResult} The rendered HTML.
+     */
     render() {
         if (!this.event || !this.day) return html``;
         
@@ -67,6 +75,10 @@ class CalendarGridCardEvent extends LitElement {
         `;
     }
 
+    /**
+     * Handles click events on the event entry.
+     * @param {Event} e - The click event.
+     */
     _handleClick(e) {
         e.stopPropagation();
         this._expanded = !this._expanded;

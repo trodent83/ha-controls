@@ -18,14 +18,26 @@ export class HAControlBase extends LitElement {
     this._loadedLang = null;
   }
 
+  /**
+   * Returns the path to the translation files.
+   * @returns {string|null} The translation path.
+   */
   get translationPath() {
     return null;
   }
 
+  /**
+   * Returns the version of the translation files.
+   * @returns {string} The translation version.
+   */
   get translationVersion() {
     return '1.0.0';
   }
 
+  /**
+   * Invoked after the element has updated.
+   * @param {Map} changedProps - Map of changed properties.
+   */
   updated(changedProps) {
     super.updated(changedProps);
     // Check if hass is defined and changed
@@ -38,6 +50,10 @@ export class HAControlBase extends LitElement {
     this._loadTranslations(lang);
   }
 
+  /**
+   * Loads translations for the specified language.
+   * @param {string} lang - The language code.
+   */
   async _loadTranslations(lang) {
       // If no translation path is defined, we cannot load translations
       if (!this.translationPath) return;
@@ -89,6 +105,12 @@ export class HAControlBase extends LitElement {
       }
   }
 
+  /**
+   * Localizes a key with optional replacements.
+   * @param {string} key - The translation key.
+   * @param {Object} replace - Replacements for placeholders.
+   * @returns {string} The localized string.
+   */
   _localize(key, replace = {}) {
     let translated = this._strings ? this._strings[key] : undefined;
     // If translation is missing in current language, try English fallback from cache
