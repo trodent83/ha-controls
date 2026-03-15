@@ -1,5 +1,6 @@
-import { HAControlLoader } from "../ha-control-loader.js?v=1.0.20";
-import { VERSION } from "./version.js?v=1.0.20";
+import { HAControlLoader } from "../ha-control-loader.js";
+
+const VERSION = "1.0.21";
 
 const SCRIPT_NAME = "room-status-card-loader.js";
 

@@ -79,6 +79,9 @@ export class HAControlBase extends LitElement {
                   try {
                       const json = JSON.parse(text);
                       if (!setStrings) {
+                          if (l !== lang) {
+                              console.info(`[HAControlBase] Translation for '${lang}' not found in ${this.translationPath}, falling back to '${l}'.`);
+                          }
                           this._strings = json;
                           setStrings = true;
                       }
@@ -106,19 +109,30 @@ export class HAControlBase extends LitElement {
    */
   _localize(key, replace = {}) {
     let translated = this._strings ? this._strings[key] : undefined;
+    
     // If translation is missing in current language, try English fallback from cache
     if (translated === undefined && this._loadedLang !== 'en') {
-         if (this._fallbackStrings) {
+         if (this._fallbackStrings && this._fallbackStrings[key] !== undefined) {
             translated = this._fallbackStrings[key];
+            console.info(`[HAControlBase] Key '${key}' not found in '${this._loadedLang}', falling back to English.`);
          }
     }
+    
     // If still undefined, return the key itself
-    if (translated === undefined) return key;
-
-    // Perform replacements for placeholders
-    for (const [k, v] of Object.entries(replace)) {
-        translated = translated.replace(`{${k}}`, v);
+    if (translated === undefined) {
+        console.warn(`[HAControlBase] Missing translation for key '${key}' in ${this.localName}`);
+        return key;
     }
+
+    try {
+        // Perform replacements for placeholders
+        for (const [k, v] of Object.entries(replace)) {
+            translated = translated.replace(`{${k}}`, String(v));
+        }
+    } catch (e) {
+        console.error(`[HAControlBase] Error formatting translation for key '${key}':`, e);
+    }
+    
     return translated;
   }
 }

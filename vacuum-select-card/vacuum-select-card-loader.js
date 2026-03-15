@@ -1,5 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js";
-import { VERSION } from "./version.js";
+
+const VERSION = "1.0.2";
 
 const SCRIPT_NAME = "vacuum-select-card-loader.js";
 

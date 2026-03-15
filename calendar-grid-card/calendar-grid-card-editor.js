@@ -1,5 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
-import { VERSION } from "./version.js";
+
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
 
 class CalendarGridCardEditor extends HAControlBase {
   static get properties() {
