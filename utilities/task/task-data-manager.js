@@ -1,0 +1,63 @@
+export class TaskDataManager {
+  constructor(hass) {
+    this.hass = hass;
+  }
+
+  async fetchTasks(entities) {
+    let allItems = [];
+    for (const entityConf of entities) {
+      // Determine the entity ID from either an object or a string
+      const entity_id = typeof entityConf === 'object' ? entityConf.entity : entityConf;
+
+      // Skip if the entity does not exist in the current Home Assistant state
+      if (!this.hass.states[entity_id]) continue;
+
+      try {
+        // Fetch the list of items for the todo entity via WebSocket
+        const response = await this.hass.callWS({
+          type: "todo/item/list",
+          entity_id
+        });
+
+        // Skip if the response is invalid or contains no items (Early Return Pattern)
+        if (!response || !response.items) continue;
+
+        let items = response.items;
+
+        // Process filters only if the entity configuration is an object
+        if (typeof entityConf === 'object') {
+          // Gather all filters defined in the entity configuration
+          const filters = [];
+          if (entityConf.filters) {
+            filters.push(...entityConf.filters);
+          }
+          if (entityConf.filter) {
+            filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
+          }
+
+          // Apply filters if any are defined
+          if (filters.length > 0) {
+            items = items.filter(item => {
+              return !filters.some(filter => {
+                if (!filter || !filter.pattern) return false;
+                try {
+                  const flags = filter.case_sensitive === false ? 'i' : '';
+                  return new RegExp(filter.pattern, flags).test(item.summary || '');
+                } catch (e) {
+                  console.warn(`Invalid regex filter for ${entity_id}: ${filter.pattern}`);
+                  return false;
+                }
+              });
+            });
+          }
+        }
+
+        // Map the items to include the entity_id and append to the combined list
+        allItems = allItems.concat(items.map(item => ({ ...item, entity_id })));
+      } catch (e) {
+        console.error("Error fetching items for", entity_id, e);
+      }
+    }
+    return allItems;
+  }
+}

@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
-const VERSION = "1.0.3";
+const VERSION = "1.0.5";
 
 const SCRIPT_NAME = "task-list-card-loader.js";
 

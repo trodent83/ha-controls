@@ -2,8 +2,9 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.5.1";
 
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
-import { Task } from "./task-list-dto-task.js";
-import { Day } from "./task-list-dto-day.js";
+import { Task } from "../utilities/task/task-dto-task.js";
+import { Day } from "../utilities/task/task-dto-day.js";
+import { TaskDataManager } from "../utilities/task/task-data-manager.js";
 
 class TaskListCard extends HAControlBase {
   static get properties() {
@@ -126,59 +127,14 @@ class TaskListCard extends HAControlBase {
       .map(e => (typeof e === 'object' ? e.entity : e));
   }
 
-  async *_fetchItemsGenerator() {
+  async _fetchItems() {
     if (!this.hass) return;
 
-    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
-    for (const entityConf of entities) {
-      const entity_id = typeof entityConf === 'object' ? entityConf.entity : entityConf;
-      if (!this.hass.states[entity_id]) continue;
-      try {
-        const response = await this.hass.callWS({
-          type: "todo/item/list",
-          entity_id
-        });
-        if (response && response.items) {
-          let items = response.items;
-          if (typeof entityConf === 'object') {
-            const filters = [];
-            if (entityConf.filters) {
-              filters.push(...entityConf.filters);
-            }
-            if (entityConf.filter) {
-              filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive });
-            }
-
-            if (filters.length > 0) {
-              items = items.filter(item => {
-                return !filters.some(filter => {
-                  if (!filter || !filter.pattern) return false;
-                  try {
-                    const flags = filter.case_sensitive === false ? 'i' : '';
-                    return new RegExp(filter.pattern, flags).test(item.summary || '');
-                  } catch (e) {
-                    console.warn(`Invalid regex filter for ${entity_id}: ${filter.pattern}`);
-                    return false;
-                  }
-                });
-              });
-            }
-          }
-          yield items.map(item => ({ ...item, entity_id }));
-        }
-      } catch (e) {
-        console.error("Error fetching items for", entity_id, e);
-      }
-    }
-  }
-
-  async _fetchItems() {
-    let allItems = [];
-    for await (const items of this._fetchItemsGenerator()) {
-      allItems = allItems.concat(items);
-    }
-
     const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
+
+    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
+    const dataManager = new TaskDataManager(this.hass);
+    let allItems = await dataManager.fetchTasks(entities);
 
     if (maxDays !== null) {
       const cutoff = new Date();
