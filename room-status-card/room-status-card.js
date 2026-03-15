@@ -1,11 +1,13 @@
-//Nessesary Control initialization
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class RoomStatusCard extends LitElement {
+class RoomStatusCard extends HAControlBase {
   static get properties() {
-    return { hass: {}, config: {} };
+    return { ...super.properties, config: {} };
   }
+
+  get translationPath() { return "/local/ha-controls/room-status-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   //Returns the editor for this control
   static getConfigElement() {
@@ -63,7 +65,7 @@ class RoomStatusCard extends LitElement {
     const badges = this.config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=1.0.16">
+      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=${VERSION}">
       <ha-card>
         <div class="card-content">
           <div class="header_container">

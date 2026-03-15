@@ -1,12 +1,10 @@
 import { VERSION } from "./version.js";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
 
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
-
-class CalendarGridCardEvent extends LitElement {
+class CalendarGridCardEvent extends HAControlBase {
     static get properties() {
         return {
-            hass: { attribute: false },
+            ...super.properties,
             event: { attribute: false },
             day: { attribute: false },
             color: { attribute: false },

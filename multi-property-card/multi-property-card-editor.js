@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class MultiPropertyCardEditor extends LitElement {
+class MultiPropertyCardEditor extends HAControlBase {
   static get properties() {
-    return { hass: {}, _config: {} };
+    return { ...super.properties, _config: {} };
   }
+
+  get translationPath() { return "/local/ha-controls/multi-property-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   setConfig(config) {
     this._config = config;
@@ -37,19 +40,9 @@ class MultiPropertyCardEditor extends LitElement {
     this._fireConfigChanged();
   }
 
-  _valueChanged(ev) {
+  _globalValueChanged(ev) {
     if (!this._config || !this.hass) return;
-    const target = ev.target.configValue;
-    const value = ev.detail?.value !== undefined ? ev.detail.value : (ev.target.checked !== undefined ? ev.target.checked : ev.target.value);
-    this._config = { ...this._config, [target]: value };
-    this._fireConfigChanged();
-  }
-
-  _entityChanged(ev, index) {
-    const entities = [...this._config.entities];
-    const newValue = ev.detail.value.entity;
-    entities[index] = { ...entities[index], entity: newValue };
-    this._config = { ...this._config, entities };
+    this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
   }
 
@@ -86,39 +79,53 @@ class MultiPropertyCardEditor extends LitElement {
     }));
   }
 
+  _globalSchema() {
+    const show_unavailable = this._localize('show_unavailable');
+    return [
+      {
+        name: "",
+        type: "grid",
+        schema: [
+          { name: "show_label", label: this._localize('show_labels'), selector: { boolean: {} } },
+          { name: "show_value", label: this._localize('show_values'), selector: { boolean: {} } },
+          { name: "show_unavailable", label: show_unavailable, selector: { boolean: {} } }
+        ]
+      },
+      { 
+        name: "layout", 
+        label: this._localize('layout'), 
+        selector: { 
+          select: { 
+            options: [
+              { value: "row", label: this._localize('horizontal') },
+              { value: "column", label: this._localize('vertical') }
+            ] 
+          } 
+        } 
+      }
+    ];
+  }
+
   render() {
     if (!this.hass || !this._config) return html``;
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card-editor.css?v=0.1.9">
+      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card-editor.css?v=${VERSION}">
       <div class="card-config">
             
         <div class="global-settings">
-          <div class="switch-item">
-            <span>Show Labels</span>
-            <ha-switch .checked=${this._config.show_label !== false} .configValue=${"show_label"} @change=${this._valueChanged}></ha-switch>
-          </div>
-          <div class="switch-item">
-            <span>Show Values</span>
-            <ha-switch .checked=${this._config.show_value !== false} .configValue=${"show_value"} @change=${this._valueChanged}></ha-switch>
-          </div>
-          <div class="switch-item">
-            <span>Show Unavailable</span>
-            <ha-switch .checked=${this._config.show_unavailable === true} .configValue=${"show_unavailable"} @change=${this._valueChanged}></ha-switch>
-          </div>
-          <ha-select
-            label="Layout"
-            .value=${this._config.layout || "row"}
-            .configValue=${"layout"}
-            @closed=${(e) => e.stopPropagation()}
-            @change=${this._valueChanged}
-            fixedMenuPosition
-            naturalMenuWidth
-            class="layout-select"
-          >
-            <mwc-list-item value="row">Horizontal</mwc-list-item>
-            <mwc-list-item value="column">Vertical</mwc-list-item>
-          </ha-select>
+          <ha-form
+            .hass=${this.hass}
+            .data=${{
+              show_label: this._config.show_label !== false,
+              show_value: this._config.show_value !== false,
+              show_unavailable: this._config.show_unavailable === true,
+              layout: this._config.layout || "row"
+            }}
+            .schema=${this._globalSchema()}
+            .computeLabel=${(schema) => schema.label || schema.name}
+            @value-changed=${this._globalValueChanged}
+          ></ha-form>
         </div>
 
         <div class="divider"></div>
@@ -126,22 +133,74 @@ class MultiPropertyCardEditor extends LitElement {
         <div class="entities-container">
           ${(this._config.entities || []).map((ent, idx) => {
             const entityId = typeof ent === 'string' ? ent : ent.entity;
-            const stateObj = this.hass.states[entityId];
+            const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
 
-            const hassFriendlyName = stateObj ? stateObj.attributes.friendly_name : "";
-            const entityLabel = ent.name || hassFriendlyName || entityId || `Entity ${idx + 1}`;
+            const hassFriendlyName = stateObj?.attributes?.friendly_name || entityId;
+            const entityLabel = ent.name || hassFriendlyName || this._localize('entity_num', { num: idx + 1 }) || `Entity ${idx + 1}`;
 
-            const localSchema = [{ name: "entity", selector: { entity: {} } }];
-            const localData = { entity: entityId };
-
-            const actionSchema = [
-              { name: "tap_action", label: "Tap Action", selector: { "ui-action": {} } },
-              { name: "hold_action", label: "Hold Action", selector: { "ui-action": {} } }
-            ];
-            const actionData = { 
-              tap_action: ent.tap_action || { action: "none" }, 
-              hold_action: ent.hold_action || { action: "none" } 
+            const combinedData = {
+              entity: entityId,
+              name: ent.name || "",
+              value: ent.value || "",
+              icon: ent.icon || "",
+              show_icon: ent.show_icon !== false,
+              color: ent.color || "",
+              label_font_size: ent.label_font_size ? String(ent.label_font_size).replace("px", "") : "",
+              label_bold: ent.label_bold === true,
+              animation: ent.animation || "",
+              condition: ent.condition || "",
+              tap_action: ent.tap_action || { action: "none" },
+              hold_action: ent.hold_action || { action: "none" }
             };
+
+            const combinedSchema = [
+              { name: "entity", label: this._localize('entity'), selector: { entity: {} } },
+              { name: "name", label: this._localize('friendly_name_override'), selector: { text: {} } },
+              { name: "value", label: this._localize('static_value'), selector: { text: {} } },
+              {
+                name: "",
+                type: "grid",
+                schema: [
+                  { name: "icon", label: this._localize('icon_override'), selector: { icon: {} } },
+                  { name: "show_icon", label: this._localize('show_icon'), selector: { boolean: {} } }
+                ]
+              },
+              { name: "color", label: this._localize('color_override'), selector: { text: {} } },
+              {
+                name: "",
+                type: "grid",
+                schema: [
+                  { name: "label_font_size", label: this._localize('label_size'), selector: { text: {} } },
+                  { name: "label_bold", label: this._localize('bold'), selector: { boolean: {} } }
+                ]
+              },
+              { 
+                name: "animation", 
+                label: this._localize('default_animation'), 
+                selector: { 
+                  select: { 
+                    options: [
+                      { value: "", label: this._localize('none') },
+                      { value: "blink", label: this._localize('blink') },
+                      { value: "bounce", label: this._localize('bounce') },
+                      { value: "rotating", label: this._localize('rotating') },
+                      { value: "pulse", label: this._localize('pulse') },
+                      { value: "shake", label: this._localize('shake') },
+                      { value: "float", label: this._localize('float') },
+                      { value: "spin-slow", label: this._localize('spin_slow') }
+                    ]
+                  } 
+                } 
+              },
+              { 
+                name: "condition", 
+                label: this._localize('complex_visibility_condition'), 
+                selector: { text: { multiline: true } },
+                helper: this._localize('complex_visibility_condition_placeholder')
+              },
+              { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
+              { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
+            ];
 
             return html`
               <ha-expansion-panel>
@@ -166,190 +225,36 @@ class MultiPropertyCardEditor extends LitElement {
                   <div class="panel-content">
                     <ha-form
                       .hass=${this.hass}
-                      .data=${localData}
-                      .schema=${localSchema}
-                      .computeLabel=${(schema) => schema.name === "entity" ? "" : schema.name}
-                      @value-changed=${(e) => this._entityChanged(e, idx)}
-                    ></ha-form>
-
-                    <ha-textfield
-                      label="Friendly Name Override"
-                      .value=${ent.name || ""}
-                      @input=${(e) => {
-                        const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], name: e.target.value };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    >
-                      ${ent.name ? html`
-                        <ha-icon-button slot="suffix" @click=${(e) => {
-                            e.stopPropagation();
-                            const ents = [...this._config.entities];
-                            ents[idx] = { ...ents[idx], name: "" };
-                            this._config = { ...this._config, entities: ents };
-                            this._fireConfigChanged();
-                        }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
-                      ` : ""}
-                    </ha-textfield>
-
-                    <ha-textfield
-                      label="Static Value (for constants)"
-                      .value=${ent.value || ""}
-                      @input=${(e) => {
-                        const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], value: e.target.value };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    >
-                      ${ent.value ? html`
-                        <ha-icon-button slot="suffix" @click=${(e) => {
-                            e.stopPropagation();
-                            const ents = [...this._config.entities];
-                            ents[idx] = { ...ents[idx], value: "" };
-                            this._config = { ...this._config, entities: ents };
-                            this._fireConfigChanged();
-                        }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
-                      ` : ""}
-                    </ha-textfield>
-
-                    <ha-icon-picker
-                      .hass=${this.hass}
-                      label="Icon Override"
-                      .value=${ent.icon}
+                      .data=${combinedData}
+                      .schema=${combinedSchema}
+                      .computeLabel=${(schema) => schema.label || schema.name}
                       @value-changed=${(e) => {
                         const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], icon: e.detail.value };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    ></ha-icon-picker>
-
-                    <div class="icon-settings-row">
-                      <span>Show Icon</span>
-                      <ha-switch
-                        .checked=${ent.show_icon !== false}
-                        @change=${(e) => {
-                          const ents = [...this._config.entities];
-                          ents[idx] = { ...ents[idx], show_icon: e.target.checked };
-                          this._config = { ...this._config, entities: ents };
-                          this._fireConfigChanged();
-                        }}
-                      ></ha-switch>
-                    </div>
-
-                    <ha-textfield
-                      label="Color Override"
-                      .value=${ent.color || ""}
-                      @input=${(e) => {
-                        const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], color: e.target.value };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    >
-                      ${ent.color ? html`
-                        <ha-icon-button slot="suffix" @click=${(e) => {
-                            e.stopPropagation();
-                            const ents = [...this._config.entities];
-                            ents[idx] = { ...ents[idx], color: "" };
-                            this._config = { ...this._config, entities: ents };
-                            this._fireConfigChanged();
-                        }}><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
-                      ` : ""}
-                    </ha-textfield>
-
-                    <ha-textfield
-                        label="Label Size"
-                        type="number"
-                        placeholder="12"
-                        .value=${ent.label_font_size ? String(ent.label_font_size).replace("px", "") : ""}
-                        @input=${(e) => {
-                            const ents = [...this._config.entities];
-                            ents[idx] = { ...ents[idx], label_font_size: e.target.value };
-                            this._config = { ...this._config, entities: ents };
-                            this._fireConfigChanged();
-                        }}
-                    ><span slot="suffix">px</span></ha-textfield>
-
-                    <div class="icon-settings-row">
-                        <span>Bold</span>
-                        <ha-switch
-                            .checked=${ent.label_bold === true}
-                            @change=${(e) => {
-                                const ents = [...this._config.entities];
-                                ents[idx] = { ...ents[idx], label_bold: e.target.checked };
-                                this._config = { ...this._config, entities: ents };
-                                this._fireConfigChanged();
-                            }}
-                        ></ha-switch>
-                    </div>
-
-                    <ha-select
-                      label="Default Animation"
-                      .value=${ent.animation || ""}
-                      @closed=${(e) => {
-                        e.stopPropagation();
-                        const target = e.target;
-                        if (target.value !== undefined && target.value !== ent.animation) {
-                          const ents = [...this._config.entities];
-                          ents[idx] = { ...ents[idx], animation: target.value };
-                          this._config = { ...this._config, entities: ents };
-                          this._fireConfigChanged();
+                        const newValue = { ...e.detail.value };
+                        
+                        for (const key in newValue) {
+                          if (newValue[key] === "") {
+                            delete newValue[key];
+                            delete ents[idx][key];
+                          }
                         }
-                      }}
-                      fixedMenuPosition
-                      naturalMenuWidth
-                    >
-                      <mwc-list-item value="">None</mwc-list-item>
-                      <mwc-list-item value="blink">Blink</mwc-list-item>
-                      <mwc-list-item value="bounce">Bounce</mwc-list-item>
-                      <mwc-list-item value="rotating">Rotating</mwc-list-item>
-                      <mwc-list-item value="pulse">Pulse</mwc-list-item>
-                      <mwc-list-item value="shake">Shake</mwc-list-item>
-                      <mwc-list-item value="float">Float</mwc-list-item>
-                      <mwc-list-item value="spin-slow">Spin Slow</mwc-list-item>
-                    </ha-select>
 
-                    <ha-textarea
-                      label="Complex Visibility Condition"
-                      placeholder="Available: hass, entities, entity, state, attributes. E.g.,&#10;state > 10 &amp;&amp; attributes.power > 100&#10;entities['sun.sun'].state === 'below_horizon'&#10;hass.user.is_admin"
-                      .value=${ent.condition || ""}
-                      @input=${(e) => {
-                        const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], condition: e.target.value };
+                        ents[idx] = { ...ents[idx], ...newValue };
                         this._config = { ...this._config, entities: ents };
                         this._fireConfigChanged();
                       }}
-                      autogrow
-                    ></ha-textarea>
-
-                    <div class="actions-container">
-                      <ha-form
-                        .hass=${this.hass}
-                        .data=${actionData}
-                        .schema=${actionSchema}
-                        .computeLabel=${(schema) => schema.label}
-                        @value-changed=${(e) => {
-                          const ents = [...this._config.entities];
-                          ents[idx] = { ...ents[idx], ...e.detail.value };
-                          this._config = { ...this._config, entities: ents };
-                          this._fireConfigChanged();
-                        }}
-                      ></ha-form>
-                    </div>
+                    ></ha-form>
 
                     <div class="thresholds-section">
                       <ha-expansion-panel 
                         outlined 
-                        header="Thresholds / State Rules"
-                        .secondary=${`Rules defined: ${(ent.thresholds || []).length}`}
+                        header="${this._localize('thresholds_state_rules')}"
+                        .secondary=${this._localize('rules_defined', { count: (ent.thresholds || []).length })}
                       >
                         ${(ent.thresholds || []).map((thresh, tIdx) => html`
                           <div class="threshold-block">
                             <div class="threshold-sub-header">
-                              <span>Rule #${tIdx + 1} ${thresh.value ? `(${thresh.value})` : ""}</span>
+                              <span>${this._localize('rule_number', { num: tIdx + 1 })} ${thresh.value ? `(${thresh.value})` : ""}</span>
                               <ha-icon-button
                                 class="remove-btn-compact"
                                 @click=${() => this._removeThreshold(idx, tIdx)}
@@ -359,13 +264,13 @@ class MultiPropertyCardEditor extends LitElement {
                             <div class="threshold-row row-1">
                               <ha-textfield
                                 class="flex-grow"
-                                label="Value"
+                                label="${this._localize('value')}"
                                 .value=${thresh.value || ""}
                                 @input=${(e) => this._updateThreshold(idx, tIdx, 'value', e.target.value)}
                               ></ha-textfield>
                               <ha-textfield
                                 class="flex-grow"
-                                label="Color"
+                                label="${this._localize('color')}"
                                 .value=${thresh.color || ""}
                                 @input=${(e) => this._updateThreshold(idx, tIdx, 'color', e.target.value)}
                               ></ha-textfield>
@@ -374,7 +279,7 @@ class MultiPropertyCardEditor extends LitElement {
                             <!-- Row 2: Animation (Full Width) -->
                             <div class="threshold-row row-2">
                               <ha-select
-                                label="Animation"
+                                label="${this._localize('animation')}"
                                 .value=${thresh.animation || ""}
                                 .idx=${idx}
                                 .tIdx=${tIdx}
@@ -389,21 +294,21 @@ class MultiPropertyCardEditor extends LitElement {
                                 fixedMenuPosition
                                 naturalMenuWidth
                               >
-                                <mwc-list-item value="">None</mwc-list-item>
-                                <mwc-list-item value="blink">Blink</mwc-list-item>
-                                <mwc-list-item value="bounce">Bounce</mwc-list-item>
-                                <mwc-list-item value="rotating">Rotating</mwc-list-item>
-                                <mwc-list-item value="pulse">Pulse</mwc-list-item>
-                                <mwc-list-item value="shake">Shake</mwc-list-item>
-                                <mwc-list-item value="float">Float</mwc-list-item>
-                                <mwc-list-item value="spin-slow">Spin Slow</mwc-list-item>
+                                <mwc-list-item value="">${this._localize('none')}</mwc-list-item>
+                                <mwc-list-item value="blink">${this._localize('blink')}</mwc-list-item>
+                                <mwc-list-item value="bounce">${this._localize('bounce')}</mwc-list-item>
+                                <mwc-list-item value="rotating">${this._localize('rotating')}</mwc-list-item>
+                                <mwc-list-item value="pulse">${this._localize('pulse')}</mwc-list-item>
+                                <mwc-list-item value="shake">${this._localize('shake')}</mwc-list-item>
+                                <mwc-list-item value="float">${this._localize('float')}</mwc-list-item>
+                                <mwc-list-item value="spin-slow">${this._localize('spin_slow')}</mwc-list-item>
                               </ha-select>
                             </div>
                           </div>
                         `)}
 
                         <ha-button @click=${() => this._addThreshold(idx)}>
-                          <ha-icon icon="mdi:plus" slot="icon"></ha-icon> Add Rule
+                          <ha-icon icon="mdi:plus" slot="icon"></ha-icon> ${this._localize('add_rule')}
                         </ha-button>
                       </ha-expansion-panel>
                     </div>
@@ -416,7 +321,7 @@ class MultiPropertyCardEditor extends LitElement {
         <div class="add-button-container">
           <ha-button raised @click=${this._addEntity}>
             <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-            Add Entity
+            ${this._localize('add_entity')}
           </ha-button>
         </div>
       </div>

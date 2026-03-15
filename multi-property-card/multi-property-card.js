@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class MultiPropertyCard extends LitElement {
+class MultiPropertyCard extends HAControlBase {
   static get properties() {
-    return { hass: {}, config: {} };
+    return { ...super.properties, config: {} };
   }
+
+  get translationPath() { return "/local/ha-controls/multi-property-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   static getConfigElement() {
     return document.createElement("multi-property-card-editor");
@@ -106,12 +109,12 @@ class MultiPropertyCard extends LitElement {
   }
 
   render() {
-    if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">No entities</ha-alert>`;
+    if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">${this._localize('no_entities')}</ha-alert>`;
 
     const layoutClass = this.config.layout === 'column' ? 'layout-column' : 'layout-row';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=0.2.6">
+      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=${VERSION}">
       <ha-card>
         <div class="content-container ${layoutClass}">
       ${this.config.entities
@@ -213,7 +216,7 @@ class MultiPropertyCard extends LitElement {
                 ` : ''}
                 ${showValue ? html`
                   <div class="value-container">
-                      <span class="value-text">${state ?? (entityId ? 'N/A' : '')}</span>
+                      <span class="value-text">${state ?? (entityId ? this._localize('not_available') : '')}</span>
                       ${unit ? html`<span class="unit-text">${unit}</span>` : ''}
                   </div>
                 ` : ''}

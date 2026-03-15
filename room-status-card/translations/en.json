@@ -1,0 +1,21 @@
+{
+  "room_name": "Room Name",
+  "icon": "Icon",
+  "header_settings": "Header Settings",
+  "display_room_name": "Display Room Name",
+  "display_icon": "Display Icon",
+  "badges": "Badges",
+  "badge_num": "Badge {num}",
+  "default_color": "Default Color",
+  "show_icon": "Show Icon",
+  "show_value": "Show Value",
+  "thresholds_rules": "Thresholds / Rules",
+  "value_ge": "Value >=",
+  "color": "Color",
+  "animation": "Animation",
+  "none": "None",
+  "blink": "Blink",
+  "pulse": "Pulse",
+  "add_rule": "Add Rule",
+  "add_badge": "Add Badge"
+}

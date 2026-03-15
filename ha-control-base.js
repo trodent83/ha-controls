@@ -75,13 +75,19 @@ export class HAControlBase extends LitElement {
           try {
               const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
               if (response.ok) {
-                  const json = await response.json();
-                  if (!setStrings) {
-                      this._strings = json;
-                      setStrings = true;
-                  }
-                  if (l === 'en') {
-                      this._fallbackStrings = json;
+                  const text = await response.text();
+                  try {
+                      const json = JSON.parse(text);
+                      if (!setStrings) {
+                          this._strings = json;
+                          setStrings = true;
+                      }
+                      if (l === 'en') {
+                          this._fallbackStrings = json;
+                      }
+                      this.requestUpdate();
+                  } catch (e) {
+                      console.error(`[HAControlBase] Error parsing JSON for '${l}' from ${this.translationPath}:\n${e.message}\nRaw content:\n${text}`);
                   }
               } else {
                   console.warn(`[HAControlBase] Failed to fetch translation for '${l}' from ${this.translationPath}: ${response.status} ${response.statusText}`);

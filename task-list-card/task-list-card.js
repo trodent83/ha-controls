@@ -1,13 +1,16 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
 import { Task } from "./task-list-dto-task.js";
 import { Day } from "./task-list-dto-day.js";
 
-class TaskListCard extends LitElement {
+class TaskListCard extends HAControlBase {
   static get properties() {
-    return { hass: {}, config: {}, _groups: { state: true }, _processing: { state: true } };
+    return { ...super.properties, config: {}, _groups: { state: true }, _processing: { state: true } };
   }
+
+  get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   static getConfigElement() {
     return document.createElement("task-list-card-editor");
@@ -90,6 +93,7 @@ class TaskListCard extends LitElement {
   }
 
   updated(changedProps) {
+    super.updated(changedProps);
     if (!changedProps.has("hass")) { return; }
     const entities = this._getEntities();
     let hasChanged = false;
@@ -251,7 +255,7 @@ class TaskListCard extends LitElement {
     const groups = this._groups || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=${VERSION}">
       <style>
         .spinning {
           animation: spin 1s linear infinite;
@@ -287,7 +291,7 @@ class TaskListCard extends LitElement {
               ></task-list-card-row>
             `;
     })}
-          ${groups.length === 0 ? html`<div class="task-row">No tasks</div>` : ''}
+          ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
         </div>
       </ha-card>
           ${this.config.show_delete_completed_button ? html`
@@ -297,8 +301,8 @@ class TaskListCard extends LitElement {
                 <ha-icon icon="${this._processing === 'delete' ? 'mdi:refresh' : 'mdi:delete-sweep'}" class="${this._processing === 'delete' ? 'spinning' : ''}"></ha-icon>
               </div>
               <div class="tile-info">
-                <span class="tile-name">Delete Completed</span>
-                <span class="tile-state">Delete all completed tasks</span>
+                <span class="tile-name">${this._localize('delete_completed')}</span>
+                <span class="tile-state">${this._localize('delete_completed_desc')}</span>
               </div>
             </div>
           </ha-card>
@@ -310,8 +314,8 @@ class TaskListCard extends LitElement {
                 <ha-icon icon="mdi:refresh" class="${this._processing === 'refresh' ? 'spinning' : ''}"></ha-icon>
               </div>
               <div class="tile-info">
-                <span class="tile-name">Refresh</span>
-                <span class="tile-state">Update task list</span>
+                <span class="tile-name">${this._localize('refresh')}</span>
+                <span class="tile-state">${this._localize('refresh_desc')}</span>
               </div>
             </div>
           </ha-card>

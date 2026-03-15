@@ -1,15 +1,18 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class TaskListCardRow extends LitElement {
+class TaskListCardRow extends HAControlBase {
   static get properties() {
     return {
-      hass: { attribute: false },
+      ...super.properties,
       config: { attribute: false },
       day: { attribute: false },
       readonly: { type: Boolean }
     };
   }
+
+  get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   createRenderRoot() {
     return this;
@@ -94,11 +97,11 @@ class TaskListCardRow extends LitElement {
     const diffDays = this.day.diffDays;
 
     if (diffDays !== null) {
-      if (diffDays === 0) dueInDaysText = 'Today';
-      else if (diffDays === 1) dueInDaysText = 'Tomorrow';
-      else if (diffDays > 1) dueInDaysText = `Due in ${diffDays} days`;
-      else if (diffDays === -1) dueInDaysText = 'Overdue by 1 day';
-      else dueInDaysText = `Overdue by ${Math.abs(diffDays)} days`;
+      if (diffDays === 0) dueInDaysText = this._localize('today');
+      else if (diffDays === 1) dueInDaysText = this._localize('tomorrow');
+      else if (diffDays > 1) dueInDaysText = this._localize('due_in_days', { days: diffDays });
+      else if (diffDays === -1) dueInDaysText = this._localize('overdue_by_1_day');
+      else dueInDaysText = this._localize('overdue_by_days', { days: Math.abs(diffDays) });
     }
 
     const tasks = this.day.tasks;

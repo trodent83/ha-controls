@@ -1,6 +1,6 @@
-import { HAControlLoader } from "../ha-control-loader.js";
+import { HAControlLoader } from "../ha-control-loader.js?v=0.5.0";
+import { VERSION } from "./version.js?v=1.0.12";
 
-const VERSION = "1.0.0";
 const SCRIPT_NAME = "multi-property-card-loader.js";
 
 const loader = new HAControlLoader(SCRIPT_NAME, VERSION);

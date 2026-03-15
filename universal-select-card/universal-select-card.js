@@ -1,13 +1,16 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class UniversalSelectCard extends LitElement {
+class UniversalSelectCard extends HAControlBase {
   static get properties() {
     return { 
-      hass: {}, 
+      ...super.properties,
       config: {} 
     };
   }
+
+  get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   getCardSize() {
     return 1;
@@ -82,7 +85,7 @@ class UniversalSelectCard extends LitElement {
     const lockedClass = isLocked ? 'locked' : '';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card.css?v=1.0.2">
+      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card.css?v=${VERSION}">
       <ha-card class="${layoutClass} ${lockedClass}">
         ${options.map(option => {
           const optCfg = this.config.options_config?.[option] || {};
@@ -97,7 +100,7 @@ class UniversalSelectCard extends LitElement {
                 label = optCfg._scriptFn(this.hass, option);
                 this._lastScriptLabel = label;
               } catch (e) {
-                label = "Error";
+                label = this._localize('error');
                 console.error("Script error:", e);
               }
             } else if (optCfg.active_label_entity) {

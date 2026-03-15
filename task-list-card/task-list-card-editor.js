@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class TaskListCardEditor extends LitElement {
+class TaskListCardEditor extends HAControlBase {
   static get properties() {
-    return { hass: {}, _config: {} };
+    return { ...super.properties, _config: {} };
   }
+
+  get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   connectedCallback() {
     super.connectedCallback();
@@ -157,7 +160,7 @@ class TaskListCardEditor extends LitElement {
     const due_date_colors = this._config.due_date_colors || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=${VERSION}">
       <style>
         .entity-row-container {
           border: 1px solid var(--divider-color);
@@ -182,47 +185,47 @@ class TaskListCardEditor extends LitElement {
       <div class="card-config">
         <div class="options">
             <ha-textfield
-              label="Title"
+              label="${this._localize('title')}"
               .value="${this._config.title || ''}"
               .configValue="${'title'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-icon-picker
-              label="Icon"
+              label="${this._localize('icon')}"
               .value="${this._config.icon === undefined ? 'mdi:calendar-check' : this._config.icon}"
               .configValue="${'icon'}"
               @value-changed="${(e) => this._iconChanged(e)}"
             ></ha-icon-picker>
             <ha-textfield
-              label="Max Days"
+              label="${this._localize('max_days')}"
               type="number"
               .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
               .configValue="${'max_days'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <div class="switches-grid">
-              <ha-formfield label="Show no due date">
+              <ha-formfield label="${this._localize('show_no_due_date')}">
                 <ha-switch
                   .checked="${this._config.show_no_due_date !== false}"
                   .configValue="${'show_no_due_date'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show completed">
+              <ha-formfield label="${this._localize('show_completed')}">
                 <ha-switch
                   .checked="${this._config.show_completed !== false}"
                   .configValue="${'show_completed'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show refresh button">
+              <ha-formfield label="${this._localize('show_refresh_button')}">
                 <ha-switch
                   .checked="${this._config.show_refresh_button === true}"
                   .configValue="${'show_refresh_button'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show delete completed button">
+              <ha-formfield label="${this._localize('show_delete_completed_button')}">
                 <ha-switch
                   .checked="${this._config.show_delete_completed_button === true}"
                   .configValue="${'show_delete_completed_button'}"
@@ -232,7 +235,7 @@ class TaskListCardEditor extends LitElement {
             </div>
         </div>
 
-        <ha-expansion-panel header="Entities" outlined expanded class="panel">
+        <ha-expansion-panel header="${this._localize('entities')}" outlined expanded class="panel">
           <div class="entities-list">
             ${entities.map((entityConf, index) => {
               const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
@@ -262,12 +265,12 @@ class TaskListCardEditor extends LitElement {
                   ${filters.map((filter, filterIndex) => html`
                     <div class="filter-row">
                       <ha-textfield
-                        label="Filter (Regex)"
+                        label="${this._localize('filter_regex')}"
                         .value="${filter.pattern || ''}"
                         @input="${(e) => this._filterChanged(e, index, filterIndex, 'pattern')}"
                         style="flex-grow: 1;"
                       ></ha-textfield>
-                      <ha-formfield label="Case Sensitive">
+                      <ha-formfield label="${this._localize('case_sensitive')}">
                         <ha-switch
                           .checked="${filter.case_sensitive !== false}"
                           @change="${(e) => this._filterChanged(e, index, filterIndex, 'case_sensitive')}"
@@ -278,25 +281,25 @@ class TaskListCardEditor extends LitElement {
                       ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
                     </div>
                   `)}
-                  <ha-button @click="${() => this._addFilter(index)}">Add Filter</ha-button>
+                  <ha-button @click="${() => this._addFilter(index)}">${this._localize('add_filter')}</ha-button>
                 </div>
               </div>
             `})}
             <div class="add-button">
               <ha-button raised @click="${this._addEntity}">
                 <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-                Add Entity
+                ${this._localize('add_entity')}
               </ha-button>
             </div>
           </div>
         </ha-expansion-panel>
 
-                <ha-expansion-panel header="Due Date Colors" outlined class="panel">
+        <ha-expansion-panel header="${this._localize('due_date_colors')}" outlined class="panel">
           <div class="due-date-colors">
           ${due_date_colors.map((rule, index) => html`
             <div class="due-date-color-row">
               <ha-select
-                label="Operator"
+                label="${this._localize('operator')}"
                 class="operator"
                 .value="${rule.operator || '<='}"
                 @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
@@ -312,14 +315,14 @@ class TaskListCardEditor extends LitElement {
                 <mwc-list-item value=">=">&gt;=</mwc-list-item>
               </ha-select>
               <ha-textfield
-                label="Days"
+                label="${this._localize('days')}"
                 type="number"
                 class="days"
                 .value="${rule.days}"
                 @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
               ></ha-textfield>
               <ha-textfield
-                label="Color"
+                label="${this._localize('color')}"
                 class="color"
                 .value="${rule.color}"
                 @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
@@ -332,44 +335,44 @@ class TaskListCardEditor extends LitElement {
           <div class="add-button">
             <ha-button raised @click="${this._addDueDateColor}">
               <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-              Add Rule
+              ${this._localize('add_rule')}
             </ha-button>
           </div>
         </div>
         </ha-expansion-panel>
 
-        <ha-expansion-panel header="Appearance" outlined class="panel">
+        <ha-expansion-panel header="${this._localize('appearance')}" outlined class="panel">
           <div class="options">
             <div class="switches-grid">
-              <ha-formfield label="Show due date">
+              <ha-formfield label="${this._localize('show_due_date')}">
                 <ha-switch
                   .checked="${this._config.show_due_date !== false}"
                   .configValue="${'show_due_date'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show description">
+              <ha-formfield label="${this._localize('show_description')}">
                 <ha-switch
                   .checked="${this._config.show_description === true}"
                   .configValue="${'show_description'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show due in days">
+              <ha-formfield label="${this._localize('show_due_in_days')}">
                 <ha-switch
                   .checked="${this._config.show_due_in_days === true}"
                   .configValue="${'show_due_in_days'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Merge tasks same day">
+              <ha-formfield label="${this._localize('merge_tasks_same_day')}">
                 <ha-switch
                   .checked="${this._config.merge_tasks_same_day === true}"
                   .configValue="${'merge_tasks_same_day'}"
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
-              <ha-formfield label="Show source">
+              <ha-formfield label="${this._localize('show_source')}">
                 <ha-switch
                   .checked="${this._config.show_source === true}"
                   .configValue="${'show_source'}"
@@ -378,7 +381,7 @@ class TaskListCardEditor extends LitElement {
               </ha-formfield>
             </div>
             <ha-select
-              label="Separator Mode"
+              label="${this._localize('separator_mode')}"
               .value="${this._config.separator_mode || 'day'}"
               .configValue="${'separator_mode'}"
               @selected="${this._valueChanged}"
@@ -386,42 +389,42 @@ class TaskListCardEditor extends LitElement {
               fixedMenuPosition
               naturalMenuWidth
             >
-              <mwc-list-item value="day">Day</mwc-list-item>
-              <mwc-list-item value="week">Week</mwc-list-item>
-              <mwc-list-item value="month">Month</mwc-list-item>
+              <mwc-list-item value="day">${this._localize('day')}</mwc-list-item>
+              <mwc-list-item value="week">${this._localize('week')}</mwc-list-item>
+              <mwc-list-item value="month">${this._localize('month')}</mwc-list-item>
             </ha-select>
             <ha-textfield
-              label="Default Color"
+              label="${this._localize('default_color')}"
               .value="${this._config.default_due_date_color || ''}"
               .configValue="${'default_due_date_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-textfield
-              label="Date Separator Color"
+              label="${this._localize('date_separator_color')}"
               .value="${this._config.date_separator_color || ''}"
               .configValue="${'date_separator_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-textfield
-              label="Separator Color"
+              label="${this._localize('separator_color')}"
               .value="${this._config.day_separator_color || ''}"
               .configValue="${'day_separator_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-textfield
-              label="Due In Days Separator Color"
+              label="${this._localize('due_in_days_separator_color')}"
               .value="${this._config.due_in_days_separator_color || ''}"
               .configValue="${'due_in_days_separator_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-textfield
-              label="Merged Tasks Separator Color"
+              label="${this._localize('merged_tasks_separator_color')}"
               .value="${this._config.merged_tasks_separator_color || ''}"
               .configValue="${'merged_tasks_separator_color'}"
               @input="${this._valueChanged}"
             ></ha-textfield>
             <ha-textfield
-              label="Source Color"
+              label="${this._localize('source_color')}"
               .value="${this._config.source_color || ''}"
               .configValue="${'source_color'}"
               @input="${this._valueChanged}"

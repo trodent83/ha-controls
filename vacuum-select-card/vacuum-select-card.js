@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class VacuumSelectCard extends LitElement {
+class VacuumSelectCard extends HAControlBase {
   static get properties() {
-    return { hass: {}, config: {} };
+    return { ...super.properties, config: {} };
   }
+
+  get translationPath() { return "/local/ha-controls/vacuum-select-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   // Link to the visual editor
   static getConfigElement() { 
@@ -49,7 +52,7 @@ class VacuumSelectCard extends LitElement {
       ? Math.floor(parseFloat(cleaningStatusEntity.state))
       : null;
 
-    if (!vacuum || !output) return html`<ha-alert alert-type="error">Missing entities</ha-alert>`;
+    if (!vacuum || !output) return html`<ha-alert alert-type="error">${this._localize('missing_entities')}</ha-alert>`;
 
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
@@ -67,7 +70,7 @@ class VacuumSelectCard extends LitElement {
     const isMarkingEnabled = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=0.2.2">
+      <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=${VERSION}">
       <div class="container ${isReadonly ? 'readonly' : ''}" 
           style="--grid-columns: ${this.config.columns || 4}; 
                   --selection-color: ${this.config.selection_color || 'var(--primary-color)'}; 
@@ -115,8 +118,8 @@ class VacuumSelectCard extends LitElement {
               <ha-icon .icon="${allVisibleSelected ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline'}"></ha-icon>
             </div>
             <div class="tile-info">
-              <span class="tile-name">${allVisibleSelected ? 'Deselect All' : 'Select All'}</span>
-              <span class="tile-state">${selectedRooms.length} rooms selected</span>
+            <span class="tile-name">${allVisibleSelected ? this._localize('deselect_all') : this._localize('select_all')}</span>
+            <span class="tile-state">${this._localize('rooms_selected', { count: selectedRooms.length })}</span>
             </div>
           </div>
         ` : ''}

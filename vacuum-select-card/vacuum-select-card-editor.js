@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class VacuumSelectCardEditor extends LitElement {
+class VacuumSelectCardEditor extends HAControlBase {
   static get properties() {
-    return { hass: { type: Object }, _config: { type: Object } };
+    return { ...super.properties, _config: { type: Object } };
   }
+
+  get translationPath() { return "/local/ha-controls/vacuum-select-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   setConfig(config) {
     this._config = {
@@ -22,25 +25,25 @@ class VacuumSelectCardEditor extends LitElement {
     const roomsData = vacuum?.attributes?.rooms?.[currentMap] || [];
 
     const baseSchema = [
-      { name: "vacuum_entity", label: "Vacuum Entity", selector: { entity: { domain: "vacuum" } } },
-      { name: "output_entity", label: "Selection Helper (Output)", selector: { entity: {} } },
-      { name: "currently_cleaning_entity", label: "Currently Cleaning Entity", selector: { entity: {} } },
-      { name: "readonly_entity", label: "Lock Entity", selector: { entity: { domain: "binary_sensor" } } },
-      { name: "mark_active_room", label: "Display Active Room Selector", selector: { entity: { domain: "binary_sensor" } } },
+      { name: "vacuum_entity", label: this._localize('vacuum_entity'), selector: { entity: { domain: "vacuum" } } },
+      { name: "output_entity", label: this._localize('selection_helper'), selector: { entity: {} } },
+      { name: "currently_cleaning_entity", label: this._localize('currently_cleaning'), selector: { entity: {} } },
+      { name: "readonly_entity", label: this._localize('lock_entity'), selector: { entity: { domain: "binary_sensor" } } },
+      { name: "mark_active_room", label: this._localize('display_active_room'), selector: { entity: { domain: "binary_sensor" } } },
       { 
         name: "mark_animation", 
-        label: "Animation For Selected Room", 
+        label: this._localize('animation_selected_room'), 
         selector: { 
           select: { 
             options: [
-              { value: "none", label: "None (Static)" },
-              { value: "spinning", label: "Spinning" },
-              { value: "pulsing", label: "Pulsing" },
-              { value: "flash", label: "Flashing" },
-              { value: "bouncing", label: "Bouncing" },
-              { value: "shaking", label: "Shaking" },
-              { value: "floating", label: "Floating" },
-              { value: "spin-slow", label: "Slow Spin" }
+              { value: "none", label: this._localize('none_static') },
+              { value: "spinning", label: this._localize('spinning') },
+              { value: "pulsing", label: this._localize('pulsing') },
+              { value: "flash", label: this._localize('flashing') },
+              { value: "bouncing", label: this._localize('bouncing') },
+              { value: "shaking", label: this._localize('shaking') },
+              { value: "floating", label: this._localize('floating') },
+              { value: "spin-slow", label: this._localize('slow_spin') }
             ],
             mode: "list"
           } 
@@ -50,24 +53,24 @@ class VacuumSelectCardEditor extends LitElement {
         name: "", 
         type: "grid", 
         schema: [
-          { name: "mark_animation_background", label: "Animation Background Color", selector: { text: {} } },
-          { name: "mark_animation_foreground", label: "Animation Text Color", selector: { text: {} } }
+          { name: "mark_animation_background", label: this._localize('animation_bg_color'), selector: { text: {} } },
+          { name: "mark_animation_foreground", label: this._localize('animation_fg_color'), selector: { text: {} } }
         ] 
       },
       { 
         name: "", 
         type: "grid", 
         schema: [
-          { name: "columns", label: "Columns", selector: { number: { min: 2, max: 6, mode: "slider" } } },
-          { name: "show_toggle", label: "Show Toggle All Button", selector: { boolean: {} } }
+          { name: "columns", label: this._localize('columns'), selector: { number: { min: 2, max: 6, mode: "slider" } } },
+          { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } }
         ] 
       },
       { 
         name: "", 
         type: "grid", 
         schema: [
-          { name: "selection_color", label: "Active Color", selector: { text: {} } },
-          { name: "selection_foreground", label: "Active Text Color", selector: { text: {} } }
+          { name: "selection_color", label: this._localize('active_color'), selector: { text: {} } },
+          { name: "selection_foreground", label: this._localize('active_text_color'), selector: { text: {} } }
         ] 
       }
     ];
@@ -79,31 +82,31 @@ class VacuumSelectCardEditor extends LitElement {
       type: "grid",
       schema: roomsData.map(room => ({
         name: room.id.toString(),
-        label: `Room: ${room.name}`,
+        label: this._localize('room', { name: room.name }),
         type: "expandable",
         schema: [
-          { name: "label", label: "Custom Name", selector: { text: {} } },
-          { name: "icon", label: "Custom Icon", selector: { icon: {} } },
+          { name: "label", label: this._localize('custom_name'), selector: { text: {} } },
+          { name: "icon", label: this._localize('custom_icon'), selector: { icon: {} } },
           { 
             name: "animation", 
-            label: "Animation Class", 
+            label: this._localize('animation_class'), 
             selector: { 
               select: { 
                 options: [
-                    { value: "none", label: "None (Static)" },
-                    { value: "spinning", label: "Spinning" },
-                    { value: "pulsing", label: "Pulsing" },
-                    { value: "flash", label: "Flashing" },
-                    { value: "bounce", label: "Bouncing" },
-                    { value: "shake", label: "Shaking" },
-                    { value: "float", label: "Floating" },
-                    { value: "spin-slow", label: "Slow Spin" }
+                    { value: "none", label: this._localize('none_static') },
+                    { value: "spinning", label: this._localize('spinning') },
+                    { value: "pulsing", label: this._localize('pulsing') },
+                    { value: "flash", label: this._localize('flashing') },
+                    { value: "bounce", label: this._localize('bouncing') },
+                    { value: "shake", label: this._localize('shaking') },
+                    { value: "float", label: this._localize('floating') },
+                    { value: "spin-slow", label: this._localize('slow_spin') }
                   ],
                 mode: "list"
               } 
             } 
           },
-          { name: "disabled", label: "Disable Room", selector: { boolean: {} } }
+          { name: "disabled", label: this._localize('disable_room'), selector: { boolean: {} } }
         ]
       }))
     };

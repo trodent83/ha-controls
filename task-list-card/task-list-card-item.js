@@ -1,10 +1,10 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class TaskListCardItem extends LitElement {
+class TaskListCardItem extends HAControlBase {
   static get properties() {
     return {
-      hass: { attribute: false },
+      ...super.properties,
       config: { attribute: false },
       task: { attribute: false },
       hasSeparator: { type: Boolean },
@@ -41,7 +41,7 @@ class TaskListCardItem extends LitElement {
           cursor: default;
         }
       </style>
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css">
+      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css?v=${VERSION}">
       <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${this.readonly ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}

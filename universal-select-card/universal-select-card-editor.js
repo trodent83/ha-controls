@@ -1,10 +1,13 @@
-const LitElement = window.LitElement || Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
-const html = LitElement.prototype.html;
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { VERSION } from "./version.js";
 
-class UniversalSelectCardEditor extends LitElement {
+class UniversalSelectCardEditor extends HAControlBase {
   static get properties() {
-    return { hass: { type: Object }, _config: { type: Object } };
+    return { ...super.properties, _config: { type: Object } };
   }
+
+  get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+  get translationVersion() { return VERSION; }
 
   setConfig(config) {
     this._config = config;
@@ -12,17 +15,17 @@ class UniversalSelectCardEditor extends LitElement {
 
   _baseSchema() {
     return [
-      { name: "entity", label: "Controlled Dropdown", selector: { entity: { domain: "input_select" } } },
-      { name: "lock_entity", label: "Disable Control", selector: { entity: { domain: "binary_sensor" } } },
-      { name: "show_label", label: "Show Labels", selector: { boolean: {} } },
+      { name: "entity", label: this._localize('controlled_dropdown'), selector: { entity: { domain: "input_select" } } },
+      { name: "lock_entity", label: this._localize('disable_control'), selector: { entity: { domain: "binary_sensor" } } },
+      { name: "show_label", label: this._localize('show_labels'), selector: { boolean: {} } },
       { 
         name: "layout", 
-        label: "Layout", 
+        label: this._localize('layout'), 
         selector: { 
           select: { 
             options: [
-              { value: "row", label: "Horizontal" },
-              { value: "column", label: "Vertical" }
+              { value: "row", label: this._localize('horizontal') },
+              { value: "column", label: this._localize('vertical') }
             ] 
           } 
         } 
@@ -72,23 +75,23 @@ class UniversalSelectCardEditor extends LitElement {
             name: "",
             type: "grid",
             schema: [
-              { name: "label", label: "Custom Label", selector: { text: {} } },
-              { name: "icon", label: "Icon", selector: { icon: {} } },
-              { name: "color", label: "Color (Hex/Name)", selector: { text: {} } },
+              { name: "label", label: this._localize('custom_label'), selector: { text: {} } },
+              { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
+              { name: "color", label: this._localize('color'), selector: { text: {} } },
               { 
                 name: "animation", 
-                label: "Animation", 
+                label: this._localize('animation'), 
                 selector: { 
                   select: { 
                     options: [
-                      { value: "", label: "None" },
-                      { value: "bounce", label: "Bounce" },
-                      { value: "blink", label: "Blink" },
-                      { value: "rotating", label: "Rotating" },
-                      { value: "pulse", label: "Pulse" },
-                      { value: "shake", label: "Shake" },
-                      { value: "float", label: "Float" },
-                      { value: "spin-slow", label: "Spin Slow" }
+                      { value: "", label: this._localize('none') },
+                      { value: "bounce", label: this._localize('bounce') },
+                      { value: "blink", label: this._localize('blink') },
+                      { value: "rotating", label: this._localize('rotating') },
+                      { value: "pulse", label: this._localize('pulse') },
+                      { value: "shake", label: this._localize('shake') },
+                      { value: "float", label: this._localize('float') },
+                      { value: "spin-slow", label: this._localize('spin_slow') }
                     ] 
                   } 
                 } 
@@ -101,7 +104,7 @@ class UniversalSelectCardEditor extends LitElement {
             schema: [
               { 
                 name: "active_label_script", 
-                label: "Active Label Script (JS)", 
+                label: this._localize('active_label_script'), 
                 selector: { text: { multiline: true, rows: 6 } },
                 helper: "Return a string. Vars: hass, option.\n\nExamples:\n// Timer (00:00:00)\nconst t = hass.states['timer.x'];\nif (t?.state === 'active') {\n  const left = Math.max(0, new Date(t.attributes.finishes_at) - Date.now());\n  return new Date(left).toISOString().slice(11, 19);\n}\n\n// Conditional\nreturn hass.states['sun.sun'].state === 'above_horizon' ? 'Day' : 'Night';" 
               }
@@ -112,7 +115,7 @@ class UniversalSelectCardEditor extends LitElement {
       const actionSchema = [
           {
             name: "hold_action",
-            label: "Hold Action (Selected)",
+            label: this._localize('hold_action'),
             selector: { "ui-action": {} }
           }
       ];
@@ -120,7 +123,7 @@ class UniversalSelectCardEditor extends LitElement {
       return html`
         <ha-expansion-panel outlined style="margin-top: 8px;">
             <div slot="header" class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <div class="panel-title">Button: ${option}</div>
+                <div class="panel-title">${optionData.label || option}</div>
                 <div style="display: flex; align-items: center;">
                     <ha-icon-button
                     @click=${(e) => { e.stopPropagation(); this._moveOption(option, -1); }}
