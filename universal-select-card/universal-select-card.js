@@ -6,18 +6,23 @@ class UniversalSelectCard extends HAControlBase {
   static get properties() {
     return { 
       ...super.properties,
+      // Holds the parsed user configuration for this card
       config: {} 
     };
   }
 
+  // Path to the translations folder for this custom card
   get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
   get translationVersion() { return VERSION; }
 
+  // Define the layout size of the card (used by Home Assistant's layout engine)
   getCardSize() {
     return 1;
   }
 
+  // Optimizes rendering by checking if we actually need to update the DOM
   shouldUpdate(changedProps) {
+    // Always update if the configuration changes
     if (changedProps.has('config')) {
       return true;
     }
@@ -26,10 +31,12 @@ class UniversalSelectCard extends HAControlBase {
       const oldHass = changedProps.get('hass');
       if (!oldHass || !this.hass || !this.config) return true;
 
+      // Update if the main controlled entity changes its state
       if (oldHass.states[this.config.entity] !== this.hass.states[this.config.entity]) {
         return true;
       }
 
+      // Update if the locking entity changes its state (used to disable the control)
       if (this.config.lock_entity && 
           oldHass.states[this.config.lock_entity] !== this.hass.states[this.config.lock_entity]) {
         return true;
@@ -40,21 +47,21 @@ class UniversalSelectCard extends HAControlBase {
         const option = stateObj.state;
         const optCfg = this.config.options_config?.[option];
         
-        if (optCfg?._scriptFn) {
-          try {
-            const newLabel = optCfg._scriptFn(this.hass, option);
-            if (newLabel !== this._lastScriptLabel) {
-              return true;
-            }
-            return false;
-          } catch (e) {
-            return true;
-          }
-        }
         
+        // If the option's label depends on another entity's state, update when that entity changes
         if (optCfg?.active_label_entity && 
             oldHass.states[optCfg.active_label_entity] !== this.hass.states[optCfg.active_label_entity]) {
           return true;
+        }
+        
+        // Propagate updates if any feature entity state changes
+        if (Array.isArray(optCfg?.features)) {
+          for (const feature of optCfg.features) {
+            const fEntity = feature.entity;
+            if (fEntity && oldHass.states[fEntity] !== this.hass.states[fEntity]) {
+              return true;
+            }
+          }
         }
       }
       return false;
@@ -62,11 +69,13 @@ class UniversalSelectCard extends HAControlBase {
     return true;
   }
 
+  // Main render function for generating the card's HTML layout
   render() {
     if (!this.config || !this.config.entity || !this.hass) return html``;
     const stateObj = this.hass.states[this.config.entity];
     let options = stateObj?.attributes.options || [];
     
+    // Sort options according to the user-defined order in the configuration, if provided
     if (this.config.options_order) {
       const order = this.config.options_order;
       options = [...options].sort((a, b) => {
@@ -79,7 +88,7 @@ class UniversalSelectCard extends HAControlBase {
       });
     }
     
-    // Check if the card should be disabled
+    // Check if the card should be disabled based on the lock_entity
     const isLocked = this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
 
     const layoutClass = this.config.layout === 'column' ? 'layout-column' : 'layout-row';
@@ -95,16 +104,10 @@ class UniversalSelectCard extends HAControlBase {
           const animationClass = isActive ? (optCfg.animation || '') : '';
 
           let label = optCfg.label || option;
+          // Compute active label dynamically if configured
           if (isActive) {
-            if (optCfg._scriptFn) {
-              try {
-                label = optCfg._scriptFn(this.hass, option);
-                this._lastScriptLabel = label;
-              } catch (e) {
-                label = this._localize('error');
-                console.error("Script error:", e);
-              }
-            } else if (optCfg.active_label_entity) {
+            // Fallback to active_label_entity state
+            if (optCfg.active_label_entity) {
               const activeStateObj = this.hass.states[optCfg.active_label_entity];
               if (activeStateObj) {
                 label = this.hass.formatEntityState ? this.hass.formatEntityState(activeStateObj) : activeStateObj.state;
@@ -113,6 +116,7 @@ class UniversalSelectCard extends HAControlBase {
           }
 
           return html`
+            <!-- Renders individual option buttons with appropriate styles and event listeners -->
             <div class="btn" 
                  style="background-color: ${isActive ? (optCfg.color || 'var(--primary-color)') : 'transparent'}; 
                         color: ${isActive ? 'white' : 'var(--disabled-text-color)'};"
@@ -128,6 +132,13 @@ class UniversalSelectCard extends HAControlBase {
                 .icon="${optCfg.icon || 'mdi:circle-outline'}">
               </ha-icon>
               ${this.config.show_label ? html`<div class="label">${label}</div>` : ''}
+              ${isActive && Array.isArray(optCfg.features) ? optCfg.features.map(feature => html`
+                <universal-feature-renderer 
+                  .hass=${this.hass} 
+                  .config=${feature} 
+                  .stateObj=${stateObj}>
+                </universal-feature-renderer>
+              `) : ''}
             </div>
           `;
         })}
@@ -135,10 +146,12 @@ class UniversalSelectCard extends HAControlBase {
     `;
   }
 
+  // Provides the custom editor element used in the Home Assistant Lovelace UI editor
   static getConfigElement() {
     return document.createElement("universal-select-card-editor");
   }
 
+  // Calls the Home Assistant service to select an option for the input_select entity
   _selectOption(option) {
     this.hass.callService("input_select", "select_option", {
       entity_id: this.config.entity,
@@ -146,19 +159,23 @@ class UniversalSelectCard extends HAControlBase {
     });
   }
 
+  // Checks if the card is currently locked by the lock_entity
   _isLocked() {
     return this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
   }
 
+  // Handles the start of a touch/mouse press
   _handleDown(e, option) {
     if (this._isLocked()) return;
     this._isHolding = false;
+    // Set a timer to trigger a long press (hold) action after 1 second
     this._longPressTimer = setTimeout(() => {
       this._isHolding = true;
       this._handleHold(option);
     }, 1000);
   }
 
+  // Clears the hold timer if the interaction ends prematurely
   _handleUp(e) {
     if (this._longPressTimer) {
       clearTimeout(this._longPressTimer);
@@ -166,6 +183,7 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
+  // Clears the hold timer if the interaction is canceled (e.g., finger scrolls away)
   _handleCancel(e) {
     if (this._longPressTimer) {
       clearTimeout(this._longPressTimer);
@@ -174,8 +192,10 @@ class UniversalSelectCard extends HAControlBase {
     this._isHolding = false;
   }
 
+  // Handles click/tap to select the option
   _handleClick(e, option) {
     if (this._isLocked()) return;
+    // If the click is actually the end of a hold, don't execute the standard click action
     if (this._isHolding) {
       e.stopPropagation();
       e.preventDefault();
@@ -185,6 +205,7 @@ class UniversalSelectCard extends HAControlBase {
     this._selectOption(option);
   }
 
+  // Triggers the customized hold action when an option is long-pressed
   _handleHold(option) {
     const stateObj = this.hass.states[this.config.entity];
     if (stateObj && stateObj.state === option) {
@@ -195,20 +216,25 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
+  // Routes custom actions (e.g., call-service, navigate, url, more-info)
   _handleAction(actionConfig) {
     if (!actionConfig) return;
     const action = actionConfig.action;
+    // Standard Home Assistant service calls
     if (action === 'call-service' || action === 'perform-action') {
       const { service, data, target, perform_action } = actionConfig;
       const svc = service || perform_action;
       const [domain, serviceName] = svc.split('.');
       this.hass.callService(domain, serviceName, data, target);
+    // Navigate to another Home Assistant dashboard view
     } else if (action === 'navigate') {
       window.history.pushState(null, '', actionConfig.navigation_path);
       const event = new Event('location-changed', { bubbles: true, composed: true });
       window.dispatchEvent(event);
+    // Open external URL
     } else if (action === 'url') {
       window.open(actionConfig.url_path);
+    // Fire a custom DOM event
     } else if (action === 'fire-dom-event') {
       const event = new CustomEvent("ll-custom", {
         bubbles: true,
@@ -216,6 +242,7 @@ class UniversalSelectCard extends HAControlBase {
         detail: actionConfig
       });
       this.dispatchEvent(event);
+    // Open the More Info dialog for the controlled entity
     } else if (action === 'more-info') {
         const event = new CustomEvent("hass-more-info", {
             bubbles: true,
@@ -226,38 +253,7 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    if (!this.config || !this.hass || !this.config.entity) return;
-    
-    const stateObj = this.hass.states[this.config.entity];
-    if (!stateObj) return;
-
-    const optCfg = this.config.options_config?.[stateObj.state];
-    if (optCfg && optCfg._scriptFn) {
-      this._startTimer();
-    } else {
-      this._stopTimer();
-    }
-  }
-
-  _startTimer() {
-    if (this._interval) return;
-    this._interval = setInterval(() => this.requestUpdate(), 1000);
-  }
-
-  _stopTimer() {
-    if (this._interval) {
-      clearInterval(this._interval);
-      this._interval = null;
-    }
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this._stopTimer();
-  }
-
+  // Receives configuration from Home Assistant and parses it
   setConfig(config) {
     if (!config.entity) {
       throw new Error("You need to define an entity");
@@ -268,32 +264,18 @@ class UniversalSelectCard extends HAControlBase {
       ...config 
     };
 
+    // Deep clone and compile custom JS scripts into executable functions
     if (this.config.options_config) {
       this.config.options_config = { ...this.config.options_config };
       Object.keys(this.config.options_config).forEach(key => {
         this.config.options_config[key] = { ...this.config.options_config[key] };
-        const optCfg = this.config.options_config[key];
-        if (optCfg.active_label_script) {
-          try {
-            optCfg._scriptFn = new Function('hass', 'option', optCfg.active_label_script);
-          } catch (e) {
-            console.error("Error compiling script:", e);
-          }
-        }
       });
     }
   }
-
-  // Hilfsmethode für das Lovelace-Vorschau-Fenster
-  getCardSize() {
-    return 1;
-  }
 }
 
-// Registrierung der Card in Home Assistant
 customElements.define("universal-select-card", UniversalSelectCard);
 
-// Hinzufügen zum Custom-Card-Picker
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "universal-select-card",

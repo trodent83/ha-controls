@@ -1,0 +1,50 @@
+.option-panel {
+  margin-top: 8px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.panel-content {
+  padding: 16px;
+}
+
+.form-divider {
+  border-top: 1px solid var(--divider-color);
+  margin: 24px 0 16px 0;
+}
+
+.features-header {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  margin-bottom: 12px;
+}
+
+.feature-item {
+  border: 1px solid var(--divider-color);
+  border-radius: var(--ha-card-border-radius, 8px);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.feature-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.feature-add ha-form {
+  width: 100%;
+}

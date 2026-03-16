@@ -34,6 +34,18 @@ class UniversalSelectCardEditor extends HAControlBase {
     ];
   }
 
+  _getFeatureName(type) {
+    if (!type) return "Unknown Feature";
+    const customFeatures = window.customCardFeatures || [];
+    const found = customFeatures.find(f => f.type === type);
+    if (found && found.name) {
+      return found.name;
+    }
+    let cleanType = type.startsWith("custom:") ? type.substring(7) : type;
+    cleanType = cleanType.replace(/-card-feature$/, '').replace(/-/g, ' ');
+    return cleanType.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
   render() {
     if (!this.hass || !this._config) return html``;
     const data = { layout: 'row', ...this._config };
@@ -55,6 +67,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     }
 
     return html`
+      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card-editor.css?v=${VERSION}">
       <ha-form
         .hass=${this.hass}
         .data=${data}
@@ -98,18 +111,6 @@ class UniversalSelectCardEditor extends HAControlBase {
                 } 
               }
             ]
-          },
-          {
-            name: "",
-            type: "grid",
-            schema: [
-              { 
-                name: "active_label_script", 
-                label: this._localize('active_label_script'), 
-                selector: { text: { multiline: true, rows: 6 } },
-                helper: "Return a string. Vars: hass, option.\n\nExamples:\n// Timer (00:00:00)\nconst t = hass.states['timer.x'];\nif (t?.state === 'active') {\n  const left = Math.max(0, new Date(t.attributes.finishes_at) - Date.now());\n  return new Date(left).toISOString().slice(11, 19);\n}\n\n// Conditional\nreturn hass.states['sun.sun'].state === 'above_horizon' ? 'Day' : 'Night';" 
-              }
-            ]
           }
       ];
 
@@ -122,10 +123,10 @@ class UniversalSelectCardEditor extends HAControlBase {
       ];
 
       return html`
-        <ha-expansion-panel outlined style="margin-top: 8px;">
-            <div slot="header" class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <ha-expansion-panel outlined class="option-panel">
+            <div slot="header" class="panel-header">
                 <div class="panel-title">${optionData.label || option}</div>
-                <div style="display: flex; align-items: center;">
+                <div class="panel-header-actions">
                     <ha-icon-button
                     @click=${(e) => { e.stopPropagation(); this._moveOption(option, -1); }}
                     .disabled=${idx === 0}
@@ -136,7 +137,7 @@ class UniversalSelectCardEditor extends HAControlBase {
                     ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
                 </div>
             </div>
-            <div class="panel-content" style="padding: 16px;">
+            <div class="panel-content">
                 <ha-form
                     .hass=${this.hass}
                     .data=${optionData}
@@ -144,7 +145,7 @@ class UniversalSelectCardEditor extends HAControlBase {
                     .computeLabel=${(s) => s.label || s.name}
                     @value-changed=${(e) => this._optionValueChanged(option, e)}
                 ></ha-form>
-                <div style="border-top: 1px solid var(--divider-color); margin: 24px 0 16px 0;"></div>
+                <div class="form-divider"></div>
                 <ha-form
                     .hass=${this.hass}
                     .data=${optionData}
@@ -152,6 +153,50 @@ class UniversalSelectCardEditor extends HAControlBase {
                     .computeLabel=${(s) => s.label || s.name}
                     @value-changed=${(e) => this._optionValueChanged(option, e)}
                 ></ha-form>
+                <div class="form-divider"></div>
+                <div class="features-section">
+                    <div class="features-header">${this._localize('features') || "Features"}</div>
+                    <div class="features-list">
+                        ${(optionData.features || []).map((feature, fIdx) => html`
+                            <div class="feature-item">
+                                <div class="feature-item-header">
+                                    <span>${this._getFeatureName(feature.type)}</span>
+                                    <ha-icon-button
+                                        @click=${(e) => { e.stopPropagation(); this._removeFeature(option, fIdx); }}
+                                    ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                                </div>
+                                <universal-feature-editor-renderer
+                                    .hass=${this.hass}
+                                    .config=${feature}
+                                    @config-changed=${(e) => { e.stopPropagation(); this._updateFeature(option, fIdx, e.detail.config); }}
+                                ></universal-feature-editor-renderer>
+                            </div>
+                        `)}
+                    </div>
+                    <div class="feature-add">
+                        <ha-form
+                            .hass=${this.hass}
+                            .data=${{ new_feature: "" }}
+                            .schema=${[
+                                {
+                                    name: "new_feature",
+                                    label: "Add Feature",
+                                    selector: {
+                                        select: {
+                                            options: [
+                                                { value: "", label: "Select a feature..." },
+                                                ...(window.customCardFeatures || []).map(f => ({ value: f.type, label: f.name }))
+                                            ],
+                                            mode: "dropdown"
+                                        }
+                                    }
+                                }
+                            ]}
+                            .computeLabel=${(s) => s.label || s.name}
+                            @value-changed=${(e) => this._addFeature(option, e)}
+                        ></ha-form>
+                    </div>
+                </div>
             </div>
         </ha-expansion-panel>
       `;
@@ -178,6 +223,46 @@ class UniversalSelectCardEditor extends HAControlBase {
     [currentOrder[index], currentOrder[newIndex]] = [currentOrder[newIndex], currentOrder[index]];
 
     this._config = { ...this._config, options_order: currentOrder };
+    this._fireConfigChanged();
+  }
+
+  _addFeature(option, ev) {
+    const type = ev.detail.value.new_feature;
+    if (!type) return;
+    
+    const featureConfig = { type: type };
+    const isCustom = type.startsWith("custom:");
+    const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
+    const FeatureClass = customElements.get(tag);
+    if (FeatureClass && FeatureClass.getStubConfig) {
+        Object.assign(featureConfig, FeatureClass.getStubConfig());
+    }
+
+    const optionsConfig = this._config.options_config || {};
+    const optionConfig = optionsConfig[option] || {};
+    const features = [...(optionConfig.features || []), featureConfig];
+    
+    this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
+    this._fireConfigChanged();
+  }
+
+  _removeFeature(option, fIdx) {
+    const optionsConfig = this._config.options_config || {};
+    const optionConfig = optionsConfig[option] || {};
+    const features = [...(optionConfig.features || [])];
+    features.splice(fIdx, 1);
+    
+    this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
+    this._fireConfigChanged();
+  }
+
+  _updateFeature(option, fIdx, newFeatureConfig) {
+    const optionsConfig = this._config.options_config || {};
+    const optionConfig = optionsConfig[option] || {};
+    const features = [...(optionConfig.features || [])];
+    features[fIdx] = newFeatureConfig;
+    
+    this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
     this._fireConfigChanged();
   }
 
