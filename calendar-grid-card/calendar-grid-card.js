@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.1";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js";
 

@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.0";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
 
