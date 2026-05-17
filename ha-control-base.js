@@ -16,6 +16,7 @@ export class HAControlBase extends LitElement {
     this._strings = {};
     this._fallbackStrings = {};
     this._loadedLang = null;
+    this._translationsLoaded = false;
   }
 
   /**
@@ -55,72 +56,60 @@ export class HAControlBase extends LitElement {
    * @param {string} lang - The language code.
    */
   async _loadTranslations(lang) {
-      // If no translation path is defined, we cannot load translations
       if (!this.translationPath) return;
 
       this._loadedLang = lang;
-      const languages = [lang];
-      // If language has a region (e.g. en-US), try the base language (en) as well
+      this._translationsLoaded = false;
+      const languagesToTry = [lang];
       if (lang.includes('-')) {
-          languages.push(lang.split('-')[0]);
+          languagesToTry.push(lang.split('-')[0]);
       }
-      // Always ensure English is in the list as a fallback
-      if (!languages.includes('en')) {
-          languages.push('en');
+      if (!languagesToTry.includes('en')) {
+          languagesToTry.push('en');
       }
 
-      let setStrings = false;
+      let primaryStringsSet = false;
+      this._strings = {};
+      this._fallbackStrings = {};
 
-      for (const l of languages) {
+      for (const l of languagesToTry) {
           try {
               const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
               if (response.ok) {
-                  const text = await response.text();
-                  try {
-                      const json = JSON.parse(text);
-                      if (!setStrings) {
-                          if (l !== lang) {
-                              console.info(`[HAControlBase] Translation for '${lang}' not found in ${this.translationPath}, falling back to '${l}'.`);
-                          }
-                          this._strings = json;
-                          setStrings = true;
+                  const json = await response.json();
+                  if (!primaryStringsSet) {
+                      if (l !== lang) {
+                          console.info(`[HAControlBase] Translation for '${lang}' not found, falling back to '${l}'.`);
                       }
-                      if (l === 'en') {
-                          this._fallbackStrings = json;
-                      }
-                      this.requestUpdate();
-                  } catch (e) {
-                      console.error(`[HAControlBase] Error parsing JSON for '${l}' from ${this.translationPath}:\n${e.message}\nRaw content:\n${text}`);
+                      this._strings = json;
+                      primaryStringsSet = true;
+                  }
+                  if (l === 'en') {
+                      this._fallbackStrings = json;
                   }
               } else {
                   console.warn(`[HAControlBase] Failed to fetch translation for '${l}' from ${this.translationPath}: ${response.status} ${response.statusText}`);
               }
           } catch (e) {
-              console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
+              console.error(`[HAControlBase] Error loading or parsing translation for '${l}':`, e);
           }
       }
+
+      this._translationsLoaded = true;
+      this.requestUpdate();
   }
 
   /**
    * Localizes a key with optional replacements.
-   * @param {string} key - The translation key.
-   * @param {Object} replace - Replacements for placeholders.
    * @returns {string} The localized string.
    */
   _localize(key, replace = {}) {
-    let translated = this._strings ? this._strings[key] : undefined;
-    
-    // If translation is missing in current language, try English fallback from cache
-    if (translated === undefined && this._loadedLang !== 'en') {
-         if (this._fallbackStrings && this._fallbackStrings[key] !== undefined) {
-            translated = this._fallbackStrings[key];
-            console.info(`[HAControlBase] Key '${key}' not found in '${this._loadedLang}', falling back to English.`);
-         }
-    }
-    
-    // If still undefined, return the key itself
+    let translated = this._strings?.[key] ?? this._fallbackStrings?.[key];
+
     if (translated === undefined) {
-        console.warn(`[HAControlBase] Missing translation for key '${key}' in ${this.localName}`);
+        if (this._translationsLoaded) {
+            console.warn(`[HAControlBase] Missing translation for key '${key}' in '${this._loadedLang}' for ${this.localName}`);
+        }
         return key;
     }
 
