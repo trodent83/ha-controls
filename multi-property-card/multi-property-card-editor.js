@@ -26,7 +26,11 @@ class MultiPropertyCardEditor extends HAControlBase {
   _updateThreshold(entityIdx, threshIdx, key, value) {
     const entities = [...this._config.entities];
     const thresholds = [...entities[entityIdx].thresholds];
-    thresholds[threshIdx] = { ...thresholds[threshIdx], [key]: value };
+    if (key === null) {
+      thresholds[threshIdx] = { ...thresholds[threshIdx], ...value };
+    } else {
+      thresholds[threshIdx] = { ...thresholds[threshIdx], [key]: value };
+    }
     entities[entityIdx] = { ...entities[entityIdx], thresholds };
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
@@ -253,58 +257,49 @@ class MultiPropertyCardEditor extends HAControlBase {
                         .secondary=${this._localize('rules_defined', { count: (ent.thresholds || []).length })}
                       >
                         ${(ent.thresholds || []).map((thresh, tIdx) => html`
-                          <div class="threshold-block">
-                            <div class="threshold-sub-header">
-                              <span>${this._localize('rule_number', { num: tIdx + 1 })} ${thresh.value ? `(${thresh.value})` : ""}</span>
+                          <div class="threshold-block" style="padding: 16px; border: 1px solid var(--divider-color); border-radius: 8px; margin-bottom: 16px;">
+                            <div class="threshold-sub-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                              <span style="font-weight: 500;">${this._localize('rule_number', { num: tIdx + 1 })} ${thresh.value ? `(${thresh.value})` : ""}</span>
                               <ha-icon-button
                                 class="remove-btn-compact"
                                 @click=${() => this._removeThreshold(idx, tIdx)}
-                              ><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
+                              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                             </div>
 
-                            <div class="threshold-row row-1">
-                              <ha-textfield
-                                class="flex-grow"
-                                label="${this._localize('value')}"
-                                .value=${thresh.value || ""}
-                                @input=${(e) => this._updateThreshold(idx, tIdx, 'value', e.target.value)}
-                              ></ha-textfield>
-                              <ha-textfield
-                                class="flex-grow"
-                                label="${this._localize('color')}"
-                                .value=${thresh.color || ""}
-                                @input=${(e) => this._updateThreshold(idx, tIdx, 'color', e.target.value)}
-                              ></ha-textfield>
-                            </div>
-
-                            <!-- Row 2: Animation (Full Width) -->
-                            <div class="threshold-row row-2">
-                              <ha-select
-                                label="${this._localize('animation')}"
-                                .value=${thresh.animation || ""}
-                                .idx=${idx}
-                                .tIdx=${tIdx}
-                                @closed=${(e) => {
-                                  // stopPropagation verhindert, dass das Event den Editor schließt
-                                  e.stopPropagation();
-                                  const target = e.target;
-                                  if (target.value !== undefined && target.value !== thresh.animation) {
-                                    this._updateThreshold(idx, tIdx, 'animation', target.value);
-                                  }
-                                }}
-                                fixedMenuPosition
-                                naturalMenuWidth
-                              >
-                                <mwc-list-item value="">${this._localize('none')}</mwc-list-item>
-                                <mwc-list-item value="blink">${this._localize('blink')}</mwc-list-item>
-                                <mwc-list-item value="bounce">${this._localize('bounce')}</mwc-list-item>
-                                <mwc-list-item value="rotating">${this._localize('rotating')}</mwc-list-item>
-                                <mwc-list-item value="pulse">${this._localize('pulse')}</mwc-list-item>
-                                <mwc-list-item value="shake">${this._localize('shake')}</mwc-list-item>
-                                <mwc-list-item value="float">${this._localize('float')}</mwc-list-item>
-                                <mwc-list-item value="spin-slow">${this._localize('spin_slow')}</mwc-list-item>
-                              </ha-select>
-                            </div>
+                            <ha-form
+                              .hass=${this.hass}
+                              .data=${thresh}
+                              .schema=${[
+                                {
+                                  name: "",
+                                  type: "grid",
+                                  schema: [
+                                    { name: "value", label: this._localize('value'), selector: { text: {} } },
+                                    { name: "color", label: this._localize('color'), selector: { text: {} } }
+                                  ]
+                                },
+                                { 
+                                  name: "animation", 
+                                  label: this._localize('animation'), 
+                                  selector: { 
+                                    select: { 
+                                      options: [
+                                        { value: "", label: this._localize('none') },
+                                        { value: "blink", label: this._localize('blink') },
+                                        { value: "bounce", label: this._localize('bounce') },
+                                        { value: "rotating", label: this._localize('rotating') },
+                                        { value: "pulse", label: this._localize('pulse') },
+                                        { value: "shake", label: this._localize('shake') },
+                                        { value: "float", label: this._localize('float') },
+                                        { value: "spin-slow", label: this._localize('spin_slow') }
+                                      ]
+                                    } 
+                                  } 
+                                }
+                              ]}
+                              .computeLabel=${(schema) => schema.label || schema.name}
+                              @value-changed=${(e) => this._updateThreshold(idx, tIdx, null, e.detail.value)}
+                            ></ha-form>
                           </div>
                         `)}
 
