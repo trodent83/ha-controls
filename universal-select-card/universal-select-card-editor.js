@@ -166,11 +166,11 @@ class UniversalSelectCardEditor extends HAControlBase {
                                         @click=${(e) => { e.stopPropagation(); this._removeFeature(option, fIdx); }}
                                     ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                                 </div>
-                                <universal-feature-editor-renderer
+                                <feature-renderer-editor-card
                                     .hass=${this.hass}
                                     .config=${feature}
                                     @config-changed=${(e) => { e.stopPropagation(); this._updateFeature(option, fIdx, e.detail.config); }}
-                                ></universal-feature-editor-renderer>
+                                ></feature-renderer-editor-card>
                             </div>
                         `)}
                     </div>

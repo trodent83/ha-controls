@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
-class MultiStateFeatureEditorRenderer extends HAControlBase {
+export class FeatureRendererEditorCard extends HAControlBase {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -42,6 +42,5 @@ class MultiStateFeatureEditorRenderer extends HAControlBase {
     return html`${this._el || html`No editor for ${this.config.type}`}`;
   }
 }
-if (!customElements.get("multi-state-feature-editor-renderer")) {
-  customElements.define("multi-state-feature-editor-renderer", MultiStateFeatureEditorRenderer);
-}
+
+customElements.define("feature-renderer-editor-card", FeatureRendererEditorCard);

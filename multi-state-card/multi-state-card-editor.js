@@ -252,14 +252,14 @@ class MultiPropertyCardEditor extends HAControlBase {
                                 @click=${() => this._removeFeature(idx, fIdx)}
                               ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
                             </div>
-                            <multi-state-feature-editor-renderer
+                            <feature-renderer-editor-card
                               .hass=${this.hass}
                               .config=${feature}
                               @config-changed=${(e) => {
                                 e.stopPropagation();
                                 this._updateFeature(idx, fIdx, e.detail.config);
                               }}
-                            ></multi-state-feature-editor-renderer>
+                            ></feature-renderer-editor-card>
                           </div>
                         `)}
                       </div>

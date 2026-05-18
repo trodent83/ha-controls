@@ -130,12 +130,12 @@ class MultiPropertyCard extends HAControlBase {
               ${(entConf.features && Array.isArray(entConf.features)) ? html`
                 <div class="features-container">
                   ${entConf.features.map(featureConfig => html`
-                    <multi-state-feature-renderer
+                    <feature-renderer-card
                       .hass=${this.hass}
                       .config=${featureConfig}
                       .stateObj=${stateObj}
                       .color=${finalColor}
-                    ></multi-state-feature-renderer>
+                    ></feature-renderer-card>
                   `)}
                 </div>
               ` : ''}

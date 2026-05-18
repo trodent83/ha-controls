@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
-class MultiStateFeatureRenderer extends HAControlBase {
+export class FeatureRendererCard extends HAControlBase {
   static get properties() {
     return {
       hass: { attribute: false },
@@ -8,6 +8,15 @@ class MultiStateFeatureRenderer extends HAControlBase {
       stateObj: { attribute: false },
       color: { attribute: false }
     };
+  }
+
+  _updateFeatureElementProperties(element) {
+    element.hass = this.hass;
+    element.config = this.config;
+    element.stateObj = this.stateObj;
+    if (this.color) {
+        element.color = this.color;
+    }
   }
 
   render() {
@@ -22,19 +31,18 @@ class MultiStateFeatureRenderer extends HAControlBase {
 
     if (this._tag !== tag) {
       this._tag = tag;
-      this._el = document.createElement(tag);
+      if (customElements.get(tag)) {
+        this._el = document.createElement(tag);
+      } else {
+        this._el = null;
+      }
     }
     
     if (this._el) {
-      this._el.hass = this.hass;
-      this._el.config = this.config;
-      this._el.stateObj = this.stateObj;
-      this._el.color = this.color;
+      this._updateFeatureElementProperties(this._el);
     }
-    return html`${this._el}`;
+    return html`${this._el || html`Feature not found: ${tag}`}`;
   }
 }
 
-if (!customElements.get("multi-state-feature-renderer")) {
-  customElements.define("multi-state-feature-renderer", MultiStateFeatureRenderer);
-}
+customElements.define("feature-renderer-card", FeatureRendererCard);
