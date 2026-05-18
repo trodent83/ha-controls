@@ -67,13 +67,11 @@ class MultiPropertyCard extends HAControlBase {
 
   static getStubConfig() {
     return {
-      show_label: true,
       show_icon: true,
       layout: "row",
       entities: [
         {
           entity: "sun.sun",
-          name: "Sun Status",
         }
       ]
     };
@@ -99,7 +97,7 @@ class MultiPropertyCard extends HAControlBase {
       ${(this.config.entities || [])
         .map(entConf => {
           const entityId = (typeof entConf === 'string' ? entConf : entConf.entity);
-          let stateObj, domain, deviceClass, displayName;
+          let stateObj, domain, deviceClass;
 
           if (entityId) {
             stateObj = this.hass.states[entityId];
@@ -108,12 +106,10 @@ class MultiPropertyCard extends HAControlBase {
             }
             domain = entityId.split('.')[0];
             deviceClass = stateObj?.attributes?.device_class;
-            displayName = entConf.name || stateObj?.attributes?.friendly_name || entityId;
           } else {
             if (!entConf.name && !entConf.icon) return html``;
             domain = 'constant';
             deviceClass = undefined;
-            displayName = entConf.name || '';
           }
 
           const finalColor = entConf.color || 'var(--primary-text-color)';
@@ -121,14 +117,6 @@ class MultiPropertyCard extends HAControlBase {
 
           const icon = entConf.icon || this._getFallbackIcon(domain, deviceClass);
 
-          let labelStyle = "";
-          if (entConf.label_font_size) {
-            const size = entConf.label_font_size;
-            labelStyle += `font-size: ${isNaN(size) ? size : size + 'px'};`;
-          }
-          if (entConf.label_bold) labelStyle += `font-weight: bold;`;
-
-          const showLabel = entConf.show_label !== undefined ? entConf.show_label : this.config.show_label;
           const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : this.config.show_icon;
 
           return html`<div class="multi-state-entity">
@@ -139,9 +127,6 @@ class MultiPropertyCard extends HAControlBase {
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >
               ${showIcon ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
-              <div class="info-container">
-                ${showLabel ? html`<div class="label" style="${labelStyle}">${displayName}</div>` : ''}
-              </div>
             </div>
             ${(entConf.features && Array.isArray(entConf.features)) ? html`
               <div class="features-container">
@@ -174,7 +159,6 @@ class MultiPropertyCard extends HAControlBase {
   setConfig(config) { 
     this.config = 
     { 
-      show_label: true, 
       show_icon: true,
       show_unavailable: false, // Hier auf false setzen
       ...config }; 

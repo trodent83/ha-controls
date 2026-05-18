@@ -21,7 +21,7 @@ class MultiPropertyCardEditor extends HAControlBase {
   }
 
   _addEntity() {
-    const entities = [...(this._config.entities || []), { entity: "", name: "" }];
+    const entities = [...(this._config.entities || []), {}];
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -54,17 +54,8 @@ class MultiPropertyCardEditor extends HAControlBase {
   }
 
   _globalSchema() {
-    const show_unavailable = this._localize('show_unavailable');
     return [
       {
-        name: "",
-        type: "grid",
-        schema: [
-          { name: "show_label", label: this._localize('show_labels'), selector: { boolean: {} } },
-          { name: "show_unavailable", label: show_unavailable, selector: { boolean: {} } }
-        ]
-      },
-      { 
         name: "layout", 
         label: this._localize('layout'), 
         selector: { 
@@ -102,19 +93,15 @@ class MultiPropertyCardEditor extends HAControlBase {
             const entityLabel = ent.name || `Item ${idx + 1}`;
 
             const combinedData = {
-              name: ent.name || "",
               icon: ent.icon || "",
               show_icon: ent.show_icon !== false,
               color: ent.color || "",
-              label_font_size: ent.label_font_size ? String(ent.label_font_size).replace("px", "") : "",
-              label_bold: ent.label_bold === true,
               animation: ent.animation || "",
               tap_action: ent.tap_action || { action: "none" },
               hold_action: ent.hold_action || { action: "none" }
             };
 
             const combinedSchema = [
-              { name: "name", label: this._localize('friendly_name_override'), selector: { text: {} } },
               {
                 name: "",
                 type: "grid",
@@ -124,14 +111,6 @@ class MultiPropertyCardEditor extends HAControlBase {
                 ]
               },
               { name: "color", label: this._localize('color_override'), selector: { text: {} } },
-              {
-                name: "",
-                type: "grid",
-                schema: [
-                  { name: "label_font_size", label: this._localize('label_size'), selector: { text: {} } },
-                  { name: "label_bold", label: this._localize('bold'), selector: { boolean: {} } }
-                ]
-              },
               { 
                 name: "animation", 
                 label: this._localize('default_animation'), 
