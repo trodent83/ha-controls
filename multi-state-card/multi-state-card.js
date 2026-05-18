@@ -127,18 +127,19 @@ class MultiPropertyCard extends HAControlBase {
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >
               ${showIcon ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
+              ${(entConf.features && Array.isArray(entConf.features)) ? html`
+                <div class="features-container">
+                  ${entConf.features.map(featureConfig => html`
+                    <multi-state-feature-renderer
+                      .hass=${this.hass}
+                      .config=${featureConfig}
+                      .stateObj=${stateObj}
+                      .color=${finalColor}
+                    ></multi-state-feature-renderer>
+                  `)}
+                </div>
+              ` : ''}
             </div>
-            ${(entConf.features && Array.isArray(entConf.features)) ? html`
-              <div class="features-container">
-                ${entConf.features.map(featureConfig => html`
-                  <multi-state-feature-renderer
-                    .hass=${this.hass}
-                    .config=${featureConfig}
-                    .stateObj=${stateObj}
-                  ></multi-state-feature-renderer>
-                `)}
-              </div>
-            ` : ''}
             </div>
           `;
         })}

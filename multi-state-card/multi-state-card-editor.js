@@ -53,6 +53,61 @@ class MultiPropertyCardEditor extends HAControlBase {
     }));
   }
 
+  get featureTags() {
+    return ['multi-state-card'];
+  }
+
+  _getFeatureName(type) {
+    if (!type) return "Unknown Feature";
+    const customFeatures = window.customCardFeatures || [];
+    const found = customFeatures.find(f => f.type === type);
+    if (found && found.name) {
+      return found.name;
+    }
+    let cleanType = type.startsWith("custom:") ? type.substring(7) : type;
+    cleanType = cleanType.replace(/-card-feature$/, '').replace(/-/g, ' ');
+    return cleanType.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  _addFeature(entityIndex, ev) {
+    const type = ev.detail.value.new_feature;
+    if (!type) return;
+
+    const featureConfig = { type };
+    const isCustom = type.startsWith("custom:");
+    const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
+    const FeatureClass = customElements.get(tag);
+    if (FeatureClass && FeatureClass.getStubConfig) {
+        Object.assign(featureConfig, FeatureClass.getStubConfig());
+    }
+
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || []), featureConfig];
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+    
+    ev.target.value = { ...ev.target.value, new_feature: "" };
+  }
+
+  _removeFeature(entityIndex, featureIndex) {
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || [])];
+    features.splice(featureIndex, 1);
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
+  _updateFeature(entityIndex, featureIndex, newFeatureConfig) {
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || [])];
+    features[featureIndex] = newFeatureConfig;
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
   _globalSchema() {
     return [
       {
@@ -66,7 +121,7 @@ class MultiPropertyCardEditor extends HAControlBase {
             ] 
           } 
         } 
-      }
+      },
     ];
   }
 
@@ -90,6 +145,16 @@ class MultiPropertyCardEditor extends HAControlBase {
       <div class="card-config">
         <div class="entities-container">
           ${(this._config.entities || []).map((ent, idx) => {
+            const allFeatures = window.customCardFeatures || [];
+            const includedTags = this.featureTags;
+            let availableFeatures = allFeatures;
+
+            if (includedTags && includedTags.length > 0) {
+              availableFeatures = allFeatures.filter(f => 
+                  Array.isArray(f.tags) && f.tags.some(tag => includedTags.includes(tag))
+              );
+            }
+
             const entityLabel = ent.name || `Item ${idx + 1}`;
 
             const combinedData = {
@@ -176,19 +241,53 @@ class MultiPropertyCardEditor extends HAControlBase {
                       }}
                     ></ha-form>
 
-                    <h4>${this._localize('features')}</h4>
-                    <ha-yaml-editor
-                      .hass=${this.hass}
-                      .defaultValue=${ent.features || []}
-                      @value-changed=${(e) => {
-                        e.stopPropagation();
-                        const newFeatures = e.detail.value;
-                        const ents = [...this._config.entities];
-                        ents[idx] = { ...ents[idx], features: newFeatures };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    ></ha-yaml-editor>
+                    <div class="features-section">
+                      <div class="features-header">${this._localize('features')}</div>
+                      <div class="features-list">
+                        ${(ent.features || []).map((feature, fIdx) => html`
+                          <div class="feature-item">
+                            <div class="feature-item-header">
+                              <span>${this._getFeatureName(feature.type)}</span>
+                              <ha-icon-button
+                                @click=${() => this._removeFeature(idx, fIdx)}
+                              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                            </div>
+                            <multi-state-feature-editor-renderer
+                              .hass=${this.hass}
+                              .config=${feature}
+                              @config-changed=${(e) => {
+                                e.stopPropagation();
+                                this._updateFeature(idx, fIdx, e.detail.config);
+                              }}
+                            ></multi-state-feature-editor-renderer>
+                          </div>
+                        `)}
+                      </div>
+                      <div class="feature-add">
+                        <ha-form
+                          .hass=${this.hass}
+                          .data=${{ new_feature: "" }}
+                          .schema=${[
+                            {
+                              name: "new_feature",
+                              label: this._localize('add_feature'),
+                              selector: {
+                                select: {
+                                  options: [
+                                    { value: "", label: "Select a feature..." },
+                                    ...availableFeatures.map(f => ({ value: f.type, label: f.name }))
+                                  ],
+                                  mode: "dropdown",
+                                  filter: true
+                                }
+                              }
+                            }
+                          ]}
+                          .computeLabel=${(s) => s.label || s.name}
+                          @value-changed=${(e) => this._addFeature(idx, e)}
+                        ></ha-form>
+                      </div>
+                    </div>
                   </div>
               </ha-expansion-panel>
               ${idx < (this._config.entities || []).length - 1

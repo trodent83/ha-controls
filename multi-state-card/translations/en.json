@@ -20,5 +20,6 @@
   "shake": "Shake",
   "float": "Float",
   "spin_slow": "Spin Slow",
-  "add_entity": "Add Entity"
+  "add_entity": "Add Entity",
+  "add_feature": "Add Feature"
 }

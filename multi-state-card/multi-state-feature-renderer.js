@@ -5,7 +5,8 @@ class MultiStateFeatureRenderer extends HAControlBase {
     return {
       hass: { attribute: false },
       config: { attribute: false },
-      stateObj: { attribute: false }
+      stateObj: { attribute: false },
+      color: { attribute: false }
     };
   }
 
@@ -28,6 +29,7 @@ class MultiStateFeatureRenderer extends HAControlBase {
       this._el.hass = this.hass;
       this._el.config = this.config;
       this._el.stateObj = this.stateObj;
+      this._el.color = this.color;
     }
     return html`${this._el}`;
   }
