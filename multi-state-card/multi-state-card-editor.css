@@ -1,0 +1,23 @@
+.card-content {
+    padding: 0 16px 16px;
+}
+.layout-select {
+    width: 100%;
+    margin-top: 10px;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+.icon-settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.entity-separator {
+    border-bottom: 1px solid var(--divider-color);
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
