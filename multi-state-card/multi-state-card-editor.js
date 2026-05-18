@@ -70,7 +70,7 @@ class MultiPropertyCardEditor extends HAControlBase {
   }
 
   _addFeature(entityIndex, ev) {
-    const type = ev.detail.value.new_feature;
+    const type = ev.detail.type;
     if (!type) return;
 
     const featureConfig = { type };
@@ -78,7 +78,7 @@ class MultiPropertyCardEditor extends HAControlBase {
     const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
     const FeatureClass = customElements.get(tag);
     if (FeatureClass && FeatureClass.getStubConfig) {
-        Object.assign(featureConfig, FeatureClass.getStubConfig());
+      Object.assign(featureConfig, FeatureClass.getStubConfig());
     }
 
     const entities = [...this._config.entities];
@@ -86,8 +86,6 @@ class MultiPropertyCardEditor extends HAControlBase {
     entities[entityIndex] = { ...entities[entityIndex], features };
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
-    
-    ev.target.value = { ...ev.target.value, new_feature: "" };
   }
 
   _removeFeature(entityIndex, featureIndex) {
@@ -145,16 +143,6 @@ class MultiPropertyCardEditor extends HAControlBase {
       <div class="card-config">
         <div class="entities-container">
           ${(this._config.entities || []).map((ent, idx) => {
-            const allFeatures = window.customCardFeatures || [];
-            const includedTags = this.featureTags;
-            let availableFeatures = allFeatures;
-
-            if (includedTags && includedTags.length > 0) {
-              availableFeatures = allFeatures.filter(f => 
-                  Array.isArray(f.tags) && f.tags.some(tag => includedTags.includes(tag))
-              );
-            }
-
             const entityLabel = ent.name || `Item ${idx + 1}`;
 
             const combinedData = {
@@ -264,28 +252,12 @@ class MultiPropertyCardEditor extends HAControlBase {
                         `)}
                       </div>
                       <div class="feature-add">
-                        <ha-form
+                        <feature-selector-card
                           .hass=${this.hass}
-                          .data=${{ new_feature: "" }}
-                          .schema=${[
-                            {
-                              name: "new_feature",
-                              label: this._localize('add_feature'),
-                              selector: {
-                                select: {
-                                  options: [
-                                    { value: "", label: "Select a feature..." },
-                                    ...availableFeatures.map(f => ({ value: f.type, label: f.name }))
-                                  ],
-                                  mode: "dropdown",
-                                  filter: true
-                                }
-                              }
-                            }
-                          ]}
-                          .computeLabel=${(s) => s.label || s.name}
-                          @value-changed=${(e) => this._addFeature(idx, e)}
-                        ></ha-form>
+                          .label=${this._localize('add_feature')}
+                          .tags=${this.featureTags}
+                          @feature-selected=${(e) => this._addFeature(idx, e)}
+                        ></feature-selector-card>
                       </div>
                     </div>
                   </div>

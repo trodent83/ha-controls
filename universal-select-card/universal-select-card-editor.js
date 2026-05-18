@@ -175,32 +175,35 @@ class UniversalSelectCardEditor extends HAControlBase {
                         `)}
                     </div>
                     <div class="feature-add">
-                        <ha-form
-                            .hass=${this.hass}
-                            .data=${{ new_feature: "" }}
-                            .schema=${[
-                                {
-                                    name: "new_feature",
-                                    label: "Add Feature",
-                                    selector: {
-                                        select: {
-                                            options: [
-                                                { value: "", label: "Select a feature..." },
-                                                ...(window.customCardFeatures || []).map(f => ({ value: f.type, label: f.name }))
-                                            ],
-                                            mode: "dropdown"
-                                        }
-                                    }
-                                }
-                            ]}
-                            .computeLabel=${(s) => s.label || s.name}
-                            @value-changed=${(e) => this._addFeature(option, e)}
-                        ></ha-form>
+                        <feature-selector-card
+                          .hass=${this.hass}
+                          label="Add Feature"
+                          @feature-selected=${(e) => this._addFeature(option, e)}
+                        ></feature-selector-card>
                     </div>
                 </div>
             </div>
         </ha-expansion-panel>
       `;
+  }
+  _addFeature(option, ev) {
+    const type = ev.detail.type;
+    if (!type) return;
+    
+    const featureConfig = { type: type };
+    const isCustom = type.startsWith("custom:");
+    const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
+    const FeatureClass = customElements.get(tag);
+    if (FeatureClass && FeatureClass.getStubConfig) {
+        Object.assign(featureConfig, FeatureClass.getStubConfig());
+    }
+
+    const optionsConfig = this._config.options_config || {};
+    const optionConfig = optionsConfig[option] || {};
+    const features = [...(optionConfig.features || []), featureConfig];
+    
+    this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
+    this._fireConfigChanged();
   }
 
   _moveOption(option, direction) {
@@ -224,26 +227,6 @@ class UniversalSelectCardEditor extends HAControlBase {
     [currentOrder[index], currentOrder[newIndex]] = [currentOrder[newIndex], currentOrder[index]];
 
     this._config = { ...this._config, options_order: currentOrder };
-    this._fireConfigChanged();
-  }
-
-  _addFeature(option, ev) {
-    const type = ev.detail.value.new_feature;
-    if (!type) return;
-    
-    const featureConfig = { type: type };
-    const isCustom = type.startsWith("custom:");
-    const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
-    const FeatureClass = customElements.get(tag);
-    if (FeatureClass && FeatureClass.getStubConfig) {
-        Object.assign(featureConfig, FeatureClass.getStubConfig());
-    }
-
-    const optionsConfig = this._config.options_config || {};
-    const optionConfig = optionsConfig[option] || {};
-    const features = [...(optionConfig.features || []), featureConfig];
-    
-    this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
     this._fireConfigChanged();
   }
 
