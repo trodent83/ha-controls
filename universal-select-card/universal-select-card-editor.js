@@ -108,8 +108,9 @@ class UniversalSelectCardEditor extends HAControlBase {
                       { value: "spin-slow", label: this._localize('spin_slow') }
                     ] 
                   } 
-                } 
-              }
+                }
+              },
+              { name: "hide_label_if_active", label: this._localize('hide_label_if_active') || "Hide Label When Active", selector: { boolean: {} } }
             ]
           }
       ];

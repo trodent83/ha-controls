@@ -131,7 +131,7 @@ class UniversalSelectCard extends HAControlBase {
                 class="${animationClass}" 
                 .icon="${optCfg.icon || 'mdi:circle-outline'}">
               </ha-icon>
-              ${this.config.show_label ? html`<div class="label">${label}</div>` : ''}
+              ${this.config.show_label && !(isActive && optCfg.hide_label_if_active) ? html`<div class="label">${label}</div>` : ''}
               ${isActive && Array.isArray(optCfg.features) ? optCfg.features.map(feature => html`
                 <universal-feature-renderer 
                   .hass=${this.hass} 

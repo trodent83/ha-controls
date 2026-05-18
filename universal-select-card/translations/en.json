@@ -20,5 +20,6 @@
   "spin_slow": "Spin Slow",
   "active_label_script": "Active Label Script (JS)",
   "hold_action": "Hold Action (Selected)",
-  "button_option": "Button: {option}"
+  "button_option": "Button: {option}",
+  "hide_label_if_active": "Hide Label if Active"
 }

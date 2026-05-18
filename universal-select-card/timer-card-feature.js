@@ -104,7 +104,7 @@ class TimerCardFeature extends HAControlBase {
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/universal-select-card/timer-card-feature.css?v=${VERSION}">
-      <div class="timer-label" @click="${this._toggleTimer}">${displayLabel}</div>
+      <div class="label" @click="${this._toggleTimer}">${displayLabel}</div>
     `;
   }
 }

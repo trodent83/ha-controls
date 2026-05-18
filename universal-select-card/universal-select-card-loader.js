@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
-const VERSION = "1.0.13";
+const VERSION = "1.0.15";
 
 const SCRIPT_NAME = "universal-select-card-loader.js";
 
