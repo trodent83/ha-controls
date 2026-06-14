@@ -195,7 +195,21 @@ class MultiPropertyCard extends HAControlBase {
               ${showIcon ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
               ${(entConf.features && Array.isArray(entConf.features)) ? html`
                 <div class="features-container">
-                  ${entConf.features.map(featureConfig => html`
+                  ${entConf.features.filter(featureConfig => {
+                    if (featureConfig.condition) {
+                      try {
+                        const hass = this.hass;
+                        const entity = stateObj;
+                        const state = stateObj?.state;
+                        const attributes = stateObj?.attributes;
+                        return eval(featureConfig.condition);
+                      } catch (e) {
+                        console.error("Error evaluating condition for feature", featureConfig, e);
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map(featureConfig => html`
                     <feature-renderer-card
                       .hass=${this.hass}
                       .config=${featureConfig}
