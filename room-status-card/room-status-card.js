@@ -125,7 +125,7 @@ class RoomStatusCard extends HAControlBase {
     const badges = this.config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=${VERSION}">
+      ${this.renderStyle('room-status-card.css')}
       <ha-card>
         <div class="card-content">
           <div class="header_container">

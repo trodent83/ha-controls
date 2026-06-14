@@ -192,7 +192,7 @@ class CalendarGridCardEditor extends HAControlBase {
     const dayNames = this._getDayNames();
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=${this.translationVersion}">
+      ${this.renderStyle('calendar-grid-card-editor.css')}
       <div class="card-config">
         <ha-form
             .hass=${this.hass}

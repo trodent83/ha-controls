@@ -50,6 +50,20 @@ class TaskListCardItem extends HAControlBase {
   }
 
   /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
+  get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
+  get translationVersion() { return VERSION; }
+
+  /**
    * Renders the custom card item HTML template.
    * 
    * @protected
@@ -71,7 +85,7 @@ class TaskListCardItem extends HAControlBase {
     const isDisabled = this.readonly || isFutureBlocked;
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css?v=${VERSION}">
+      ${this.renderStyle('task-list-card-item.css')}
       <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}

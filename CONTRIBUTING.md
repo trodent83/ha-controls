@@ -71,12 +71,12 @@ To maintain clean codebases and ensure the editor configurators match their pres
 
 * **Logic:** Placed inside `.js` files (e.g. `example-card.js` and `example-card-editor.js`).
 * **Styling:** Placed inside `.css` files (e.g. `example-card-editor.css` and `example-card.css`).
-* Inject the CSS stylesheet in the `render()` method of the LitElement control or editor:
+* Inject the CSS stylesheet in the `render()` method using the base class `renderStyle` helper:
 
 ```javascript
 render() {
   return html`
-    <link rel="stylesheet" href="/local/ha-controls/example-card/example-card.css?v=${VERSION}">
+    ${this.renderStyle('example-card.css')}
     <ha-card>
       <!-- HTML Structure here -->
     </ha-card>
@@ -256,4 +256,4 @@ get translationPath() {
 
 * **Use Localized Formatters:** Avoid rendering raw timestamps or float values. Utilize Home Assistant's integrated formatting helpers (e.g., `this.hass.formatEntityState(stateObj)`) to display values matching the user's regional format settings.
 * **Lovelace Config Editors:** Always provide a visual configuration editor for your cards to support user-friendly customization via the dashboard visual builder.
-* **Graceful Degradation:** Display clear `<ha-alert>` warnings when a configured entity is missing, unavailable, or misconfigured, preventing JS stack failures.
+* **Graceful Degradation:** Display clear warnings when a configured entity is missing, unavailable, or misconfigured, preventing JS stack failures. Use the base class helpers `this.renderError(message)` or `this.renderWarning(message)` to display alerts uniformly.

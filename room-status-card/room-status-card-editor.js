@@ -222,7 +222,7 @@ class RoomStatusCardEditor extends HAControlBase {
     const badges = this._config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card-editor.css?v=${VERSION}">
+      ${this.renderStyle('room-status-card-editor.css')}
       <ha-form
         .hass=${this.hass}
         .data=${this._config}

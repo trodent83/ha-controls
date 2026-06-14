@@ -102,7 +102,7 @@ class VacuumSelectCard extends HAControlBase {
       ? Math.floor(parseFloat(cleaningStatusEntity.state))
       : null;
 
-    if (!vacuum || !output) return html`<ha-alert alert-type="error">${this._localize('missing_entities')}</ha-alert>`;
+    if (!vacuum || !output) return this.renderError(this._localize('missing_entities'));
 
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
@@ -120,7 +120,7 @@ class VacuumSelectCard extends HAControlBase {
     const isMarkingEnabled = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=${VERSION}">
+      ${this.renderStyle('vacuum-select-card.css')}
       <div class="container ${isReadonly ? 'readonly' : ''}" 
           style="--grid-columns: ${this.config.columns || 4}; 
                   --selection-color: ${this.config.selection_color || 'var(--primary-color)'}; 

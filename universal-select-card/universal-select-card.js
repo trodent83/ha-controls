@@ -115,6 +115,9 @@ class UniversalSelectCard extends HAControlBase {
   render() {
     if (!this.config || !this.config.entity || !this.hass) return html``;
     const stateObj = this.hass.states[this.config.entity];
+    if (!stateObj) {
+      return this.renderError(this._localize('entity_not_found'));
+    }
     let options = stateObj?.attributes.options || [];
     
     // Sort options according to the user-defined order in the configuration, if provided
@@ -123,6 +126,7 @@ class UniversalSelectCard extends HAControlBase {
       options = [...options].sort((a, b) => {
         const idxA = order.indexOf(a);
         const idxB = order.indexOf(b);
+        const idxB_val = order.indexOf(b);
         if (idxA === -1 && idxB === -1) return 0;
         if (idxA === -1) return 1;
         if (idxB === -1) return -1;
@@ -137,7 +141,7 @@ class UniversalSelectCard extends HAControlBase {
     const lockedClass = isLocked ? 'locked' : '';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card.css?v=${VERSION}">
+      ${this.renderStyle('universal-select-card.css')}
       <ha-card class="${layoutClass} ${lockedClass}">
         ${options.map(option => {
           const optCfg = this.config.options_config?.[option] || {};

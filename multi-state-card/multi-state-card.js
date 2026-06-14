@@ -152,12 +152,12 @@ class MultiPropertyCard extends HAControlBase {
    * @returns {import('lit-html').TemplateResult} The rendered template output
    */
   render() {
-    if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">${this._localize('no_entities')}</ha-alert>`;
+    if (!this.config?.entities || !this.hass) return this.renderError(this._localize('no_entities'));
 
     const layoutClass = this.config.layout === 'column' ? 'layout-column' : 'layout-row';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-state-card/multi-state-card.css?v=${VERSION}">
+      ${this.renderStyle('multi-state-card.css')}
       <ha-card>
         <div class="content-container ${layoutClass}">
       ${(this.config.entities || [])

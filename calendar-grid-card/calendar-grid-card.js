@@ -214,11 +214,18 @@ class CalendarGridCard extends HAControlBase {
   _checkAndFetch() {
     if (!this.hass || !this.config) return;
 
+    const { start, end } = this._getViewDateRange();
+
+    // Skip debounce on initial fetch (when no active range has been fetched yet)
+    if (!this._fetchedRange || !this._fetchedRange.start) {
+      this._fetchEvents(start, end);
+      return;
+    }
+
     if (this._fetchTimer) {
       clearTimeout(this._fetchTimer);
     }
     this._fetchTimer = setTimeout(() => {
-      const { start, end } = this._getViewDateRange();
       this._fetchEvents(start, end);
     }, 500);
   }
@@ -453,7 +460,7 @@ class CalendarGridCard extends HAControlBase {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card.css?v=${this.translationVersion}">
+      ${this.renderStyle('calendar-grid-card.css')}
       <ha-card>
         <div class="header">
             <div class="month-title">${monthName}</div>

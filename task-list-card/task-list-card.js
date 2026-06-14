@@ -169,14 +169,37 @@ class TaskListCard extends HAControlBase {
    * 
    * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
    */
+  /**
+   * LitElement lifecycle hook. Destroys debounced fetch timers to prevent memory leaks.
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+    }
+  }
+
+  /**
+   * LitElement lifecycle trigger. Captures todo list updates and triggers debounced item refetches.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   */
   updated(changedProps) {
     super.updated(changedProps);
     if (!changedProps.has("hass")) { return; }
+    
+    const oldHass = changedProps.get("hass");
+    if (!oldHass) {
+      // First update cycle. setConfig already triggered the initial fetch,
+      // so we avoid setting a redundant 500ms debounce fetch timer.
+      return;
+    }
+
     const entities = this._getEntities();
     let hasChanged = false;
 
     for (const entityId of entities) {
-      const oldState = changedProps.get("hass")?.states[entityId];
+      const oldState = oldHass.states[entityId];
       const newState = this.hass.states[entityId];
 
       if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
@@ -193,7 +216,6 @@ class TaskListCard extends HAControlBase {
 
     this._debounceTimer = setTimeout(() => {
       this._fetchItems();
-      console.groupEnd();
     }, 500);
   }
 
@@ -321,7 +343,7 @@ class TaskListCard extends HAControlBase {
     const groups = this._groups || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=${VERSION}">
+      ${this.renderStyle('task-list-card.css')}
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">

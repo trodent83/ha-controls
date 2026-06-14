@@ -61,6 +61,20 @@ class CalendarGridCardEvent extends HAControlBase {
     }
 
     /**
+     * Resolves the directory path hosting the translation localizations.
+     * 
+     * @type {string}
+     */
+    get translationPath() { return "/local/ha-controls/calendar-grid-card/translations"; }
+
+    /**
+     * Version parameter for translation cache-busting.
+     * 
+     * @type {string}
+     */
+    get translationVersion() { return VERSION; }
+
+    /**
      * Renders the custom card event HTML template.
      * 
      * @protected
@@ -92,7 +106,7 @@ class CalendarGridCardEvent extends HAControlBase {
         const animationClass = (isActive && this.activeIconAnimation) ? this.activeIconAnimation : '';
 
         return html`
-            <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-event.css?v=${VERSION}">
+            ${this.renderStyle('calendar-grid-card-event.css')}
             <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon ${animationClass}" icon="${icon}" style="${iconStyle}"></ha-icon>

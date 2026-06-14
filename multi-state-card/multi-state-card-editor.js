@@ -236,7 +236,7 @@ class MultiPropertyCardEditor extends HAControlBase {
     if (!this.hass || !this._config) return html``;
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-state-card/multi-state-card-editor.css?v=${VERSION}">
+      ${this.renderStyle('multi-state-card-editor.css')}
       <ha-card .header=${this._localize('global_settings')}>
         <div class="card-content">
           <ha-form

@@ -122,7 +122,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card-editor.css?v=${VERSION}">
+      ${this.renderStyle('universal-select-card-editor.css')}
       <ha-form
         .hass=${this.hass}
         .data=${data}
