@@ -133,11 +133,11 @@ class UniversalSelectCard extends HAControlBase {
               </ha-icon>
               ${this.config.show_label && !(isActive && optCfg.hide_label_if_active) ? html`<div class="label">${label}</div>` : ''}
               ${isActive && Array.isArray(optCfg.features) ? optCfg.features.map(feature => html`
-                <universal-feature-renderer 
+                <feature-renderer-card 
                   .hass=${this.hass} 
                   .config=${feature} 
                   .stateObj=${stateObj}>
-                </universal-feature-renderer>
+                </feature-renderer-card>
               `) : ''}
             </div>
           `;
