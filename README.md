@@ -1,0 +1,149 @@
+# 🏠 HA Controls: Premium Custom Cards for Home Assistant
+
+Welcome to the **HA Controls** repository! This is a curated collection of premium, highly interactive, and feature-rich custom Lovelace cards for Home Assistant. Designed with modern 2026 aesthetics in mind, these cards are built on top of `LitElement` and feature an advanced dynamic translation system, modular resource loading, and visual configuration editors.
+
+---
+
+## 🚀 Key Repository Architecture
+
+Unlike basic custom cards, this repository implements a unified framework designed for performance, flexibility, and ease of use:
+
+* **Dynamic Localization System (`ha-control-base.js`):** Every card inherits from `HAControlBase`, which listens to Home Assistant's active language and dynamically fetches/caches translated files (e.g., `translations/en.json`) with standard translation key interpolation and automatic English fallbacks.
+* **Modular Cache-Busting Loader (`ha-control-loader.js`):** Every card has a dedicated `-loader.js` module that checks for existing scripts, automatically tracks component versions, and dynamically injects the required JavaScript/CSS bundles.
+* **Dynamic Feature Renderer (`feature-renderer-card`):** A wrapper card that dynamically resolves and renders standard or custom Home Assistant card features (e.g., cover tilt controls, slider buttons, or custom timers) inside host elements.
+
+---
+
+## 🎨 Included Custom Cards
+
+| Card Type & Tag | Description | Highlights |
+| :--- | :--- | :--- |
+| **`calendar-grid-card`** | A monthly or weekly grid view of events across one or multiple calendars. | Weekly/monthly toggles, custom orientation (horizontal/vertical), sidebar to selectively toggle calendar visibility (cached in `localStorage`), and customizable today borders/backgrounds. |
+| **`task-list-card`** | A powerful tasks board for checking off and managing items in `todo` lists. | Support for single/multiple `todo` entities, group tasks on the same day, smart separators (day, week, month), clean sweeping of completed items, and debounced data loading. |
+| **`universal-select-card`** | Segmented button controls to represent and change options for `input_select` entities. | Column/row button layouts, long-press actions (`call-service`, `navigate`, `url`, `more-info`), and dynamic child feature injection (like timers/labels). |
+| **`vacuum-select-card`** | Grid-based room selector designed to coordinate multi-room vacuum cleanings. | Automatically extracts segments/rooms from vacuum attributes, tracks selections via text inputs, respects vacuum sequence orders, and pulses/blinks the room button currently being cleaned. |
+| **`room-status-card`** | A minimalist status header displaying real-time metrics and alerts for rooms. | Custom header icons/names, dynamic status badge widgets (e.g. temp/humidity), and threshold rules that apply alert animations (blink, pulse) and colors on the fly. |
+| **`multi-property-card`** | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, and dedicated tap/hold event routing. |
+| **`multi-state-card`** | Interactive grid layout representing various entity button states. | Interactive tap/hold actions, customizable background states, and structural support for nesting sub-features like text display. |
+
+---
+
+## ⚙️ Custom Card Features
+
+We provide helper features that plug directly into compatible custom cards (like the **Universal Select Card** and **Multi State Card**):
+
+* **`timer-card-feature` (`custom:timer-card-feature`):** Renders a real-time running countdown indicator directly on the card. Allows tapping to pause or resume the underlying `timer.*` entity.
+* **`constant-text-feature` (`custom:constant-text-feature`):** Renders formatted text/labels within button structures using CSS rules (color, size, alignment, weight) defined directly in Lovelace.
+
+---
+
+## 📥 Installation
+
+To use these controls in your Home Assistant installation:
+
+### 1. Copy Files
+
+Copy the repository contents to your Home Assistant configuration directory under `www/ha-controls/` so that the structure looks like this:
+
+```text
+config/
+└── www/
+    └── ha-controls/
+        ├── ha-control-base.js
+        ├── ha-control-loader.js
+        ├── calendar-grid-card/
+        ├── vacuum-select-card/
+        └── ...
+```
+
+### 2. Add Dashboard Resources
+
+Register the loader script of whichever cards you'd like to use in your Lovelace dashboard resources:
+
+> [!TIP]
+> Always load the respective `-loader.js` file instead of the card's main `.js` file to ensure the visual editor stylesheets and translation configurations load correctly.
+
+#### Via the Home Assistant UI
+
+1. Navigate to **Settings** -> **Dashboards**.
+2. Click the three dots in the top right and select **Resources**.
+3. Click **Add Resource**.
+4. Enter the URL path (e.g., `/local/ha-controls/room-status-card/room-status-card-loader.js`).
+5. Choose **JavaScript Module** as the resource type.
+
+#### Via `configuration.yaml`
+
+```yaml
+lovelace:
+  mode: yaml
+  resources:
+    - url: /local/ha-controls/room-status-card/room-status-card-loader.js
+      type: module
+    - url: /local/ha-controls/calendar-grid-card/calendar-grid-card-loader.js
+      type: module
+```
+
+---
+
+## 💡 Quick Start Configurations
+
+### Room Status Card
+
+```yaml
+type: custom:room-status-card
+name: "Living Room"
+icon: mdi:sofa
+header_settings:
+  show_header: true
+  show_icon: true
+badges:
+  - entity: sensor.living_room_temperature
+    icon: mdi:thermometer
+    thresholds:
+      - value: 25
+        color: "var(--error-color)"
+        animation: blink
+  - entity: binary_sensor.living_room_motion
+    icon: mdi:motion-sensor
+    color: "var(--warning-color)"
+```
+
+### Universal Select Card
+
+```yaml
+type: custom:universal-select-card
+entity: input_select.house_mode
+show_label: true
+layout: row
+options_config:
+  Home:
+    icon: mdi:home
+    color: "var(--success-color)"
+  Away:
+    icon: mdi:exit-run
+    color: "var(--error-color)"
+  Sleep:
+    icon: mdi:sleep
+    color: "var(--primary-color)"
+```
+
+---
+
+## 🛠️ Development & Extending
+
+For detailed development rules, coding standards, and architectural patterns, please review the [Development & Architecture Guidelines](file:///d:/Ha/ha-controls/CONTRIBUTING.md).
+
+Each card is split into modular components for easier code maintenance:
+
+* **`<card>.js`**: Standard LitElement rendering logic and properties.
+* **`<card>.css`**: Stylesheet for visual aesthetics (supporting standard Home Assistant theme CSS variables).
+* **`<card>-editor.js` / `*editor.css`**: Configurator UI seen by users when using Home Assistant's visual dashboard builder.
+* **`translations/`**: Dynamic JSON translation catalogs.
+
+### Translation Pattern
+
+To add support for a new language, create a file under `translations/` named with your language's ISO code (e.g. `de.json`, `fr.json`) mapping the key/values defined in the English fallback (`en.json`).
+
+---
+
+*Made with ❤️ for the Home Assistant Community.*
