@@ -257,9 +257,9 @@ class MultiPropertyCardEditor extends HAControlBase {
                         .secondary=${this._localize('rules_defined', { count: (ent.thresholds || []).length })}
                       >
                         ${(ent.thresholds || []).map((thresh, tIdx) => html`
-                          <div class="threshold-block" style="padding: 16px; border: 1px solid var(--divider-color); border-radius: 8px; margin-bottom: 16px;">
-                            <div class="threshold-sub-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                              <span style="font-weight: 500;">${this._localize('rule_number', { num: tIdx + 1 })} ${thresh.value ? `(${thresh.value})` : ""}</span>
+                          <div class="threshold-block">
+                            <div class="threshold-sub-header">
+                              <span>${this._localize('rule_number', { num: tIdx + 1 })} ${thresh.value ? `(${thresh.value})` : ""}</span>
                               <ha-icon-button
                                 class="remove-btn-compact"
                                 @click=${() => this._removeThreshold(idx, tIdx)}

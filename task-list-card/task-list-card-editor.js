@@ -248,7 +248,6 @@ class TaskListCardEditor extends HAControlBase {
                         label="${this._localize('filter_regex')}"
                         .value="${filter.pattern || ''}"
                         @input="${(e) => this._filterChanged(e, index, filterIndex, 'pattern')}"
-                        style="flex-grow: 1;"
                       ></ha-textfield>
                       <ha-formfield label="${this._localize('case_sensitive')}">
                         <ha-switch

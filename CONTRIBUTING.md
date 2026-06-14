@@ -58,6 +58,10 @@ loader.loadModules(
 );
 ```
 
+> [!IMPORTANT]
+> **Mandatory Version Increment Rule:** Whenever you modify *any* file inside a control's directory (logic, styles, translations, features), you **must** increment the `VERSION` constant string in the card's loader file (e.g. `example-card-loader.js`). This acts as the cache-busting query parameter for Home Assistant client browsers and guarantees updates are delivered properly.
+
+
 ### 3. Separation of Styling and Logic
 
 To maintain clean codebases and ensure the editor configurators match their presentation components:

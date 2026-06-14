@@ -92,6 +92,9 @@
     align-items: center;
     gap: 16px;
 }
+.filter-row ha-textfield {
+    flex-grow: 1 !important;
+}
 .filters-list {
     display: flex;
     flex-direction: column;
