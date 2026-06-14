@@ -4,17 +4,16 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.16';
 
 /**
- * MultiPropertyCard
- * (Registered as 'multi-state-card')
- * A Home Assistant dashboard card displaying icons, state descriptors, and inline controls for multiple entities.
+ * MultiStateCard
+ * A Home Assistant dashboard card displaying dynamic controls entirely composed of card features.
  * Supports conditional JS expression parsing (`eval` execution against state changes) to filter entity visibility.
  * 
  * @extends HAControlBase
  */
-class MultiPropertyCard extends HAControlBase {
+class MultiStateCard extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
    * Inherits properties from HAControlBase and tracks the config object.
@@ -118,30 +117,18 @@ class MultiPropertyCard extends HAControlBase {
    */
   static getStubConfig() {
     return {
-      show_icon: true,
       layout: "row",
       entities: [
         {
           entity: "sun.sun",
+          features: [
+            {
+              type: "custom:icon-card-feature"
+            }
+          ]
         }
       ]
     };
-  }
-
-  /**
-   * Fallback icon resolver. Maps entity domains and device classes to standard Material Design Icons.
-   * 
-   * @param {string} domain - The entity domain (e.g. 'light', 'sensor')
-   * @param {string} deviceClass - Optional device_class attribute of the entity
-   * @private
-   * @returns {string} Material Design Icon string (e.g., 'mdi:flash')
-   */
-  _getFallbackIcon(domain, deviceClass) {
-    const defaults = {
-      battery: 'mdi:battery', temperature: 'mdi:thermometer', humidity: 'mdi:water-percent',
-      light: 'mdi:lightbulb', switch: 'mdi:flash', binary_sensor: 'mdi:checkbox-marked-circle-outline'
-    };
-    return defaults[deviceClass] || defaults[domain] || 'mdi:circle-outline';
   }
 
   /**
@@ -163,36 +150,21 @@ class MultiPropertyCard extends HAControlBase {
       ${(this.config.entities || [])
         .map(entConf => {
           const entityId = (typeof entConf === 'string' ? entConf : entConf.entity);
-          let stateObj, domain, deviceClass;
+          let stateObj;
 
           if (entityId) {
             stateObj = this.hass.states[entityId];
             if (!stateObj && !this.config.show_unavailable) {
               return html``;
             }
-            domain = entityId.split('.')[0];
-            deviceClass = stateObj?.attributes?.device_class;
-          } else {
-            if (!entConf.name && !entConf.icon) return html``;
-            domain = 'constant';
-            deviceClass = undefined;
           }
-
-          const finalColor = entConf.color || 'var(--primary-text-color)';
-          const finalAnim = entConf.animation || '';
-
-          const icon = entConf.icon || this._getFallbackIcon(domain, deviceClass);
-
-          const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : this.config.show_icon;
 
           return html`<div class="multi-state-entity">
             <div
               class="btn"
-              style="color: ${finalColor};"
               @click="${() => this._runAction(entConf, 'tap')}"
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >
-              ${showIcon ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
               ${(entConf.features && Array.isArray(entConf.features)) ? html`
                 <div class="features-container">
                   ${entConf.features.filter(featureConfig => {
@@ -214,7 +186,6 @@ class MultiPropertyCard extends HAControlBase {
                       .hass=${this.hass}
                       .config=${featureConfig}
                       .stateObj=${stateObj}
-                      .color=${finalColor}
                     ></feature-renderer-card>
                   `)}
                 </div>
@@ -256,18 +227,17 @@ class MultiPropertyCard extends HAControlBase {
       throw new Error("Please define entities");
     }
     this.config = {
-      show_icon: true,
       show_unavailable: false,
       ...config
     };
   }
 }
 
-customElements.define("multi-state-card", MultiPropertyCard);
+customElements.define("multi-state-card", MultiStateCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "multi-state-card",
   name: "Multi State Card",
-  description: "Displays entities with their multiple states.",
+  description: "Displays entities using a customizable array of features.",
   preview: true
 });

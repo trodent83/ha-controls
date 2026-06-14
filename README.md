@@ -23,17 +23,21 @@ Unlike basic custom cards, this repository implements a unified framework design
 | **`universal-select-card`** | Segmented button controls to represent and change options for `input_select` entities. | Column/row button layouts, long-press actions (`call-service`, `navigate`, `url`, `more-info`), and dynamic child feature injection (like timers/labels). |
 | **`vacuum-select-card`** | Grid-based room selector designed to coordinate multi-room vacuum cleanings. | Automatically extracts segments/rooms from vacuum attributes, tracks selections via text inputs, respects vacuum sequence orders, and pulses/blinks the room button currently being cleaned. |
 | **`room-status-card`** | A minimalist status header displaying real-time metrics and alerts for rooms. | Custom header icons/names, dynamic status badge widgets (e.g. temp/humidity), and threshold rules that apply alert animations (blink, pulse) and colors on the fly. |
-| **`multi-property-card`** | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, and dedicated tap/hold event routing. |
-| **`multi-state-card`** | Interactive grid layout representing various entity button states. | Interactive tap/hold actions, customizable background states, and structural support for nesting sub-features like text display. |
+| **`multi-property-card`** | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, tap/hold actions, and dynamic child features. |
+| **`multi-state-card`** | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
 
 ---
 
 ## ⚙️ Custom Card Features
 
-We provide helper features that plug directly into compatible custom cards (like the **Universal Select Card** and **Multi State Card**):
+We provide helper features that plug directly into compatible custom cards (like the **Universal Select Card**, **Multi Property Card**, and **Multi State Card**) by loading the centralized `feature-renderer-card-loader.js` resource:
 
 * **`timer-card-feature` (`custom:timer-card-feature`):** Renders a real-time running countdown indicator directly on the card. Allows tapping to pause or resume the underlying `timer.*` entity.
-* **`constant-text-feature` (`custom:constant-text-feature`):** Renders formatted text/labels within button structures using CSS rules (color, size, alignment, weight) defined directly in Lovelace.
+* **`constant-text-feature` (`custom:constant-text-feature`):** Renders customizable static text/labels inside button structures.
+* **`state-value-feature` (`custom:state-value-feature`):** Renders the localized main state value of the parent or overridden entity, with customizable prefix, suffix, styling, and threshold rule overrides.
+* **`attribute-value-feature` (`custom:attribute-value-feature`):** Renders a specific attribute (subproperty) of the parent or overridden entity, with customizable prefix, suffix, styling, and threshold rule overrides.
+* **`image-card-feature` (`custom:image-card-feature`):** Renders static pictures, entity avatars (`entity_picture`), or camera snapshot streams inside buttons/slots.
+* **`icon-card-feature` (`custom:icon-card-feature`):** Renders highly customizable, state-mapped, threshold-driven, or expression-driven icons with custom colors, sizing, and animations.
 
 ---
 

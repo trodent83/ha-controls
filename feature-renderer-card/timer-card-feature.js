@@ -34,7 +34,7 @@ class TimerCardFeature extends HAControlBase {
    * 
    * @type {string}
    */
-  get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+  get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
 
   /**
    * Version parameter for translation cache-busting.
@@ -136,7 +136,7 @@ class TimerCardFeature extends HAControlBase {
     e.stopPropagation();
     const entityId = this.config?.entity || this.stateObj?.entity_id;
     if (!entityId || !this.hass) return;
-    
+
     const stateObj = this.hass.states[entityId];
     if (!stateObj) return;
 
@@ -155,7 +155,7 @@ class TimerCardFeature extends HAControlBase {
    */
   render() {
     if (!this.hass || !this.config) return html``;
-    
+
     // Card features naturally inherit the stateObj from their parent card (like Tile),
     // but we support overriding it via config.entity
     const entityId = this.config.entity || this.stateObj?.entity_id;
@@ -174,8 +174,8 @@ class TimerCardFeature extends HAControlBase {
       displayLabel = stateObj.attributes.duration;
     } else {
       // Fallback to localized formatting for 'paused', 'idle', etc.
-      displayLabel = this.hass.formatEntityState 
-        ? this.hass.formatEntityState(stateObj) 
+      displayLabel = this.hass.formatEntityState
+        ? this.hass.formatEntityState(stateObj)
         : stateObj.state;
     }
 

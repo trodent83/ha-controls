@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.20";
+const VERSION = "1.0.21";
 
 // Name of this loader module script
 const SCRIPT_NAME = "universal-select-card-loader.js";
@@ -16,11 +16,9 @@ const loader = new HAControlLoader(SCRIPT_NAME, VERSION);
 
 // Dynamically load stylesheets and scripts needed by the control
 loader.loadModules(
-  ["universal-select-card.css", "timer-card-feature.css", "universal-select-card-editor.css"],
+  ["universal-select-card.css", "universal-select-card-editor.css"],
   [
     "universal-select-card.js",
-    "universal-select-card-editor.js",
-    "timer-card-feature.js",
-    "timer-card-feature-editor.js"
+    "universal-select-card-editor.js"
   ]
 );

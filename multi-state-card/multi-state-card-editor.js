@@ -4,16 +4,15 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.16';
 
 /**
- * MultiPropertyCardEditor
- * Visual configuration editor UI for MultiPropertyCard.
- * Supports updating row/column grids, reordering item rows, configuring custom animations, and binding tap/hold actions.
+ * MultiStateCardEditor
+ * Visual configuration editor UI for MultiStateCard.
  * 
  * @extends HAControlBase
  */
-class MultiPropertyCardEditor extends HAControlBase {
+class MultiStateCardEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
    * Tracks local config instance copy.
@@ -66,7 +65,7 @@ class MultiPropertyCardEditor extends HAControlBase {
    * @private
    */
   _addEntity() {
-    const entities = [...(this._config.entities || []), {}];
+    const entities = [...(this._config.entities || []), { entity: "", features: [] }];
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -252,45 +251,16 @@ class MultiPropertyCardEditor extends HAControlBase {
       <div class="card-config">
         <div class="entities-container">
           ${(this._config.entities || []).map((ent, idx) => {
-            const entityLabel = ent.name || `Item ${idx + 1}`;
+            const entityLabel = ent.name || ent.entity || `Item ${idx + 1}`;
 
             const combinedData = {
-              icon: ent.icon || "",
-              show_icon: ent.show_icon !== false,
-              color: ent.color || "",
-              animation: ent.animation || "",
+              entity: ent.entity || "",
               tap_action: ent.tap_action || { action: "none" },
               hold_action: ent.hold_action || { action: "none" }
             };
 
             const combinedSchema = [
-              {
-                name: "",
-                type: "grid",
-                schema: [
-                  { name: "icon", label: this._localize('icon_override'), selector: { icon: {} } },
-                  { name: "show_icon", label: this._localize('show_icon'), selector: { boolean: {} } }
-                ]
-              },
-              { name: "color", label: this._localize('color_override'), selector: { text: {} } },
-              { 
-                name: "animation", 
-                label: this._localize('default_animation'), 
-                selector: { 
-                  select: { 
-                    options: [
-                      { value: "", label: this._localize('none') },
-                      { value: "blink", label: this._localize('blink') },
-                      { value: "bounce", label: this._localize('bounce') },
-                      { value: "rotating", label: this._localize('rotating') },
-                      { value: "pulse", label: this._localize('pulse') },
-                      { value: "shake", label: this._localize('shake') },
-                      { value: "float", label: this._localize('float') },
-                      { value: "spin-slow", label: this._localize('spin_slow') }
-                    ]
-                  } 
-                } 
-              },
+              { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
               { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
               { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
             ];
@@ -389,4 +359,4 @@ class MultiPropertyCardEditor extends HAControlBase {
   }
 }
 
-customElements.define("multi-state-card-editor", MultiPropertyCardEditor);
+customElements.define("multi-state-card-editor", MultiStateCardEditor);

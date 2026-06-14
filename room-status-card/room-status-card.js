@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlThresholdBase, html } from "../ha-control-base.js?v=0.5.3";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -12,12 +12,12 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.20';
  * Displays room header title/icon and a row of status badges mapped to temperature, humidity,
  * occupancy, or door/window sensors. Supports dynamic threshold-based badge coloring and pulsing animations.
  * 
- * @extends HAControlBase
+ * @extends HAControlThresholdBase
  */
-class RoomStatusCard extends HAControlBase {
+class RoomStatusCard extends HAControlThresholdBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Inherits properties from HAControlBase and tracks the config object.
+   * Inherits properties from HAControlThresholdBase and tracks the config object.
    * 
    * @static
    * @returns {Object} LitElement properties definition
@@ -79,36 +79,6 @@ class RoomStatusCard extends HAControlBase {
   }
 
   /**
-   * Helper utility checking numeric or string status thresholds.
-   * Inspects configured threshold arrays and returns styling values (color/animation classes)
-   * matching the sensor's current active state value.
-   * 
-   * @param {string|number} stateValue - Sensor state value to match
-   * @param {Array<Object>} thresholds - Configured array of thresholds
-   * @param {string} propertyName - Property to look up ('color' or 'animation')
-   * @private
-   * @returns {string|null} The matched configuration value, or null if no threshold applies
-   */
-  _getMatchedProperty(stateValue, thresholds, propertyName) {
-    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
-    const stringState = String(stateValue).toLowerCase();
-
-    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
-
-    const numericValue = parseFloat(stateValue);
-    if (!isNaN(numericValue)) {
-      const numericThresholds = thresholds
-        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
-        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-      
-      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
-      if (match) return match[propertyName];
-    }
-    return null;
-  }
-
-  /**
    * Renders the custom card's HTML template.
    * Generates header blocks and parses status badges list applying custom threshold attributes.
    * 
@@ -134,29 +104,29 @@ class RoomStatusCard extends HAControlBase {
           </div>
           <div class="status_badges">
           ${badges.map(badgeConfig => {
-            const entityId = badgeConfig.entity;
-            const stateObj = entityId ? this.hass.states[entityId] : null;
-            if (!stateObj) return '';
+      const entityId = badgeConfig.entity;
+      const stateObj = entityId ? this.hass.states[entityId] : null;
+      if (!stateObj) return '';
 
-            const state = stateObj.state;
-            const unit = stateObj.attributes.unit_of_measurement || '';
-            
-            const matchColor = this._getMatchedProperty(state, badgeConfig.thresholds, 'color');
-            const matchAnim = this._getMatchedProperty(state, badgeConfig.thresholds, 'animation');
-            
-            const finalColor = matchColor || badgeConfig.color || 'var(--primary-text-color)';
-            const finalAnim = matchAnim || badgeConfig.animation || '';
-            const icon = badgeConfig.icon || stateObj.attributes.icon;
-            const showIcon = badgeConfig.show_icon !== false;
-            const showState = badgeConfig.show_state !== false;
+      const state = stateObj.state;
+      const unit = stateObj.attributes.unit_of_measurement || '';
 
-            return html`
+      const matchColor = this._getMatchedProperty(state, badgeConfig.thresholds, 'color');
+      const matchAnim = this._getMatchedProperty(state, badgeConfig.thresholds, 'animation');
+
+      const finalColor = matchColor || badgeConfig.color || 'var(--primary-text-color)';
+      const finalAnim = matchAnim || badgeConfig.animation || '';
+      const icon = badgeConfig.icon || stateObj.attributes.icon;
+      const showIcon = badgeConfig.show_icon !== false;
+      const showState = badgeConfig.show_state !== false;
+
+      return html`
               <div class="status_badge ${finalAnim}" style="--badge-color: ${finalColor}">
                 ${showIcon && icon ? html`<ha-icon .icon="${icon}"></ha-icon>` : ''}
                 ${showState ? html`${state}${unit}` : ''}
               </div>
             `;
-          })}
+    })}
           </div>
         </div>
       </ha-card>

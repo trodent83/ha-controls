@@ -1,13 +1,13 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
 /**
- * ConstantTextFeatureEditor
- * Visual configuration editor UI for the ConstantTextFeature custom card feature.
- * Allows entering custom static text, custom CSS styles, fonts, etc.
+ * TimerCardFeatureEditor
+ * Visual configuration editor UI for the TimerCardFeature custom card feature.
+ * Provides inputs to optionally override the target timer entity.
  * 
  * @extends HAControlBase
  */
-class ConstantTextFeatureEditor extends HAControlBase {
+class TimerCardFeatureEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
    * Tracks local config instance copy.
@@ -24,7 +24,7 @@ class ConstantTextFeatureEditor extends HAControlBase {
    * 
    * @type {string}
    */
-  get translationPath() { return "/local/ha-controls/multi-state-card/translations"; }
+  get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
 
   /**
    * Version parameter for translation cache-busting.
@@ -69,28 +69,7 @@ class ConstantTextFeatureEditor extends HAControlBase {
     if (!this.hass || !this._config) return html``;
 
     const schema = [
-      { name: "text", label: this._localize('text'), selector: { text: {} } },
-      {
-        name: "",
-        type: "grid",
-        schema: [
-          { name: "color", label: this._localize('color_inherit'), selector: { "text": {} } },
-          { name: "font_size", label: this._localize('font_size_placeholder'), selector: { text: {} } }
-        ]
-      },
-      {
-        name: "font_weight",
-        label: this._localize('font_weight'),
-        selector: {
-          select: {
-            options: [
-              { value: "normal", label: this._localize('normal') },
-              { value: "bold", label: this._localize('bold') }
-            ],
-            mode: "dropdown"
-          }
-        }
-      }
+      { name: "entity", label: this._localize('override_entity'), selector: { entity: { domain: "timer" } } }
     ];
 
     return html`
@@ -105,4 +84,4 @@ class ConstantTextFeatureEditor extends HAControlBase {
   }
 }
 
-customElements.define("constant-text-feature-editor", ConstantTextFeatureEditor);
+customElements.define("timer-card-feature-editor", TimerCardFeatureEditor);

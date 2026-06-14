@@ -1,23 +1,23 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlThresholdBase, html } from "../ha-control-base.js?v=0.5.3";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.25';
 
 /**
  * MultiPropertyCard
  * A custom Home Assistant Lovelace dashboard card that renders a layout row/column grid of entity states.
  * Supports threshold-based coloring, fallback icon mapping, Javasript condition logic filters,
- * custom units override, and interactive tap/hold action execution.
+ * custom units override, interactive tap/hold action execution, and dynamic child features.
  * 
- * @extends HAControlBase
+ * @extends HAControlThresholdBase
  */
-class MultiPropertyCard extends HAControlBase {
+class MultiPropertyCard extends HAControlThresholdBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Inherits properties from HAControlBase and tracks the config object.
+   * Inherits properties from HAControlThresholdBase and tracks the config object.
    * 
    * @static
    * @returns {Object} LitElement properties definition
@@ -76,9 +76,9 @@ class MultiPropertyCard extends HAControlBase {
         const entityId = typeof ent === 'string' ? ent : ent.entity;
         const stateObj = entityId ? this.hass.states[entityId] : undefined;
         const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
-        
+
         const stateChanged = oldStateObj !== stateObj;
-        
+
         let conditionResult = true;
         let conditionChanged = false;
 
@@ -134,52 +134,6 @@ class MultiPropertyCard extends HAControlBase {
   }
 
   /**
-   * Helper utility checking numeric or string status thresholds.
-   * Inspects configured threshold arrays and returns styling values (color/animation classes)
-   * matching the sensor's current active state value.
-   * 
-   * @param {string|number} stateValue - Sensor state value to match
-   * @param {Array<Object>} thresholds - Configured array of thresholds
-   * @param {string} propertyName - Property to look up ('color' or 'animation')
-   * @private
-   * @returns {string|null} The matched configuration value, or null if no threshold applies
-   */
-  _getMatchedProperty(stateValue, thresholds, propertyName) {
-    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
-    const stringState = String(stateValue).toLowerCase();
-
-    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
-
-    const numericValue = parseFloat(stateValue);
-    if (!isNaN(numericValue)) {
-      const numericThresholds = thresholds
-        .filter(t => !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
-        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-      
-      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
-      if (match) return match[propertyName];
-    }
-    return null;
-  }
-
-  /**
-   * Fallback icon resolver. Maps entity domains and device classes to standard Material Design Icons.
-   * 
-   * @param {string} domain - The entity domain (e.g. 'light', 'sensor')
-   * @param {string} deviceClass - Optional device_class attribute of the entity
-   * @private
-   * @returns {string} Material Design Icon string (e.g., 'mdi:flash')
-   */
-  _getFallbackIcon(domain, deviceClass) {
-    const defaults = {
-      battery: 'mdi:battery', temperature: 'mdi:thermometer', humidity: 'mdi:water-percent',
-      light: 'mdi:lightbulb', switch: 'mdi:flash', binary_sensor: 'mdi:checkbox-marked-circle-outline'
-    };
-    return defaults[deviceClass] || defaults[domain] || 'mdi:circle-outline';
-  }
-
-  /**
    * Renders the custom card's HTML template.
    * Filters entities list by JavaScript conditions and availability, drawing status icons and parameters values.
    * 
@@ -198,7 +152,7 @@ class MultiPropertyCard extends HAControlBase {
       ${this.config.entities
         .filter(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf?.entity;
-          
+
           if (!entityId) {
             if (typeof entConf === 'object' && entConf.condition) {
               try {
@@ -230,10 +184,10 @@ class MultiPropertyCard extends HAControlBase {
           const attr = typeof entConf === 'object' ? entConf.attribute : null;
           const val = attr ? stateObj.attributes[attr] : stateObj.state;
 
-          const isUnavailable = 
-            val === undefined || 
-            val === null || 
-            String(val).toLowerCase() === 'unavailable' || 
+          const isUnavailable =
+            val === undefined ||
+            val === null ||
+            String(val).toLowerCase() === 'unavailable' ||
             String(val).toLowerCase() === 'unknown' ||
             String(val).toLowerCase() === 'none';
 
@@ -244,9 +198,9 @@ class MultiPropertyCard extends HAControlBase {
         .map(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf.entity;
           const stateObj = entityId ? this.hass.states[entityId] : null;
-          
+
           const domain = (entityId && entityId.includes('.')) ? entityId.split('.')[0] : 'unknown';
-          
+
           let state;
           if (stateObj) {
             state = entConf.attribute ? stateObj?.attributes[entConf.attribute] : stateObj?.state;
@@ -296,6 +250,33 @@ class MultiPropertyCard extends HAControlBase {
                   </div>
                 ` : ''}
               </div>
+
+              ${(entConf.features && Array.isArray(entConf.features)) ? html`
+                <div class="features-container">
+                  ${entConf.features.filter(featureConfig => {
+                    if (featureConfig.condition) {
+                      try {
+                        const hass = this.hass;
+                        const entity = stateObj;
+                        const state = stateObj?.state;
+                        const attributes = stateObj?.attributes;
+                        return eval(featureConfig.condition);
+                      } catch (e) {
+                        console.error("Error evaluating condition for feature", featureConfig, e);
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map(featureConfig => html`
+                    <feature-renderer-card
+                      .hass=${this.hass}
+                      .config=${featureConfig}
+                      .stateObj=${stateObj}
+                      .color=${finalColor}
+                    ></feature-renderer-card>
+                  `)}
+                </div>
+              ` : ''}
             </div>
           `;
         })}

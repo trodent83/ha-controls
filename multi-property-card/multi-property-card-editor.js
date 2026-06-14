@@ -1,19 +1,19 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlThresholdBase, html } from "../ha-control-base.js?v=0.5.3";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.25';
 
 /**
  * MultiPropertyCardEditor
  * Visual configuration editor UI for MultiPropertyCard.
- * Manages grid layout options, entity attributes, conditional evaluation rules, and state thresholds.
+ * Manages grid layout options, entity attributes, conditional evaluation rules, state thresholds, and dynamic features.
  * 
- * @extends HAControlBase
+ * @extends HAControlThresholdBase
  */
-class MultiPropertyCardEditor extends HAControlBase {
+class MultiPropertyCardEditor extends HAControlThresholdBase {
   /**
    * Defines reactive properties tracked by LitElement.
    * Tracks local config instance copy.
@@ -119,7 +119,7 @@ class MultiPropertyCardEditor extends HAControlBase {
    * @private
    */
   _addEntity() {
-    const entities = [...(this._config.entities || []), { entity: "", name: "", thresholds: [] }];
+    const entities = [...(this._config.entities || []), { entity: "", name: "", thresholds: [], features: [] }];
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -167,6 +167,93 @@ class MultiPropertyCardEditor extends HAControlBase {
       bubbles: true,
       composed: true 
     }));
+  }
+
+  /**
+   * Returns feature compatibility tags.
+   * 
+   * @type {Array<string>}
+   */
+  get featureTags() {
+    return ['multi-property-card'];
+  }
+
+  /**
+   * Formats and returns a human-readable display name for custom Lovelace card features.
+   * 
+   * @param {string} type - Feature identifier tag name
+   * @private
+   * @returns {string} Human-readable feature name
+   */
+  _getFeatureName(type) {
+    if (!type) return "Unknown Feature";
+    const customFeatures = window.customCardFeatures || [];
+    const found = customFeatures.find(f => f.type === type);
+    if (found && found.name) {
+      return found.name;
+    }
+    let cleanType = type.startsWith("custom:") ? type.substring(7) : type;
+    cleanType = cleanType.replace(/-card-feature$/, '').replace(/-/g, ' ');
+    return cleanType.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  /**
+   * Appends a new layout feature block to an entity config, applying stub configs if present.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {CustomEvent} ev - Selection details containing feature type selector
+   * @private
+   */
+  _addFeature(entityIndex, ev) {
+    const type = ev.detail.type;
+    if (!type) return;
+
+    const featureConfig = { type };
+    const isCustom = type.startsWith("custom:");
+    const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
+    const FeatureClass = customElements.get(tag);
+    if (FeatureClass && FeatureClass.getStubConfig) {
+      Object.assign(featureConfig, FeatureClass.getStubConfig());
+    }
+
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || []), featureConfig];
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Removes a feature configuration from an entity's list.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} featureIndex - Feature index to remove
+   * @private
+   */
+  _removeFeature(entityIndex, featureIndex) {
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || [])];
+    features.splice(featureIndex, 1);
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Updates feature configurations by index.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} featureIndex - Feature index to replace
+   * @param {Object} newFeatureConfig - Replacement feature layout schema
+   * @private
+   */
+  _updateFeature(entityIndex, featureIndex, newFeatureConfig) {
+    const entities = [...this._config.entities];
+    const features = [...(entities[entityIndex].features || [])];
+    features[featureIndex] = newFeatureConfig;
+    entities[entityIndex] = { ...entities[entityIndex], features };
+    this._config = { ...this._config, entities };
+    this._fireConfigChanged();
   }
 
   /**
@@ -347,7 +434,8 @@ class MultiPropertyCardEditor extends HAControlBase {
                       }}
                     ></ha-form>
 
-                    <div class="thresholds-section">
+                    <!-- Thresholds Section -->
+                    <div class="thresholds-section" style="margin-top: 16px;">
                       <ha-expansion-panel 
                         outlined 
                         header="${this._localize('thresholds_state_rules')}"
@@ -403,6 +491,44 @@ class MultiPropertyCardEditor extends HAControlBase {
                         <ha-button @click=${() => this._addThreshold(idx)}>
                           <ha-icon icon="mdi:plus" slot="icon"></ha-icon> ${this._localize('add_rule')}
                         </ha-button>
+                      </ha-expansion-panel>
+                    </div>
+
+                    <!-- Features section -->
+                    <div class="features-section" style="margin-top: 16px;">
+                      <ha-expansion-panel
+                        outlined
+                        header="${this._localize('features') || 'Features'}"
+                        .secondary=${this._localize('rules_defined', { count: (ent.features || []).length })}
+                      >
+                        <div class="features-list">
+                          ${(ent.features || []).map((feature, fIdx) => html`
+                            <div class="feature-item" style="border: 1px solid var(--divider-color); padding: 8px; margin-bottom: 8px; border-radius: 4px; background: var(--card-background-color);">
+                              <div class="feature-item-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 500;">${this._getFeatureName(feature.type)}</span>
+                                <ha-icon-button
+                                  @click=${() => this._removeFeature(idx, fIdx)}
+                                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                              </div>
+                              <feature-renderer-editor-card
+                                .hass=${this.hass}
+                                .config=${feature}
+                                @config-changed=${(e) => {
+                                  e.stopPropagation();
+                                  this._updateFeature(idx, fIdx, e.detail.config);
+                                }}
+                              ></feature-renderer-editor-card>
+                            </div>
+                          `)}
+                        </div>
+                        <div class="feature-add" style="margin-top: 8px;">
+                          <feature-selector-card
+                            .hass=${this.hass}
+                            .label=${this._localize('add_feature')}
+                            .tags=${this.featureTags}
+                            @feature-selected=${(e) => this._addFeature(idx, e)}
+                          ></feature-selector-card>
+                        </div>
                       </ha-expansion-panel>
                     </div>
                   </div>

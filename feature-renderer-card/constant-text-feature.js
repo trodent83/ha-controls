@@ -31,6 +31,20 @@ class ConstantTextFeature extends HAControlBase {
   }
 
   /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
+  get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
+  get translationVersion() { return VERSION; }
+
+  /**
    * Creates and returns the configuration editor element for this card feature.
    * 
    * @static

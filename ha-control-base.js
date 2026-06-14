@@ -69,77 +69,77 @@ export class HAControlBase extends LitElement {
    * @async
    */
   async _loadTranslations(lang) {
-      if (!this.translationPath) return;
+    if (!this.translationPath) return;
 
-      this._loadedLang = lang;
-      this._translationsLoaded = false;
+    this._loadedLang = lang;
+    this._translationsLoaded = false;
 
-      // Check module level cache first to prevent duplicate fetches across instances
-      const cacheKey = `${this.translationPath}_${lang}`;
-      if (translationCache[cacheKey]) {
-          const cached = translationCache[cacheKey];
-          this._strings = cached.strings;
-          this._fallbackStrings = cached.fallback;
-          this._translationsLoaded = true;
-          this.requestUpdate();
-          return;
-      }
-
-      const languagesToTry = [lang];
-      if (lang.includes('-')) {
-          languagesToTry.push(lang.split('-')[0]);
-      }
-      if (!languagesToTry.includes('en')) {
-          languagesToTry.push('en');
-      }
-
-      // Fetch all translation candidate files in parallel
-      const fetchPromises = languagesToTry.map(async (l) => {
-          try {
-              const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
-              if (response.ok) {
-                  const json = await response.json();
-                  return { lang: l, json };
-              }
-          } catch (e) {
-              console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
-          }
-          return null;
-      });
-
-      const results = await Promise.all(fetchPromises);
-
-      let primaryStringsSet = false;
-      let primaryStrings = {};
-      let fallbackStrings = {};
-
-      for (const l of languagesToTry) {
-          const match = results.find(r => r && r.lang === l);
-          if (match) {
-              if (!primaryStringsSet) {
-                  if (l !== lang) {
-                      console.info(`[HAControlBase] Translation for '${lang}' not found, falling back to '${l}'.`);
-                  }
-                  primaryStrings = match.json;
-                  primaryStringsSet = true;
-              }
-              if (l === 'en') {
-                  fallbackStrings = match.json;
-              }
-          }
-      }
-
-      this._strings = primaryStrings;
-      this._fallbackStrings = fallbackStrings;
-
-      // Cache the loaded translations globally
-      translationCache[cacheKey] = {
-          strings: primaryStrings,
-          fallback: fallbackStrings
-      };
-
+    // Check module level cache first to prevent duplicate fetches across instances
+    const cacheKey = `${this.translationPath}_${lang}`;
+    if (translationCache[cacheKey]) {
+      const cached = translationCache[cacheKey];
+      this._strings = cached.strings;
+      this._fallbackStrings = cached.fallback;
       this._translationsLoaded = true;
       this.requestUpdate();
+      return;
+    }
+
+    const languagesToTry = [lang];
+    if (lang.includes('-')) {
+      languagesToTry.push(lang.split('-')[0]);
+    }
+    if (!languagesToTry.includes('en')) {
+      languagesToTry.push('en');
+    }
+
+    // Fetch all translation candidate files in parallel
+    const fetchPromises = languagesToTry.map(async (l) => {
+      try {
+        const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
+        if (response.ok) {
+          const json = await response.json();
+          return { lang: l, json };
+        }
+      } catch (e) {
+        console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
+      }
+      return null;
+    });
+
+    const results = await Promise.all(fetchPromises);
+
+    let primaryStringsSet = false;
+    let primaryStrings = {};
+    let fallbackStrings = {};
+
+    for (const l of languagesToTry) {
+      const match = results.find(r => r && r.lang === l);
+      if (match) {
+        if (!primaryStringsSet) {
+          if (l !== lang) {
+            console.info(`[HAControlBase] Translation for '${lang}' not found, falling back to '${l}'.`);
+          }
+          primaryStrings = match.json;
+          primaryStringsSet = true;
+        }
+        if (l === 'en') {
+          fallbackStrings = match.json;
+        }
+      }
+    }
+
+    this._strings = primaryStrings;
+    this._fallbackStrings = fallbackStrings;
+
+    // Cache the loaded translations globally
+    translationCache[cacheKey] = {
+      strings: primaryStrings,
+      fallback: fallbackStrings
+    };
+
+    this._translationsLoaded = true;
+    this.requestUpdate();
   }
 
   /**
@@ -152,21 +152,21 @@ export class HAControlBase extends LitElement {
     let translated = this._strings?.[key] ?? this._fallbackStrings?.[key];
 
     if (translated === undefined) {
-        if (this._translationsLoaded) {
-            console.warn(`[HAControlBase] Missing translation for key '${key}' in '${this._loadedLang}' for ${this.localName}`);
-        }
-        return key;
+      if (this._translationsLoaded) {
+        console.warn(`[HAControlBase] Missing translation for key '${key}' in '${this._loadedLang}' for ${this.localName}`);
+      }
+      return key;
     }
 
     try {
-        // Perform replacements for placeholders
-        for (const [k, v] of Object.entries(replace)) {
-            translated = translated.replace(`{${k}}`, String(v));
-        }
+      // Perform replacements for placeholders
+      for (const [k, v] of Object.entries(replace)) {
+        translated = translated.replace(`{${k}}`, String(v));
+      }
     } catch (e) {
-        console.error(`[HAControlBase] Error formatting translation for key '${key}':`, e);
+      console.error(`[HAControlBase] Error formatting translation for key '${key}':`, e);
     }
-    
+
     return translated;
   }
 
@@ -197,5 +197,60 @@ export class HAControlBase extends LitElement {
    */
   renderWarning(message) {
     return html`<ha-alert alert-type="warning" dismissable="false">${message}</ha-alert>`;
+  }
+}
+
+/**
+ * HAControlThresholdBase
+ * Base class that adds utility methods for threshold checking and icon fallback resolution.
+ * Inherits from HAControlBase.
+ */
+export class HAControlThresholdBase extends HAControlBase {
+  /**
+   * Helper utility checking numeric or string status thresholds.
+   * Inspects configured threshold arrays and returns styling values (color/animation/icon)
+   * matching the active state/attribute value.
+   * 
+   * @param {string|number} stateValue - State or attribute value to match
+   * @param {Array<Object>} thresholds - Configured array of thresholds
+   * @param {string} propertyName - Property to look up ('color', 'animation', 'icon', etc.)
+   * @protected
+   * @returns {string|null} The matched configuration value, or null if no threshold applies
+   */
+  _getMatchedProperty(stateValue, thresholds, propertyName) {
+    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
+    const stringState = String(stateValue).toLowerCase();
+
+    // Exact string match
+    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
+    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
+
+    // Numeric comparison match (parseFloat)
+    const numericValue = parseFloat(stateValue);
+    if (!isNaN(numericValue)) {
+      const numericThresholds = thresholds
+        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
+        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+
+      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
+      if (match) return match[propertyName];
+    }
+    return null;
+  }
+
+  /**
+   * Fallback icon resolver mapping domains and device classes to material design icons.
+   * 
+   * @param {string} domain - The entity domain (e.g. 'light', 'sensor')
+   * @param {string} deviceClass - Optional device_class attribute of the entity
+   * @protected
+   * @returns {string} Material Design Icon string
+   */
+  _getFallbackIcon(domain, deviceClass) {
+    const defaults = {
+      battery: 'mdi:battery', temperature: 'mdi:thermometer', humidity: 'mdi:water-percent',
+      light: 'mdi:lightbulb', switch: 'mdi:flash', binary_sensor: 'mdi:checkbox-marked-circle-outline'
+    };
+    return defaults[deviceClass] || defaults[domain] || 'mdi:circle-outline';
   }
 }
