@@ -140,5 +140,5 @@ window.customCardFeatures.push({
   type: "custom:image-card-feature",
   name: "Image Display",
   configurable: true,
-  tags: ["multi-state-card", "multi-property-card"],
+  tags: ["multi-state-card", "multi-property-card", "room-status-card"],
 });

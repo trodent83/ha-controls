@@ -1,23 +1,23 @@
-import { HAControlThresholdBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.20';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
 
 /**
  * RoomStatusCard
  * A custom Home Assistant Lovelace dashboard card that presents room status at a glance.
- * Displays room header title/icon and a row of status badges mapped to temperature, humidity,
- * occupancy, or door/window sensors. Supports dynamic threshold-based badge coloring and pulsing animations.
+ * Displays room header title/icon and a row of status badges.
+ * Badge contents are completely dynamic and determined by nested custom features.
  * 
- * @extends HAControlThresholdBase
+ * @extends HAControlBase
  */
-class RoomStatusCard extends HAControlThresholdBase {
+class RoomStatusCard extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Inherits properties from HAControlThresholdBase and tracks the config object.
+   * Inherits properties from HAControlBase and tracks the config object.
    * 
    * @static
    * @returns {Object} LitElement properties definition
@@ -69,9 +69,15 @@ class RoomStatusCard extends HAControlThresholdBase {
       badges: [
         {
           entity: "sensor.temperature",
-          icon: "mdi:thermometer",
-          thresholds: [
-            { value: 25, color: "var(--error-color)", animation: "blink" }
+          color: "var(--primary-text-color)",
+          features: [
+            {
+              type: "custom:icon-card-feature",
+              icon: "mdi:thermometer"
+            },
+            {
+              type: "custom:state-value-feature"
+            }
           ]
         }
       ]
@@ -80,7 +86,7 @@ class RoomStatusCard extends HAControlThresholdBase {
 
   /**
    * Renders the custom card's HTML template.
-   * Generates header blocks and parses status badges list applying custom threshold attributes.
+   * Generates header blocks and parses status badges list applying dynamic child features.
    * 
    * @protected
    * @returns {import('lit-html').TemplateResult} The rendered template output
@@ -104,29 +110,40 @@ class RoomStatusCard extends HAControlThresholdBase {
           </div>
           <div class="status_badges">
           ${badges.map(badgeConfig => {
-      const entityId = badgeConfig.entity;
-      const stateObj = entityId ? this.hass.states[entityId] : null;
-      if (!stateObj) return '';
+            const entityId = badgeConfig.entity;
+            const stateObj = entityId ? this.hass.states[entityId] : null;
 
-      const state = stateObj.state;
-      const unit = stateObj.attributes.unit_of_measurement || '';
+            const finalColor = badgeConfig.color || 'var(--primary-text-color)';
 
-      const matchColor = this._getMatchedProperty(state, badgeConfig.thresholds, 'color');
-      const matchAnim = this._getMatchedProperty(state, badgeConfig.thresholds, 'animation');
-
-      const finalColor = matchColor || badgeConfig.color || 'var(--primary-text-color)';
-      const finalAnim = matchAnim || badgeConfig.animation || '';
-      const icon = badgeConfig.icon || stateObj.attributes.icon;
-      const showIcon = badgeConfig.show_icon !== false;
-      const showState = badgeConfig.show_state !== false;
-
-      return html`
-              <div class="status_badge ${finalAnim}" style="--badge-color: ${finalColor}">
-                ${showIcon && icon ? html`<ha-icon .icon="${icon}"></ha-icon>` : ''}
-                ${showState ? html`${state}${unit}` : ''}
+            return html`
+              <div class="status_badge" style="--badge-color: ${finalColor}">
+                ${(badgeConfig.features && Array.isArray(badgeConfig.features)) ? html`
+                  ${badgeConfig.features.filter(featureConfig => {
+                    if (featureConfig.condition) {
+                      try {
+                        const hass = this.hass;
+                        const entity = stateObj;
+                        const state = stateObj?.state;
+                        const attributes = stateObj?.attributes;
+                        return eval(featureConfig.condition);
+                      } catch (e) {
+                        console.error("Error evaluating condition for feature", featureConfig, e);
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map(featureConfig => html`
+                    <feature-renderer-card
+                      .hass=${this.hass}
+                      .config=${featureConfig}
+                      .stateObj=${stateObj}
+                      .color=${finalColor}
+                    ></feature-renderer-card>
+                  `)}
+                ` : ''}
               </div>
             `;
-    })}
+          })}
           </div>
         </div>
       </ha-card>
@@ -153,6 +170,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "room-status-card",
   name: "Room Status Card",
-  description: "A 2026 styled room status badge card",
+  description: "A 2026 styled room status badge card with dynamic nested features",
   preview: true,
 });

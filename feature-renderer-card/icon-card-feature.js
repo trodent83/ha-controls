@@ -208,5 +208,5 @@ window.customCardFeatures.push({
   type: "custom:icon-card-feature",
   name: "Icon Display",
   configurable: true,
-  tags: ["multi-state-card", "multi-property-card"],
+  tags: ["multi-state-card", "multi-property-card", "room-status-card"],
 });
