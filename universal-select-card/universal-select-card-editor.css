@@ -1,7 +1,14 @@
+/* ==========================================================================
+   UNIVERSAL SELECT CARD EDITOR STYLESHEET
+   Styles for visual config forms, option lists, and feature sections.
+   ========================================================================== */
+
+/* Spacing between expandable form sections */
 .option-panel {
   margin-top: 8px;
 }
 
+/* Row wrapper for option expansion panel headers */
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -9,20 +16,24 @@
   width: 100%;
 }
 
+/* Suffix alignment wrapper for editor action icons */
 .panel-header-actions {
   display: flex;
   align-items: center;
 }
 
+/* Padding inside panel settings bodies */
 .panel-content {
   padding: 16px;
 }
 
+/* Divider boundaries separating form groups */
 .form-divider {
   border-top: 1px solid var(--divider-color);
   margin: 24px 0 16px 0;
 }
 
+/* Header text styling for the features subsection */
 .features-header {
   font-weight: 500;
   font-size: 14px;
@@ -30,6 +41,7 @@
   margin-bottom: 12px;
 }
 
+/* Sub-card item boxes representing configured features */
 .feature-item {
   border: 1px solid var(--divider-color);
   border-radius: var(--ha-card-border-radius, 8px);
@@ -37,6 +49,7 @@
   margin-bottom: 12px;
 }
 
+/* Header line within feature boxes (contains title and deletion action) */
 .feature-item-header {
   display: flex;
   justify-content: space-between;
@@ -45,6 +58,7 @@
   font-weight: 500;
 }
 
+/* Form selector sizing for adding new features */
 .feature-add ha-form {
   width: 100%;
 }

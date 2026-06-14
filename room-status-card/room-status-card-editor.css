@@ -1,32 +1,52 @@
+/* ==========================================================================
+   ROOM STATUS CARD EDITOR STYLESHEET
+   Styles the badge builder section, thresholds rules block, and list expansions.
+   ========================================================================== */
+
+/* Spacing before the badges builder block section */
 .badges-section {
   margin-top: 24px;
 }
+
+/* Expansion panel header line layout */
 .badge-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
+/* Padding inside badge settings sheets */
 .badge-content {
   padding: 8px 0;
 }
+
+/* Gray background containers grouping thresholds comparison values, colors, and animations */
 .threshold-block {
   background: var(--secondary-background-color);
   padding: 8px;
   margin-top: 8px;
   border-radius: 4px;
 }
+
+/* Horizontal input line fields grouping elements within threshold block rows */
 .threshold-row {
   display: flex;
   gap: 8px;
   margin-bottom: 8px;
   align-items: center;
 }
+
+/* Utility class to grow text fields to occupy remaining row widths */
 .flex-grow {
   flex-grow: 1;
 }
+
+/* Red colored delete button class */
 .remove-btn-compact {
   color: var(--error-color);
 }
+
+/* Custom styles for Lovelace expansion configuration panels */
 ha-expansion-panel {
   margin-bottom: 8px;
   border: 1px solid var(--divider-color);

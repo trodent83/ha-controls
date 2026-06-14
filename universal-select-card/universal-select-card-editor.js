@@ -1,19 +1,59 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.4';
 
+/**
+ * UniversalSelectCardEditor
+ * Visual configuration editor for UniversalSelectCard.
+ * Generates dropdown field bindings, custom label mappings, and interactive card feature loaders.
+ * 
+ * @extends HAControlBase
+ */
 class UniversalSelectCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the editor config copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: { type: Object } };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives the configuration object from Home Assistant Lovelace dashboard.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Generates the schema definition for general card configurations (e.g. entities list, layout, labels).
+   * 
+   * @private
+   * @returns {Array<Object>} Base configuration form fields schema
+   */
   _baseSchema() {
     return [
       { name: "entity", label: this._localize('controlled_dropdown'), selector: { entity: { domain: "input_select" } } },
@@ -34,6 +74,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     ];
   }
 
+  /**
+   * Formats and returns a human-readable display name for custom Lovelace card features.
+   * 
+   * @param {string} type - Feature identifier tag name (e.g., 'custom:timer-card-feature')
+   * @private
+   * @returns {string} Human-readable feature name
+   */
   _getFeatureName(type) {
     if (!type) return "Unknown Feature";
     const customFeatures = window.customCardFeatures || [];
@@ -46,6 +93,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     return cleanType.replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  /**
+   * Renders the editor configuration page layout.
+   * Generates forms for base variables and iterates over select options to generate panels.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
     const data = { layout: 'row', ...this._config };
@@ -54,6 +108,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     const stateObj = entityId ? this.hass.states[entityId] : null;
     let options = stateObj?.attributes?.options || [];
 
+    // Sort options according to the user-defined order in the configuration, if provided
     if (this._config.options_order) {
         const order = this._config.options_order;
         options = [...options].sort((a, b) => {
@@ -82,6 +137,15 @@ class UniversalSelectCardEditor extends HAControlBase {
     `;
   }
 
+  /**
+   * Renders details form panel for an individual dropdown option.
+   * 
+   * @param {string} option - Option name being rendered
+   * @param {number} idx - Index sequence of option button
+   * @param {number} total - Total count of options
+   * @private
+   * @returns {import('lit-html').TemplateResult} Rendered options settings pane HTML
+   */
   _renderOption(option, idx, total) {
       const optionData = this._config.options_config?.[option] || {};
       const mainSchema = [
@@ -172,7 +236,7 @@ class UniversalSelectCardEditor extends HAControlBase {
                                     @config-changed=${(e) => { e.stopPropagation(); this._updateFeature(option, fIdx, e.detail.config); }}
                                 ></feature-renderer-editor-card>
                             </div>
-                        `)}
+                         `)}
                     </div>
                     <div class="feature-add">
                         <feature-selector-card
@@ -186,6 +250,14 @@ class UniversalSelectCardEditor extends HAControlBase {
         </ha-expansion-panel>
       `;
   }
+
+  /**
+   * Appends a new layout feature block to an option configuration, applying stub configs if present.
+   * 
+   * @param {string} option - Option name where feature is added
+   * @param {CustomEvent} ev - Selection details containing feature type selector
+   * @private
+   */
   _addFeature(option, ev) {
     const type = ev.detail.type;
     if (!type) return;
@@ -206,6 +278,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies display index sequence of options inside card dashboard configurations.
+   * 
+   * @param {string} option - Option targeted to move
+   * @param {number} direction - Offset distance (-1 to slide left/up, 1 to slide right/down)
+   * @private
+   */
   _moveOption(option, direction) {
     const entityId = this._config?.entity;
     const stateObj = entityId ? this.hass.states[entityId] : null;
@@ -230,6 +309,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Removes a feature configuration from an option's list.
+   * 
+   * @param {string} option - Target option
+   * @param {number} fIdx - Feature index to remove
+   * @private
+   */
   _removeFeature(option, fIdx) {
     const optionsConfig = this._config.options_config || {};
     const optionConfig = optionsConfig[option] || {};
@@ -240,6 +326,14 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Updates feature configurations by index.
+   * 
+   * @param {string} option - Target option
+   * @param {number} fIdx - Feature index to replace
+   * @param {Object} newFeatureConfig - Replacement feature layout schema
+   * @private
+   */
   _updateFeature(option, fIdx, newFeatureConfig) {
     const optionsConfig = this._config.options_config || {};
     const optionConfig = optionsConfig[option] || {};
@@ -250,6 +344,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when nested option attributes change within expansion panel configurations.
+   * 
+   * @param {string} option - Name of the option modified
+   * @param {CustomEvent} ev - Form value-changed event
+   * @private
+   */
   _optionValueChanged(option, ev) {
       const newOptionConfig = { ...this._config.options_config?.[option], ...ev.detail.value };
       const optionsConfig = { ...this._config.options_config, [option]: newOptionConfig };
@@ -257,6 +358,13 @@ class UniversalSelectCardEditor extends HAControlBase {
       this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when top-level card configuration parameters are changed.
+   * Cleans options details if entity source target is changed.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event
+   * @private
+   */
   _valueChanged(ev) {
     const newConfig = ev.detail.value;
 
@@ -269,6 +377,11 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated configuration dictionary back to dashboard engine.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     const event = new CustomEvent("config-changed", {
       detail: { config: this._config },

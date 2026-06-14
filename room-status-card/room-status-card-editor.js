@@ -1,13 +1,26 @@
-/**
- * ROOM STATUS CARD EDITOR (2026 Edition)
- * Comprehensive UI configuration for sensors, thresholds, and theme colors.
- */
-
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.20';
 
+/**
+ * RoomStatusCardEditor
+ * Visual configuration editor UI for RoomStatusCard.
+ * Manages general headers, badges list, and customized state thresholds per badge.
+ * 
+ * @extends HAControlBase
+ */
 class RoomStatusCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks editor config copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -15,19 +28,48 @@ class RoomStatusCardEditor extends HAControlBase {
     };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/room-status-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Invoked when top-level card configuration parameters are changed.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event details
+   * @private
+   */
   _valueChanged(ev) {
     const config = ev.detail.value;
     this._config = { ...this._config, ...config };
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when general badge attributes (e.g. icon, colors, state toggle) are edited.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event details
+   * @param {number} index - Index sequence of badge being edited
+   * @private
+   */
   _badgeChanged(ev, index) {
     const badges = [...(this._config.badges || [])];
     badges[index] = { ...badges[index], ...ev.detail.value };
@@ -35,12 +77,23 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a blank default badge object configuration to the badges array list.
+   * 
+   * @private
+   */
   _addBadge() {
     const badges = [...(this._config.badges || []), { entity: "", icon: "", show_icon: true, show_state: true, thresholds: [] }];
     this._config = { ...this._config, badges };
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a badge object configuration by index.
+   * 
+   * @param {number} index - Index of target badge to remove
+   * @private
+   */
   _removeBadge(index) {
     const badges = [...(this._config.badges || [])];
     badges.splice(index, 1);
@@ -48,6 +101,13 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Adjusts the display sequence of badges.
+   * 
+   * @param {number} index - Index of badge to move
+   * @param {number} direction - Direction delta (-1 to move up, 1 to move down)
+   * @private
+   */
   _moveBadge(index, direction) {
     const badges = [...(this._config.badges || [])];
     if (index + direction < 0 || index + direction >= badges.length) return;
@@ -60,6 +120,12 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a default blank threshold configuration object to a badge threshold rules array.
+   * 
+   * @param {number} badgeIndex - Index of target badge
+   * @private
+   */
   _addThreshold(badgeIndex) {
     const badges = [...(this._config.badges || [])];
     const thresholds = [...(badges[badgeIndex].thresholds || [])];
@@ -69,6 +135,15 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies an attribute field value inside an individual threshold rule block.
+   * 
+   * @param {number} badgeIndex - Index of target badge
+   * @param {number} threshIdx - Index sequence of threshold rule
+   * @param {string} key - Threshold attribute name (e.g. 'value', 'color', 'animation')
+   * @param {any} value - Assigned replacement value
+   * @private
+   */
   _updateThreshold(badgeIndex, threshIdx, key, value) {
     const badges = [...(this._config.badges || [])];
     const thresholds = [...badges[badgeIndex].thresholds];
@@ -78,6 +153,13 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a threshold rule block from a badge.
+   * 
+   * @param {number} badgeIndex - Index of target badge
+   * @param {number} threshIdx - Index sequence of threshold rule to remove
+   * @private
+   */
   _removeThreshold(badgeIndex, threshIdx) {
     const badges = [...(this._config.badges || [])];
     const thresholds = [...badges[badgeIndex].thresholds];
@@ -87,6 +169,11 @@ class RoomStatusCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated config state back to the Lovelace dashboard configuration framework.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
@@ -95,6 +182,12 @@ class RoomStatusCardEditor extends HAControlBase {
     }));
   }
 
+  /**
+   * Constructs the top-level card settings form schema fields dictionary.
+   * 
+   * @private
+   * @returns {Array<Object>} Form fields schema definition for ha-form
+   */
   _schema() {
     return [
       { 
@@ -117,6 +210,12 @@ class RoomStatusCardEditor extends HAControlBase {
     ];
   }
 
+  /**
+   * Renders the editor configuration interface layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
 

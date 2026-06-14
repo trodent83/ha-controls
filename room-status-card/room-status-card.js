@@ -1,21 +1,63 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.20';
 
+/**
+ * RoomStatusCard
+ * A custom Home Assistant Lovelace dashboard card that presents room status at a glance.
+ * Displays room header title/icon and a row of status badges mapped to temperature, humidity,
+ * occupancy, or door/window sensors. Supports dynamic threshold-based badge coloring and pulsing animations.
+ * 
+ * @extends HAControlBase
+ */
 class RoomStatusCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the config object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/room-status-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
-  //Returns the editor for this control
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The room-status-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("room-status-card-editor");
   }
 
-  //Returns the default settings
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       name: "My Room",
@@ -36,6 +78,17 @@ class RoomStatusCard extends HAControlBase {
     };
   }
 
+  /**
+   * Helper utility checking numeric or string status thresholds.
+   * Inspects configured threshold arrays and returns styling values (color/animation classes)
+   * matching the sensor's current active state value.
+   * 
+   * @param {string|number} stateValue - Sensor state value to match
+   * @param {Array<Object>} thresholds - Configured array of thresholds
+   * @param {string} propertyName - Property to look up ('color' or 'animation')
+   * @private
+   * @returns {string|null} The matched configuration value, or null if no threshold applies
+   */
   _getMatchedProperty(stateValue, thresholds, propertyName) {
     if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
     const stringState = String(stateValue).toLowerCase();
@@ -55,7 +108,13 @@ class RoomStatusCard extends HAControlBase {
     return null;
   }
 
-  //Renders the control
+  /**
+   * Renders the custom card's HTML template.
+   * Generates header blocks and parses status badges list applying custom threshold attributes.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this.config) return html``;
 
@@ -104,6 +163,11 @@ class RoomStatusCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Sets the user configuration object for the card, updating fallback default settings.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   */
   setConfig(config) {
     this.config = {
       name: "Room",

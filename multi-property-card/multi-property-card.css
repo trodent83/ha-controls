@@ -1,3 +1,9 @@
+/* ==========================================================================
+   MULTI PROPERTY CARD STYLESHEET
+   Controls row/column grid systems, text overlays, and parameter displays.
+   ========================================================================== */
+
+/* Main card outer wrapper */
 ha-card {
   border-radius: var(--ha-card-border-radius, 12px);
   overflow: hidden;
@@ -6,6 +12,7 @@ ha-card {
   flex-direction: column;
 }
 
+/* Individual entity items buttons */
 .btn {
   height: auto;
   min-height: 48px;
@@ -16,22 +23,25 @@ ha-card {
   cursor: pointer;
   padding: 8px 4px;
   transition: background 0.2s ease;
-  -webkit-tap-highlight-color: transparent; /* Cleaner mobile tap */
-  flex: 1 1 0px;
+  -webkit-tap-highlight-color: transparent; /* Cleaner mobile tap response */
+  flex: 1 1 0px; /* Even width distribution */
   min-width: 60px;
 }
 
+/* Active click states overlay */
 .btn:active {
   background: rgba(var(--rgb-primary-text-color), 0.1);
   border-radius: 4px;
 }
 
+/* Grayed out locked state styling */
 .btn.is-unavailable {
   opacity: 0.4;
   filter: grayscale(1);
   pointer-events: none;
 }
 
+/* Informational parameters labels block */
 .info-container {
   display: flex;
   flex-direction: column;
@@ -40,6 +50,7 @@ ha-card {
   line-height: 1.1;
 }
 
+/* Text label format rules */
 .label {
   font-size: 10px;
   margin-top: 1px;
@@ -51,6 +62,7 @@ ha-card {
   width: 100%;
 }
 
+/* Values metrics container */
 .value-container {
   display: flex;
   align-items: baseline;
@@ -59,27 +71,33 @@ ha-card {
   font-weight: 500;
 }
 
+/* Measurement unit label typography overrides */
 .unit-text {
   font-size: 9px;
   margin-left: 1px;
-  opacity: 0.8; /* Slightly lowered for better hierarchy */
+  opacity: 0.8;
   font-weight: 500;
 }
 
+/* Material Design Icons settings */
 ha-icon { 
   --mdc-icon-size: 20px;
   margin-bottom: 2px;
-  display: inline-block !important; /* Changed from flex */
+  display: inline-block !important;
   align-items: center;
   justify-content: center;
-  transform: translateZ(0);         /* Added GPU boost */
+  transform: translateZ(0); /* GPU acceleration initialization */
 }
 
-/* GPU Optimized Animations */
+/* ==========================================================================
+   GPU OPTIMIZED ANIMATIONS
+   will-change properties prevent layout shifts and utilize GPU layers.
+   ========================================================================== */
 .bounce, .rotating, .pulse, .shake, .float, .spin-slow {
   will-change: transform;
 }
 
+/* Animation triggers */
 .bounce    { animation: bounce 1s ease infinite; }
 .blink     { animation: blink 1.5s linear infinite; }
 .rotating  { animation: rotating 2s linear infinite; }
@@ -88,11 +106,13 @@ ha-icon {
 .float     { animation: float 3s ease-in-out infinite; }
 .spin-slow { animation: rotating 8s linear infinite; }
 
+/* Rotation keyframes definition */
 @keyframes rotating { 
   from { transform: rotate(0deg) translateZ(0); } 
   to { transform: rotate(360deg) translateZ(0); } 
 }
 
+/* Inner elements container wrapper */
 .content-container {
   display: flex;
   flex-wrap: wrap;
@@ -102,14 +122,17 @@ ha-icon {
   box-sizing: border-box;
 }
 
+/* Vertical grid display mode */
 .layout-column {
   flex-direction: column;
 }
 
+/* Horizontal grid display mode */
 .layout-row {
   flex-direction: row;
 }
 
+/* Color inheritance rules for buttons inner tags */
 .btn ha-icon,
 .info-container,
 .label,
@@ -119,28 +142,33 @@ ha-icon {
   color: inherit;
 }
 
+/* Bounce keyframes definition */
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
   40% { transform: translateY(-6px); }
   60% { transform: translateY(-3px); }
 }
 
+/* Blinking keyframes definition */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
+/* Scale pulse keyframes definition */
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.9; }
 }
 
+/* Shaking keyframes definition */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
 
+/* Soft floating keyframes definition */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }

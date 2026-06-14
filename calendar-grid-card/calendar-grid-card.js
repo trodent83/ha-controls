@@ -2,9 +2,28 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
 
+/**
+ * CalendarGridCard
+ * A custom Home Assistant Lovelace dashboard card that renders calendar events in a monthly or weekly grid layout.
+ * Supports timezone-aware calculations, filter toggles, sidebar calendar source switches, custom day name localizations,
+ * and state-persistent exclusions saved in LocalStorage.
+ * 
+ * @extends HAControlBase
+ */
 class CalendarGridCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks config configuration, events list, currentDate view cursor, sidebar toggles, and disabled sets.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -17,14 +36,22 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Returns the editor element tag name.
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The calendar-grid-card-editor configuration element
    */
   static getConfigElement() {
     return document.createElement("calendar-grid-card-editor");
   }
 
   /**
-   * Returns a stub configuration for the card.
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
    */
   static getStubConfig() {
     return {
@@ -35,18 +62,52 @@ class CalendarGridCard extends HAControlBase {
     };
   }
 
+  /**
+   * Instantiates a CalendarGridCard custom card.
+   * Configures default states for calendar view boundaries and arrays.
+   */
   constructor() {
     super();
+    /**
+     * List of actively loaded calendar events.
+     * @type {Array<import('../utilities/calendar/calendar-event-model.js').CalendarEventModel>}
+     * @private
+     */
     this._events = [];
+    /**
+     * Active visual view pointer Date cursor.
+     * @type {Date}
+     * @private
+     */
     this._currentDate = new Date();
+    /**
+     * Sourced range coordinates for caching.
+     * @type {Object}
+     * @private
+     */
     this._fetchedRange = { start: null, end: null };
+    /**
+     * Sidebar visibility state indicator.
+     * @type {boolean}
+     * @private
+     */
     this._sidebarOpen = false;
+    /**
+     * List of disabled calendars.
+     * @type {Set<string>}
+     * @private
+     */
     this._disabledCalendars = new Set();
+    /**
+     * Asynchronous fetch debounce timer ID.
+     * @type {number|null}
+     * @private
+     */
     this._fetchTimer = null;
   }
 
   /**
-   * Invoked when the element is removed from the document's DOM.
+   * LitElement lifecycle hook. Destroys debounced fetch timers to prevent memory leaks.
    */
   disconnectedCallback() {
     super.disconnectedCallback();
@@ -56,22 +117,29 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Returns the path to the translation files.
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
    */
   get translationPath() {
     return "/local/ha-controls/calendar-grid-card/translations";
   }
 
   /**
-   * Returns the version of the translation files.
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
    */
   get translationVersion() {
     return VERSION;
   }
 
   /**
-   * Sets the configuration for the card.
-   * @param {Object} config - The configuration object.
+   * Configures user configuration parameters for the card, validating required fields.
+   * Resets date queries to trigger fresh pulls.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   * @throws {Error} If entities property is omitted
    */
   setConfig(config) {
     if (!config.entities) {
@@ -90,9 +158,11 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Determines if the element should update.
-   * @param {Map} changedProps - Map of changed properties.
-   * @returns {boolean} True if the element should update.
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Only returns true if config, dates cursor, sidebar states, or target entities update.
+   * 
+   * @param {Map<string, any>} changedProps - Changed properties map
+   * @returns {boolean} True if element should redraw, false otherwise
    */
   shouldUpdate(changedProps) {
     if (changedProps.has('_events') || 
@@ -125,8 +195,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Invoked after the element has updated.
-   * @param {Map} changedProps - Map of changed properties.
+   * LitElement lifecycle update callback. Triggers asynchronous database events syncs on date cursor modifications.
+   * 
+   * @param {Map<string, any>} changedProps - Changed properties map
    */
   updated(changedProps) {
     super.updated(changedProps);
@@ -136,7 +207,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Checks if events need to be fetched and schedules a fetch.
+   * Schedules a fetch operation. Sets debounced timeouts to avoid thrashing endpoints on fast clicks.
+   * 
+   * @private
    */
   _checkAndFetch() {
     if (!this.hass || !this.config) return;
@@ -151,8 +224,11 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Calculates the start and end dates for the current view.
-   * @returns {Object} Object containing start and end Date objects.
+   * Calculates calendar grid date boundaries based on view settings (week/month)
+   * and starting day of week configuration options.
+   * 
+   * @private
+   * @returns {Object} Object containing starting and ending Date objects
    */
   _getViewDateRange() {
     const view = this.config.default_view || 'month';
@@ -182,8 +258,7 @@ class CalendarGridCard extends HAControlBase {
 
     // We need to include days from previous month to fill the first week row
     const startView = new Date(startOfMonth);
-    // Day of week (0 = Sunday, 1 = Monday, etc.)
-    const dayOfWeek = startView.getDay(); // 0 (Sun) to 6 (Sat)
+    const dayOfWeek = startView.getDay();
     
     // Adjust to start on firstDayOfWeek:
     const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
@@ -207,9 +282,12 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Fetches events from the calendar data manager.
-   * @param {Date} start - Start date.
-   * @param {Date} end - End date.
+   * Calls calendar-data-manager utilities to query entities and caches updates.
+   * 
+   * @param {Date} start - Beginning date boundary
+   * @param {Date} end - Ending date boundary
+   * @async
+   * @private
    */
   async _fetchEvents(start, end) {
     if (!this.hass || !this.config) return;
@@ -223,7 +301,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Refreshes the events for the current view.
+   * Reloads calendar data matching the current dates coordinate.
+   * 
+   * @private
    */
   _refresh() {
     const { start, end } = this._getViewDateRange();
@@ -231,7 +311,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Moves the view to the previous period (week or month).
+   * Moves date cursor cursor back by one unit.
+   * 
+   * @private
    */
   _prev() {
     const view = this.config.default_view || 'month';
@@ -245,7 +327,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Moves the view to the next period (week or month).
+   * Advances date cursor cursor forward by one unit.
+   * 
+   * @private
    */
   _next() {
     const view = this.config.default_view || 'month';
@@ -259,23 +343,24 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Moves the view to the current date.
+   * Resets date cursor cursor to the current day.
+   * 
+   * @private
    */
   _today() {
     this._currentDate = new Date();
   }
 
   /**
-   * Filters events for a specific day.
-   * @param {string} dateStr - Date string (YYYY-MM-DD).
-   * @param {Array} allEvents - List of all events.
-   * @returns {Array} List of events for the day.
+   * Filters loaded events, identifying items due on the requested day string coordinates.
+   * Respects user configuration toggles such as show_finished_events.
+   * 
+   * @param {string} dateStr - Date coordinate (YYYY-MM-DD)
+   * @param {Array<import('../utilities/calendar/calendar-event-model.js').CalendarEventModel>} allEvents - Sourced list
+   * @private
+   * @returns {Array<import('../utilities/calendar/calendar-event-model.js').CalendarEventModel>} List of events on this day
    */
   _getEventsForDay(dateStr, allEvents) {
-    // Filter events that overlap with this day
-    // The user requested: "each day gets its own entries"
-    // We iterate all fetched events and check if they cover the specific date.
-    
     const targetDate = new Date(dateStr);
     targetDate.setHours(0,0,0,0);
     const targetEnd = new Date(targetDate);
@@ -292,8 +377,10 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Returns the list of week day names.
-   * @returns {Array<string>} List of week day names.
+   * Compiles week header day names based on first_day_of_week parameter.
+   * 
+   * @private
+   * @returns {Array<string>} Day name strings list
    */
   _getWeekDays() {
     let weekDays = this.config.day_names;
@@ -323,8 +410,11 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Renders the card.
-   * @returns {TemplateResult} The rendered HTML.
+   * Renders the custom card HTML template.
+   * Maps monthly/weekly calendars grids using orientations and stylesheets attributes.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
    */
   render() {
     if (!this.hass || !this.config) return html``;
@@ -344,7 +434,6 @@ class CalendarGridCard extends HAControlBase {
     if (view === 'week') {
         const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
         const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
-        monthName = `Week of ${startDateStr} - ${endDateStr}`;
         monthName = this._localize('cgc.card.week_of', { start: startDateStr, end: endDateStr });
     } else {
         monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
@@ -491,16 +580,20 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Toggles the sidebar visibility.
+   * Toggles the sidebar visibility panel.
+   * 
+   * @private
    */
   _toggleSidebar() {
     this._sidebarOpen = !this._sidebarOpen;
   }
 
   /**
-   * Toggles a calendar's visibility.
-   * @param {string} entityId - The entity ID of the calendar.
-   * @param {boolean} checked - Whether the calendar should be visible.
+   * Excludes/Includes a calendar entity from events rendering and updates local storage.
+   * 
+   * @param {string} entityId - Sourced calendar entity ID
+   * @param {boolean} checked - Active state checking target
+   * @private
    */
   _toggleCalendar(entityId, checked) {
     const newDisabled = new Set(this._disabledCalendars);
@@ -514,8 +607,10 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Generates a storage key for disabled calendars.
-   * @returns {string|null} The storage key.
+   * Resolves a storage mapping key based on target calendar entities sorted array.
+   * 
+   * @private
+   * @returns {string|null} Storage identifier key
    */
   _getStorageKey() {
     if (!this.config || !this.config.entities) return null;
@@ -524,8 +619,10 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Loads disabled calendars from local storage.
-   * @returns {Set<string>} Set of disabled calendar entity IDs.
+   * Retrieves array of disabled calendar entity IDs from local browser storage.
+   * 
+   * @private
+   * @returns {Set<string>} Set of disabled calendar entity IDs
    */
   _loadDisabledCalendars() {
     const key = this._getStorageKey();
@@ -543,7 +640,9 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Saves disabled calendars to local storage.
+   * Commits current disabled calendars set to local storage properties.
+   * 
+   * @private
    */
   _saveDisabledCalendars() {
     const key = this._getStorageKey();
@@ -553,8 +652,10 @@ class CalendarGridCard extends HAControlBase {
   }
 
   /**
-   * Handles click events on calendar events.
-   * @param {Event} e - The click event.
+   * Intercepts calendar event clicks.
+   * 
+   * @param {CustomEvent} e - Click details containing event data model
+   * @private
    */
   _onEventClick(e) {
       console.log("Event clicked", e.detail.event);

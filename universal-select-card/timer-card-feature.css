@@ -1,3 +1,9 @@
+/* ==========================================================================
+   TIMER CARD FEATURE STYLESHEET
+   Styles the textual status indicator for ticking active timer features.
+   ========================================================================== */
+
+/* Styling for the interactive timer click label */
 .timer-label {
   font-weight: 500;
   font-size: 14px;

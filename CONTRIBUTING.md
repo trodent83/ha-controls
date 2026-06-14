@@ -37,6 +37,9 @@ deactivate Card
 @enduml
 ```
 
+* **JavaScript Commenting Standard**: All JavaScript files (cards, editors, features, loaders, utilities) must use JSDoc style comments to describe classes, constructors, methods, properties, input arguments, and return values. Every function/method must be documented to explain its business logic and parameters clearly.
+* **CSS Commenting Standard**: CSS stylesheets must include descriptive comments detailing theme design tokens (standard Home Assistant CSS custom properties/variables), responsive/grid layout container properties, keyframe definitions, hover effects, and conditional status overrides.
+
 ### 2. Loader Infrastructure Integration
 
 Every custom control must use the unified loader infrastructure provided by [ha-control-loader.js](file:///d:/Ha/ha-controls/ha-control-loader.js).

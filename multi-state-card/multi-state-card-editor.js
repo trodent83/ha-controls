@@ -1,31 +1,83 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
 
+/**
+ * MultiPropertyCardEditor
+ * Visual configuration editor UI for MultiPropertyCard.
+ * Supports updating row/column grids, reordering item rows, configuring custom animations, and binding tap/hold actions.
+ * 
+ * @extends HAControlBase
+ */
 class MultiPropertyCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/multi-state-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Invoked when top-level card configuration parameters are changed.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event details
+   * @private
+   */
   _globalValueChanged(ev) {
     if (!this._config || !this.hass) return;
     this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a blank default entity configuration block to the entities list.
+   * 
+   * @private
+   */
   _addEntity() {
     const entities = [...(this._config.entities || []), {}];
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies display index sequence of entities inside card configurations.
+   * 
+   * @param {number} index - Index sequence of entity item to slide
+   * @param {number} direction - Offset direction delta (-1 for up, 1 for down)
+   * @private
+   */
   _moveEntity(index, direction) {
     const entities = [...(this._config.entities || [])];
     if (index + direction < 0 || index + direction >= entities.length) return;
@@ -38,6 +90,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes an entity configuration from the array list.
+   * 
+   * @param {number} index - Index sequence of item to delete
+   * @private
+   */
   _removeEntity(index) {
     const entities = [...this._config.entities];
     entities.splice(index, 1);
@@ -45,6 +103,11 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated configuration dictionary back to dashboard engine.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     this.dispatchEvent(new CustomEvent("config-changed", { 
       detail: { config: this._config },
@@ -53,10 +116,22 @@ class MultiPropertyCardEditor extends HAControlBase {
     }));
   }
 
+  /**
+   * Returns feature compatibility tags.
+   * 
+   * @type {Array<string>}
+   */
   get featureTags() {
     return ['multi-state-card'];
   }
 
+  /**
+   * Formats and returns a human-readable display name for custom Lovelace card features.
+   * 
+   * @param {string} type - Feature identifier tag name
+   * @private
+   * @returns {string} Human-readable feature name
+   */
   _getFeatureName(type) {
     if (!type) return "Unknown Feature";
     const customFeatures = window.customCardFeatures || [];
@@ -69,6 +144,13 @@ class MultiPropertyCardEditor extends HAControlBase {
     return cleanType.replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  /**
+   * Appends a new layout feature block to an entity config, applying stub configs if present.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {CustomEvent} ev - Selection details containing feature type selector
+   * @private
+   */
   _addFeature(entityIndex, ev) {
     const type = ev.detail.type;
     if (!type) return;
@@ -88,6 +170,13 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Removes a feature configuration from an entity's list.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} featureIndex - Feature index to remove
+   * @private
+   */
   _removeFeature(entityIndex, featureIndex) {
     const entities = [...this._config.entities];
     const features = [...(entities[entityIndex].features || [])];
@@ -97,6 +186,14 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Updates feature configurations by index.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} featureIndex - Feature index to replace
+   * @param {Object} newFeatureConfig - Replacement feature layout schema
+   * @private
+   */
   _updateFeature(entityIndex, featureIndex, newFeatureConfig) {
     const entities = [...this._config.entities];
     const features = [...(entities[entityIndex].features || [])];
@@ -106,6 +203,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Generates the schema definition for general card configurations (e.g. layout).
+   * 
+   * @private
+   * @returns {Array<Object>} Form field schemas
+   */
   _globalSchema() {
     return [
       {
@@ -123,6 +226,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     ];
   }
 
+  /**
+   * Renders the editor configuration page layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
 

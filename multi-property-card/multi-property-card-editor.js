@@ -1,19 +1,59 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
 
+/**
+ * MultiPropertyCardEditor
+ * Visual configuration editor UI for MultiPropertyCard.
+ * Manages grid layout options, entity attributes, conditional evaluation rules, and state thresholds.
+ * 
+ * @extends HAControlBase
+ */
 class MultiPropertyCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/multi-property-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Appends a default blank threshold configuration object to an entity threshold rules list.
+   * 
+   * @param {number} entityIdx - Index of target entity item
+   * @private
+   */
   _addThreshold(entityIdx) {
     const entities = [...this._config.entities];
     const thresholds = [...(entities[entityIdx].thresholds || [])];
@@ -23,6 +63,15 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies fields inside an individual threshold rule block.
+   * 
+   * @param {number} entityIdx - Index of target entity item
+   * @param {number} threshIdx - Index sequence of threshold rule
+   * @param {string|null} key - Threshold attribute name, or null if updating multiple properties
+   * @param {any} value - Assigned replacement value
+   * @private
+   */
   _updateThreshold(entityIdx, threshIdx, key, value) {
     const entities = [...this._config.entities];
     const thresholds = [...entities[entityIdx].thresholds];
@@ -36,6 +85,13 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a threshold rule block from an entity.
+   * 
+   * @param {number} entityIdx - Index of target entity item
+   * @param {number} threshIdx - Index sequence of threshold rule to remove
+   * @private
+   */
   _removeThreshold(entityIdx, threshIdx) {
     const entities = [...this._config.entities];
     const thresholds = [...entities[entityIdx].thresholds];
@@ -45,18 +101,36 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when top-level card configuration parameters are changed.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event details
+   * @private
+   */
   _globalValueChanged(ev) {
     if (!this._config || !this.hass) return;
     this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a default blank entity configuration block to the entities list.
+   * 
+   * @private
+   */
   _addEntity() {
     const entities = [...(this._config.entities || []), { entity: "", name: "", thresholds: [] }];
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies display index sequence of entities inside card configurations.
+   * 
+   * @param {number} index - Index sequence of entity item to slide
+   * @param {number} direction - Offset direction delta (-1 for up, 1 for down)
+   * @private
+   */
   _moveEntity(index, direction) {
     const entities = [...(this._config.entities || [])];
     if (index + direction < 0 || index + direction >= entities.length) return;
@@ -69,6 +143,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes an entity configuration from the array list.
+   * 
+   * @param {number} index - Index sequence of item to delete
+   * @private
+   */
   _removeEntity(index) {
     const entities = [...this._config.entities];
     entities.splice(index, 1);
@@ -76,6 +156,11 @@ class MultiPropertyCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated configuration dictionary back to dashboard engine.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     this.dispatchEvent(new CustomEvent("config-changed", { 
       detail: { config: this._config },
@@ -84,6 +169,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     }));
   }
 
+  /**
+   * Generates the schema definition for general card configurations.
+   * 
+   * @private
+   * @returns {Array<Object>} Form field schemas
+   */
   _globalSchema() {
     const show_unavailable = this._localize('show_unavailable');
     return [
@@ -111,6 +202,12 @@ class MultiPropertyCardEditor extends HAControlBase {
     ];
   }
 
+  /**
+   * Renders the editor configuration page layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
 
@@ -309,7 +406,7 @@ class MultiPropertyCardEditor extends HAControlBase {
                       </ha-expansion-panel>
                     </div>
                   </div>
-            </ha-expansion-panel>
+              </ha-expansion-panel>
             `;
           })}
         </div>

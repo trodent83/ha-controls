@@ -1,17 +1,24 @@
-/* Main wrapper */
+/* ==========================================================================
+   VACUUM SELECT CARD STYLESHEET
+   Controls the responsive room selection grid and animations.
+   ========================================================================== */
+
+/* Main wrapper container */
 .container {
     padding: 0;
     background: transparent;
 }
 
+/* Responsive grid layout for room buttons */
 .room-grid {
     display: grid;
+    /* Grid column count is set dynamically via inline CSS variables by the JS logic */
     grid-template-columns: repeat(var(--grid-columns, 4), 1fr);
     gap: 8px;
     margin-bottom: 8px;
 }
 
-/* Individual buttons */
+/* Individual room button styles */
 .room-button {
     aspect-ratio: 1 / 1;
     display: flex;
@@ -20,6 +27,7 @@
     justify-content: center;
     cursor: pointer;
     
+    /* Design Tokens: Inherit Home Assistant theme variables for cards */
     border-radius: var(--ha-card-border-radius, 12px);
     background: var(--ha-card-background, var(--card-background-color, white));
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
@@ -33,7 +41,7 @@
     color: var(--primary-text-color);
 }
 
-/* Toggle All Button - Styled like a Tile Card */
+/* Toggle All Button - Styled like a Home Assistant Tile Card */
 .tile-button {
     display: flex;
     align-items: center;
@@ -41,12 +49,15 @@
     padding: 12px;
     box-sizing: border-box;
     cursor: pointer;
+    
+    /* Design Tokens: Inherit Home Assistant card variables */
     border-radius: var(--ha-card-border-radius, 12px);
     background: var(--ha-card-background, var(--card-background-color, white));
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
     transition: all 0.2s ease-in-out;
 }
 
+/* Circular icon badge within the Tile button */
 .tile-icon-container {
     width: 40px;
     height: 40px;
@@ -59,44 +70,49 @@
     color: var(--primary-text-color);
 }
 
+/* Metadata textual block within the Tile button */
 .tile-info {
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
+/* Title element within the Tile button */
 .tile-name {
     font-size: 14px;
     font-weight: 500;
     color: var(--primary-text-color);
 }
 
+/* Status state subtitle text within the Tile button */
 .tile-state {
     font-size: 12px;
     color: var(--secondary-text-color);
 }
 
-/* Active State for Grid Buttons Only */
+/* Active selection state styles for Grid room buttons */
 .room-button.active {
+    /* Uses dynamic variables selection-color & selection-foreground injected by JS config */
     background-color: var(--selection-color) !important;
     color: var(--selection-foreground) !important;
     border-color: var(--selection-color) !important;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Icon styling */
+/* Icon dimensions and inline alignment settings */
 .room-button ha-icon, .tile-icon-container ha-icon {
     --mdc-icon-size: 24px;
     color: inherit;
     pointer-events: none;
-    display: inline-block; /* Essential for smooth rotation */
+    display: inline-block; /* Essential for smooth keyframes translation */
 }
 
+/* Grid button icon margins */
 .room-button ha-icon {
     margin-bottom: 8px;
 }
 
-/* Room Name styling */
+/* Multi-line clamp styling for room name labels */
 .room-button .name {
     font-size: 11px;
     font-weight: 500;
@@ -108,23 +124,28 @@
     word-break: break-word;
 }
 
-/* Press effect */
+/* Tap/Click micro-animations */
 .room-button:active, .tile-button:active {
     transform: scale(0.98);
 }
 
+/* Locked state display override */
 .container.readonly {
   opacity: 0.5;
   pointer-events: none;
 }
 
 
-/* GPU Optimized Animations */
+/* ==========================================================================
+   GPU OPTIMIZED ANIMATIONS
+   will-change properties prevent layout shifts and utilize GPU layers.
+   ========================================================================== */
 .bouncing, .spinning, .pulsing, .shaking, .floating, .spin-slow, .flash {
   will-change: transform;
   transform: translateZ(0);
 }
 
+/* Animation triggers */
 .bouncing  { animation: bounce 1s ease infinite; }
 .flash     { animation: blink 1.5s linear infinite; }
 .spinning  { animation: rotating 2s linear infinite; }
@@ -133,35 +154,40 @@
 .floating  { animation: float 3s ease-in-out infinite; }
 .spin-slow { animation: rotating 8s linear infinite; }
 
+/* Rotation keyframes definition */
 @keyframes rotating { 
   from { transform: rotate(0deg) translateZ(0); } 
   to { transform: rotate(360deg) translateZ(0); } 
 }
 
+/* Vertical bounce keyframes definition */
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
   40% { transform: translateY(-6px); }
   60% { transform: translateY(-3px); }
 }
 
+/* Opacity blinking keyframes definition */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
+/* Pulsing scale keyframes definition */
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.9; }
 }
 
+/* Horizontal shaking keyframes definition */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
 
+/* Soft floating keyframes definition */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
-

@@ -1,15 +1,34 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
 
+/**
+ * CalendarGridCardEditor
+ * Visual configuration editor UI for CalendarGridCard.
+ * Manages calendar entities picker list, styling color overrides, regex exclusion filters,
+ * first day of week selection, orientation layout grids, and sidebar positions.
+ * 
+ * @extends HAControlBase
+ */
 class CalendarGridCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy and dayNames section toggle state.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: {}, _dayNamesExpanded: { state: true } };
   }
 
   /**
-   * Invoked when the element is added to the document's DOM.
-   * Ensures that the ha-entity-picker is available.
+   * LitElement lifecycle mounting callback.
+   * Leverages core Home Assistant entities pickers if not already loaded globally.
    */
   connectedCallback() {
     super.connectedCallback();
@@ -23,31 +42,38 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Returns the path to the translation files.
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
    */
   get translationPath() {
     return "/local/ha-controls/calendar-grid-card/translations";
   }
 
   /**
-   * Returns the version of the translation files.
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
    */
   get translationVersion() {
     return VERSION;
   }
 
   /**
-   * Sets the configuration for the card.
-   * @param {Object} config - The configuration object.
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
    */
   setConfig(config) {
-    // Set configuration
     this._config = config;
   }
 
   /**
-   * Handles changes to configuration values from the UI.
-   * @param {Event} ev - The event object.
+   * Handles configuration values change event inside editor textfields, updating properties and dispatching events.
+   * Cleans keys if they are emptied.
+   * 
+   * @param {Event} ev - Input event details
+   * @private
    */
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
@@ -79,8 +105,10 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to the view (week/month) toggle.
-   * @param {Event} ev - The event object.
+   * Handles changes to the week/month view switch.
+   * 
+   * @param {Event} ev - Switch change event
+   * @private
    */
   _viewChanged(ev) {
     if (!this._config || !this.hass) return;
@@ -93,10 +121,11 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Dispatches a config-changed event to notify the parent element.
+   * Dispatches the updated config dictionary back to dashboard engine.
+   * 
+   * @private
    */
   _fireConfigChanged() {
-    // Dispatch config changed event
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: this._config },
@@ -107,32 +136,32 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes from the ha-form element.
-   * @param {Event} ev - The event object.
+   * Receives form values changes from the top-level `<ha-form>` component.
+   * 
+   * @param {CustomEvent} ev - Form value changed details
+   * @private
    */
   _formValueChanged(ev) {
-    // Update config from form values
     this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
   }
 
   /**
-   * Retrieves the list of day names based on configuration or defaults.
-   * @returns {Array<string>} The list of day names.
+   * Gathers list of day names based on configured list overrides or default localization strings.
+   * 
+   * @private
+   * @returns {Array<string>} List of week day names
    */
   _getDayNames() {
     let dayNames = this._config.day_names;
-    // Handle string input for day names
     if (typeof dayNames === 'string') {
       dayNames = dayNames.split(',').map(v => v.trim());
     }
 
-    // Return configured day names if valid
     if (dayNames && Array.isArray(dayNames) && dayNames.length === 7) {
       return dayNames;
     }
 
-    // Default day names based on first day of week
     const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
     const defaultDayNames = [
       this._localize('cgc.days.short_sun'),
@@ -151,8 +180,10 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Renders the editor UI.
-   * @returns {TemplateResult} The rendered HTML.
+   * Renders the editor configuration interface layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
    */
   render() {
     if (!this.hass || !this._config) return html``;
@@ -315,7 +346,7 @@ class CalendarGridCardEditor extends HAControlBase {
                                 ></ha-entity-picker>
                                 <ha-icon-button
                                     @click=${() => this._removeEntity(index)}
-                                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                                ></ha-icon-button>
                             </div>
                             <div class="separator"></div>
                             <div class="entity-options">
@@ -414,17 +445,20 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Toggles the visibility of the day names editor.
+   * Toggles the day names list editor visibility.
+   * 
+   * @private
    */
   _toggleDayNames() {
-      // Toggle visibility of day names editor
       this._dayNamesExpanded = !this._dayNamesExpanded;
   }
 
   /**
-   * Handles changes to a specific day name.
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the day name being changed.
+   * Updates an individual day name in the configurations array.
+   * 
+   * @param {Event} ev - Input event details
+   * @param {number} index - Index sequence of day name edited
+   * @private
    */
   _dayNameChanged(ev, index) {
       const newValue = ev.target.value;
@@ -432,21 +466,22 @@ class CalendarGridCardEditor extends HAControlBase {
       const newDayNames = [...dayNames];
       newDayNames[index] = newValue;
       
-      // Update day names in config
       this._config = { ...this._config, day_names: newDayNames };
       this._fireConfigChanged();
   }
 
   /**
-   * Helper method to update a specific entity configuration.
-   * @param {number} index - The index of the entity to update.
-   * @param {Function} updateFn - A function that takes the current entity config and returns the updated one.
+   * General delegate utility updating target entity configuration blocks.
+   * Normalizes entity config definitions.
+   * 
+   * @param {number} index - Index of target entity configuration to update
+   * @param {Function} updateFn - Mutator delegate returning updated schema config
+   * @private
    */
   _updateEntity(index, updateFn) {
     const newEntities = [...(this._config.entities || [])];
     let entityConf = newEntities[index];
     
-    // Normalize entity config to object
     entityConf = typeof entityConf === 'string' 
       ? { entity: entityConf } 
       : { ...entityConf };
@@ -459,51 +494,56 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to an entity selection.
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the entity being changed.
+   * Updates calendar entity target source ID.
+   * 
+   * @param {CustomEvent} ev - Picker changed event details
+   * @param {number} index - Index of entity row
+   * @private
    */
   _entityChanged(ev, index) {
-    // Update entity ID
     this._updateEntity(index, (entityConf) => {
       return { ...entityConf, entity: ev.detail.value };
     });
   }
 
   /**
-   * Handles changes to entity properties (color, name, etc.).
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the entity.
-   * @param {string} prop - The property being changed.
+   * General entity properties mutator (names, color fields).
+   * 
+   * @param {Event} ev - Input event details
+   * @param {number} index - Index of entity configuration block
+   * @param {string} prop - Property key targeted
+   * @private
    */
   _entityColorChanged(ev, index, prop) {
-    // Update entity property (color, name, etc)
     this._updateEntity(index, (entityConf) => {
       return { ...entityConf, [prop]: ev.target.value };
     });
   }
 
   /**
-   * Removes an entity from the configuration.
-   * @param {number} index - The index of the entity to remove.
+   * Deletes a calendar entity configuration block by index.
+   * 
+   * @param {number} index - Index sequence of entity item to delete
+   * @private
    */
   _removeEntity(index) {
       const newEntities = [...(this._config.entities || [])];
-      // Remove entity at index
       newEntities.splice(index, 1);
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
   }
 
   /**
-   * Adds a new filter to an entity configuration.
-   * @param {number} index - The index of the entity.
+   * Appends a blank default filter definition object to a calendar configuration block.
+   * Migrates legacy filter attributes if present.
+   * 
+   * @param {number} index - Index of target entity config block
+   * @private
    */
   _addFilter(index) {
     this._updateEntity(index, (entityConf) => {
       const filters = entityConf.filters ? [...entityConf.filters] : [];
       
-      // Migrate legacy filter to filters array
       if (entityConf.filter) {
         filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete entityConf.filter;
@@ -516,9 +556,11 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Removes a filter from an entity configuration.
-   * @param {number} entityIndex - The index of the entity.
-   * @param {number} filterIndex - The index of the filter to remove.
+   * Deletes a filter pattern rule block by index from a calendar entity.
+   * 
+   * @param {number} entityIndex - Index of target entity config block
+   * @param {number} filterIndex - Index sequence of filter to remove
+   * @private
    */
   _removeFilter(entityIndex, filterIndex) {
     this._updateEntity(entityIndex, (entityConf) => {
@@ -539,26 +581,26 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to a filter property.
-   * @param {Event} ev - The event object.
-   * @param {number} entityIndex - The index of the entity.
-   * @param {number} filterIndex - The index of the filter.
-   * @param {string} prop - The property being changed.
+   * Updates regex properties inside an individual filter block.
+   * Migrates legacy filter definitions if present.
+   * 
+   * @param {Event} ev - Input/switch event details
+   * @param {number} entityIndex - Index of target entity config block
+   * @param {number} filterIndex - Index sequence of filter rule
+   * @param {string} prop - Property key updated ('pattern' or 'case_sensitive')
+   * @private
    */
   _filterChanged(ev, entityIndex, filterIndex, prop) {
     this._updateEntity(entityIndex, (entityConf) => {
-      // Ensure filters array exists
       let filters = entityConf.filters ? [...entityConf.filters] : [];
       const newConf = { ...entityConf };
 
-      // Migrate legacy filter if needed
       if (!entityConf.filters && entityConf.filter) {
         filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete newConf.filter;
         delete newConf.case_sensitive;
       }
 
-      // Update specific filter
       filters[filterIndex] = { ...filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
       newConf.filters = filters;
       return newConf;
@@ -566,20 +608,20 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Adds a new entity to the configuration.
-   * @param {Event} ev - The event object containing the new entity ID.
+   * Appends a new calendar source entity ID to target arrays.
+   * 
+   * @param {CustomEvent} ev - Picker changed event details
+   * @private
    */
   _addEntity(ev) {
       const newValue = ev.detail.value;
       if (!newValue) return;
       
       const newEntities = [...(this._config.entities || [])];
-      // Add new entity
       newEntities.push(newValue);
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
       
-      // Clear input
       ev.target.value = "";
   }
 }

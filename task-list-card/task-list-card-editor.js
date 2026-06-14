@@ -1,15 +1,49 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
+/**
+ * TaskListCardEditor
+ * Visual configuration editor UI for TaskListCard.
+ * Manages options switches, todo list entities picker rows, regular expression text filtering per list,
+ * due color operators, and grid styling separator color attributes.
+ * 
+ * @extends HAControlBase
+ */
 class TaskListCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * LitElement lifecycle mounting callback.
+   * Leverages core Home Assistant entities pickers if not already loaded globally.
+   */
   connectedCallback() {
     super.connectedCallback();
     if (!customElements.get("ha-entity-picker")) {
@@ -20,10 +54,22 @@ class TaskListCardEditor extends HAControlBase {
     }
   }
 
+  /**
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Handles configuration values change event inside editor forms, updating properties and dispatching events.
+   * Supports standard value strings, numbers, and boolean checkboxes.
+   * 
+   * @param {Event} ev - Input event details
+   * @private
+   */
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
     const target = ev.target;
@@ -36,6 +82,13 @@ class TaskListCardEditor extends HAControlBase {
     }
   }
 
+  /**
+   * Handles specific todo list entity picker updates by index sequence.
+   * 
+   * @param {CustomEvent} ev - Picker changed event details
+   * @param {number} index - Index sequence of entity row edited
+   * @private
+   */
   _entityChanged(ev, index) {
     const entities = this._getEntities();
     const newValue = ev.detail.value;
@@ -48,6 +101,11 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a blank default entity slot to the entities array.
+   * 
+   * @private
+   */
   _addEntity() {
     const entities = this._getEntities();
     entities.push("");
@@ -55,6 +113,12 @@ class TaskListCardEditor extends HAControlBase {
       this._fireConfigChanged();
   }
 
+  /**
+   * Appends a blank default regex filter object to a specific todo list entity configurations block.
+   * 
+   * @param {number} index - Index of target entity
+   * @private
+   */
   _addFilter(index) {
     const entities = this._getEntities();
     let entityConf = typeof entities[index] === 'object' ? { ...entities[index] } : { entity: entities[index] };
@@ -73,6 +137,13 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a regex filter block from a todo list entity configurations block.
+   * 
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} filterIndex - Index sequence of filter to remove
+   * @private
+   */
   _removeFilter(entityIndex, filterIndex) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
@@ -89,6 +160,15 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when regex filter pattern or case-sensitivity switches are changed.
+   * 
+   * @param {Event} ev - Input event details
+   * @param {number} entityIndex - Index of target entity
+   * @param {number} filterIndex - Index sequence of filter edited
+   * @param {string} prop - Property modified ('pattern' or 'case_sensitive')
+   * @private
+   */
   _filterChanged(ev, entityIndex, filterIndex, prop) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
@@ -108,6 +188,12 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a todo list entity configuration by index.
+   * 
+   * @param {number} index - Index of target entity to remove
+   * @private
+   */
   _removeEntity(index) {
     const entities = this._getEntities();
     entities.splice(index, 1);
@@ -115,6 +201,14 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when due-date color fields (operator, days, color hex) are updated.
+   * 
+   * @param {Event} ev - Input/select event details
+   * @param {number} index - Index of due-date color rule edited
+   * @param {string} prop - Rule property modified ('operator', 'days', or 'color')
+   * @private
+   */
   _dueDateColorChanged(ev, index, prop) {
     const due_date_colors = [...(this._config.due_date_colors || [])];
     due_date_colors[index] = { ...due_date_colors[index], [prop]: ev.target.value };
@@ -122,6 +216,11 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Appends a default due-date color threshold rule to configuration blocks.
+   * 
+   * @private
+   */
   _addDueDateColor() {
     const due_date_colors = [...(this._config.due_date_colors || [])];
     due_date_colors.push({ days: 0, color: "", operator: "<=" });
@@ -129,6 +228,12 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Deletes a due-date color threshold rule by index.
+   * 
+   * @param {number} index - Index of rule to remove
+   * @private
+   */
   _removeDueDateColor(index) {
     const due_date_colors = [...(this._config.due_date_colors || [])];
     due_date_colors.splice(index, 1);
@@ -136,11 +241,22 @@ class TaskListCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Handles visual icon picker configuration changes.
+   * 
+   * @param {CustomEvent} ev - Icon picker event details
+   * @private
+   */
   _iconChanged(ev) {
     this._config = { ...this._config, icon: ev.detail.value };
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated config dictionary back to Lovelace configuration framings.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
@@ -149,12 +265,24 @@ class TaskListCardEditor extends HAControlBase {
     }));
   }
 
+  /**
+   * Parses entities list array, mapping configurations safely.
+   * 
+   * @private
+   * @returns {Array<any>} List of todo entities configurations
+   */
   _getEntities() {
     if (this._config.entities) return [...this._config.entities];
     if (this._config.entity) return [this._config.entity];
     return [];
   }
 
+  /**
+   * Renders the editor configuration page layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
     const entities = this._getEntities();

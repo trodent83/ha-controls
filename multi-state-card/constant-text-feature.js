@@ -1,8 +1,26 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading.
+ * @type {string}
+ */
 const VERSION = "1.0.0";
 
+/**
+ * ConstantTextFeature
+ * A custom Lovelace card feature (for use in Multi State cards)
+ * that renders customizable static text with override styles (colors, sizes, alignments).
+ * 
+ * @extends HAControlBase
+ */
 class ConstantTextFeature extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks config, parent stateObj, and active styling color.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       hass: { attribute: false },
@@ -12,10 +30,22 @@ class ConstantTextFeature extends HAControlBase {
     };
   }
 
+  /**
+   * Creates and returns the configuration editor element for this card feature.
+   * 
+   * @static
+   * @returns {HTMLElement} The constant-text-feature-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("constant-text-feature-editor");
   }
 
+  /**
+   * Returns default stub configuration details for this custom feature card.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       type: "custom:constant-text-feature",
@@ -27,10 +57,21 @@ class ConstantTextFeature extends HAControlBase {
     };
   }
 
+  /**
+   * Configures visual parameters on startup.
+   * 
+   * @param {Object} config - Raw feature config
+   */
   setConfig(config) {
     this.config = config;
   }
 
+  /**
+   * Renders the constant text visual display block layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this.config) return html``;
 

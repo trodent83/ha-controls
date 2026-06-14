@@ -1,3 +1,9 @@
+/* ==========================================================================
+   UNIVERSAL SELECT CARD STYLESHEET
+   Controls row/column segmented button containers and icon animations.
+   ========================================================================== */
+
+/* Boundary border-radii selectors for row-oriented layouts */
 .layout-row .btn:first-child {
   border-top-left-radius: var(--ha-card-border-radius, 12px) !important;
   border-bottom-left-radius: var(--ha-card-border-radius, 12px) !important;
@@ -7,6 +13,7 @@
   border-bottom-right-radius: var(--ha-card-border-radius, 12px) !important;
 }
 
+/* Boundary border-radii selectors for column-oriented layouts */
 .layout-column .btn:first-child {
   border-top-left-radius: var(--ha-card-border-radius, 12px) !important;
   border-top-right-radius: var(--ha-card-border-radius, 12px) !important;
@@ -16,6 +23,7 @@
   border-bottom-right-radius: var(--ha-card-border-radius, 12px) !important;
 }
 
+/* Main card wrapper containing flex children */
 ha-card {
   display: flex;
   padding: 0px !important;
@@ -23,39 +31,41 @@ ha-card {
   overflow: hidden;
 }
 
+/* Vertical layout display mode */
 .layout-column {
   flex-direction: column;
 }
 
+/* Horizontal layout display mode */
 .layout-row {
   flex-direction: row;
   flex-wrap: wrap;
 }
 
+/* Grayed-out lock behavior conditional state */
 .locked {
   pointer-events: none;
   opacity: 0.6;
   filter: grayscale(1);
 }
 
+/* Segmented button tiles */
 .btn {
   display: flex !important;
   flex-direction: column !important; 
-  align-items: center !important;    /* Zentriert Icon/Label horizontal im Button */
-  justify-content: center !important; /* Zentriert Inhalt vertikal */
+  align-items: center !important;    /* Centers icon and labels horizontally */
+  justify-content: center !important; /* Centers contents vertically */
   
-  /* Kein width: 100% nötig, da justify-items: stretch das übernimmt */
   width: auto; 
-  
   padding: 8px 0;
   gap: 4px;
   cursor: pointer;
   text-align: center;
-  flex: 1;
+  flex: 1; /* Distributes buttons evenly inside container lines */
 }
 
+/* Textual labels displayed beneath icons */
 .label {
-  /* WICHTIG: Das Label darf nicht breiter als der Button sein */
   width: 100%;
   max-width: 100%;
   text-align: center;
@@ -64,19 +74,24 @@ ha-card {
   word-wrap: break-word;
 }
 
+/* Icon centering and sizing overrides */
 ha-icon {
-  display: flex;                     /* Macht das Icon selbst zum Flex-Container */
+  display: flex;
   align-items: center;
   justify-content: center;
   --mdc-icon-size: 18px;
-  transform: translateZ(0);         /* Added GPU boost */
+  transform: translateZ(0); /* Initiates GPU composite layout layering */
 }
 
-/* GPU Optimized Animations */
+/* ==========================================================================
+   GPU OPTIMIZED ANIMATIONS
+   will-change properties prevent layout shifts and utilize GPU layers.
+   ========================================================================== */
 .bounce, .rotating, .pulse, .shake, .float, .spin-slow {
   will-change: transform;
 }
 
+/* Animation triggers */
 .bounce    { animation: bounce 1s ease infinite; }
 .blink     { animation: blink 1.5s linear infinite; }
 .rotating  { animation: rotating 2s linear infinite; }
@@ -85,33 +100,39 @@ ha-icon {
 .float     { animation: float 3s ease-in-out infinite; }
 .spin-slow { animation: rotating 8s linear infinite; }
 
+/* Rotation keyframes definition */
 @keyframes rotating { 
   from { transform: rotate(0deg) translateZ(0); } 
   to { transform: rotate(360deg) translateZ(0); } 
 }
 
+/* Vertical bounce keyframes definition */
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
   40% { transform: translateY(-6px); }
   60% { transform: translateY(-3px); }
 }
 
+/* Blinking keyframes definition */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
+/* Scale pulse keyframes definition */
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.9; }
 }
 
+/* Shaking keyframes definition */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
 
+/* Soft floating keyframes definition */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }

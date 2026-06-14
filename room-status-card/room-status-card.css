@@ -1,3 +1,9 @@
+/* ==========================================================================
+   ROOM STATUS CARD STYLESHEET
+   Styles the room title header container and dynamic inline status badges.
+   ========================================================================== */
+
+/* Blink animation keyframe and layout class */
 @keyframes blink {
   50% { opacity: 0.5; }
 }
@@ -5,6 +11,8 @@
   animation: blink 1s linear infinite;
   will-change: opacity;
 }
+
+/* Pulsing scale animation keyframe and layout class */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
@@ -14,11 +22,15 @@
   animation: pulse 2s infinite;
   will-change: transform;
 }
+
+/* Reset basic card style boundaries to draw inline cleanly without visual boxes */
 ha-card {
   background: none !important;
   box-shadow: none !important;
   border: none !important;
 }
+
+/* Flex row grouping room title header and status badges list */
 .card-content {
   padding: 12px 12px !important;
   display: flex;
@@ -26,6 +38,8 @@ ha-card {
   align-items: center;
   justify-content: space-between;
 }
+
+/* Left aligned room name icon/label container */
 .header_container {
   display: flex;
   align-items: center;
@@ -34,29 +48,40 @@ ha-card {
   font-weight: 500;
   color: var(--secondary-text-color);
 }
+
+/* Title text typography rules */
 .room_title {
   margin: 0;
   font-size: inherit;
   line-height: inherit;
 }
+
+/* Title icon size */
 .header_container ha-icon {
   --mdc-icon-size: 22px;
   color: inherit;
 }
+
+/* Right aligned row container for sensors badges */
 .status_badges {
   display: flex;
   gap: 8px;
 }
+
+/* Individual status badge style */
 .status_badge {
   font-size: 0.95rem;
   font-weight: 400;
   display: flex;
   align-items: center;
   gap: 4px;
+  /* Uses dynamic --badge-color variable determined by threshold configs in JS logic */
   color: var(--badge-color);
   transition: color 0.3s ease-in-out;
-  transform: translateZ(0);         /* Added GPU boost */
+  transform: translateZ(0); /* Added GPU layer composite loading */
 }
+
+/* Status badge icon overrides */
 .status_badge ha-icon {
   color: inherit;
   color: var(--badge-color);

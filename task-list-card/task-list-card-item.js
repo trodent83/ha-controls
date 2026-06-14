@@ -1,8 +1,26 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
+/**
+ * TaskListCardItem
+ * Renders an individual task item detail line, including description block,
+ * sources tracking badges, completion toggling checkboxes, and separator boundaries.
+ * 
+ * @extends HAControlBase
+ */
 class TaskListCardItem extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks task object, separators display toggles, and readonly states.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -13,15 +31,30 @@ class TaskListCardItem extends HAControlBase {
     };
   }
 
+  /**
+   * Forces a render update on this individual task element.
+   */
   updateTask() {
     this.requestUpdate();
   }
 
+  /**
+   * Click event handler. Dispatches a custom 'toggle-task' event to the card row/container
+   * if interactions are not blocked due to read-only mode or future task configuration limits.
+   * 
+   * @private
+   */
   _toggle() {
     if (this.readonly || (this.config.block_future_toggles !== false && this.task.isFuture)) return;
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }
 
+  /**
+   * Renders the custom card item HTML template.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.task || !this.config || !this.hass) return html``;
 

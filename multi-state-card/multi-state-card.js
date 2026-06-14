@@ -1,19 +1,63 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
 
+/**
+ * MultiPropertyCard
+ * (Registered as 'multi-state-card')
+ * A Home Assistant dashboard card displaying icons, state descriptors, and inline controls for multiple entities.
+ * Supports conditional JS expression parsing (`eval` execution against state changes) to filter entity visibility.
+ * 
+ * @extends HAControlBase
+ */
 class MultiPropertyCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the config object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/multi-state-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The multi-state-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("multi-state-card-editor");
   }
 
+  /**
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Evaluates javascript conditional expressions on state changes to update element presentation conditionally.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   * @returns {boolean} True if the card should re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
     if (changedProps.has('config')) {
       this._conditionCache = {};
@@ -65,6 +109,13 @@ class MultiPropertyCard extends HAControlBase {
     return true;
   }
 
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       show_icon: true,
@@ -77,6 +128,14 @@ class MultiPropertyCard extends HAControlBase {
     };
   }
 
+  /**
+   * Fallback icon resolver. Maps entity domains and device classes to standard Material Design Icons.
+   * 
+   * @param {string} domain - The entity domain (e.g. 'light', 'sensor')
+   * @param {string} deviceClass - Optional device_class attribute of the entity
+   * @private
+   * @returns {string} Material Design Icon string (e.g., 'mdi:flash')
+   */
   _getFallbackIcon(domain, deviceClass) {
     const defaults = {
       battery: 'mdi:battery', temperature: 'mdi:thermometer', humidity: 'mdi:water-percent',
@@ -85,6 +144,13 @@ class MultiPropertyCard extends HAControlBase {
     return defaults[deviceClass] || defaults[domain] || 'mdi:circle-outline';
   }
 
+  /**
+   * Renders the custom card's HTML template.
+   * Maps out buttons and embedded renderer features.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">${this._localize('no_entities')}</ha-alert>`;
 
@@ -148,6 +214,13 @@ class MultiPropertyCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Dispatches Lovelace custom actions (tap/hold) matching user dashboard specifications.
+   * 
+   * @param {Object} item - Entity card item configuration schema
+   * @param {string} actionType - Trigger mode ('tap' or 'hold')
+   * @private
+   */
   _runAction(item, actionType) {
     const actionConfig = actionType === 'hold' ? item.hold_action : item.tap_action;
     if (!actionConfig || actionConfig.action === "none") return;
@@ -157,6 +230,13 @@ class MultiPropertyCard extends HAControlBase {
     }));
   }
 
+  /**
+   * Sets the user configuration object for the card, validating required parameters.
+   * Throws configuration errors if essential parameters (e.g. entities list) are missing.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   * @throws {Error} If entities list is missing in dashboard config
+   */
   setConfig(config) {
     if (!config.entities) {
       throw new Error("Please define entities");

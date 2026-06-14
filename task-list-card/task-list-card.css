@@ -1,9 +1,17 @@
+/* ==========================================================================
+   TASK LIST CARD STYLESHEET
+   Styles row day groupings, date labels, and refresh/delete button tiles.
+   ========================================================================== */
+
+/* Day grid horizontal flex row wrapper */
 .task-row {
   display: flex;
   align-items: stretch;
   padding: 8px;
   cursor: pointer;
 }
+
+/* Left aligned date display container */
 .task-date {
   display: flex;
   flex-direction: column;
@@ -16,33 +24,47 @@
   line-height: 1.1;
   flex-shrink: 0;
 }
+
+/* Spacer style for rows matching empty/no-due-date values */
 .task-date.empty {
   width: 60px;
 }
+
+/* Short weekday text (e.g. 'SUN') styling */
 .weekday {
   font-size: 0.9em;
   opacity: 0.7;
   text-transform: uppercase;
 }
+
+/* Numeric day text (e.g. '14') styling */
 .day {
   font-size: 1.8em;
   font-weight: bold;
 }
+
+/* Short month text (e.g. 'JUN') styling */
 .month {
   font-size: 0.9em;
   font-weight: bold;
   text-transform: uppercase;
 }
+
+/* Separator boundary line injected between day blocks */
 .day-separator {
   margin: 8px 16px;
   border-top-width: 1px;
   border-top-style: solid;
 }
+
+/* Content block wrapping individual task lines */
 .task-content {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
+
+/* Right aligned dynamic due description text block */
 .task-due-in {
   font-size: 0.85em;
   color: var(--secondary-text-color);
@@ -55,17 +77,23 @@
   justify-content: center;
   line-height: 1.2;
 }
+
+/* Left vertical border for due descriptions */
 .task-due-in.separator {
   border-left-width: 1px;
   border-left-style: solid;
   padding-left: 8px;
 }
+
+/* Header line layout containing title/icon */
 .header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 16px 0 16px;
 }
+
+/* Title text block layout inside headers */
 .header-title {
   font-size: 16px;
   font-weight: 500;
@@ -74,10 +102,14 @@
   display: flex;
   align-items: center;
 }
+
+/* Header icon spacing override */
 .header-icon {
   margin-right: 8px;
   --mdc-icon-size: 20px;
 }
+
+/* Badge displaying pending tasks counts */
 .task-count-badge {
   display: flex;
   align-items: center;
@@ -89,9 +121,13 @@
   font-weight: bold;
   line-height: 1;
 }
+
+/* Count badge icon size */
 .task-count-badge ha-icon {
   --mdc-icon-size: 16px;
 }
+
+/* Actions buttons tiles (reload list, delete completed) */
 .tile-button {
   display: flex;
   align-items: center;
@@ -101,6 +137,8 @@
   cursor: pointer;
   transition: background-color 0.2s;
 }
+
+/* Round icon frame inside action tiles */
 .tile-icon-container {
   display: flex;
   align-items: center;
@@ -111,25 +149,35 @@
   margin-right: 12px;
   flex-shrink: 0;
 }
+
+/* Info container layout block inside action tiles */
 .tile-info {
   display: flex;
   flex-direction: column;
 }
+
+/* Action title text */
 .tile-name {
   font-weight: 500;
   color: var(--primary-text-color);
 }
+
+/* Action description subtitle text */
 .tile-state {
   font-size: 12px;
   color: var(--secondary-text-color);
 }
 
+/* Grayed out blocked button state */
 .tile-button.disabled {
   pointer-events: none;
   opacity: 0.5;
 }
 
+/* Spinning keyframes class trigger (for API load updates) */
 .spinning {
   animation: spin 1s linear infinite;
 }
+
+/* General rotation animation keyframes definition */
 @keyframes spin { 100% { transform: rotate(360deg); } }

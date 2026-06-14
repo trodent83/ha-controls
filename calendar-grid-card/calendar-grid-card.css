@@ -1,3 +1,8 @@
+/* ==========================================================================
+   CALENDAR GRID CARD STYLESHEET
+   Styles calendar header controls, monthly grids cells, sidebars, and toggles.
+   ========================================================================== */
+
 :host {
     display: flex;
     flex-direction: column;
@@ -6,6 +11,7 @@
     overflow: hidden;
 }
 
+/* Base card layout styling */
 ha-card {
     padding: 16px;
     display: flex;
@@ -15,6 +21,7 @@ ha-card {
     overflow: hidden;
 }
 
+/* Header line wrapping title and month controls */
 .header {
     display: flex;
     justify-content: space-between;
@@ -23,17 +30,20 @@ ha-card {
     flex-shrink: 0;
 }
 
+/* Header title typography settings */
 .month-title {
     font-size: 1.5rem;
     font-weight: 500;
 }
 
+/* Suffix row holding action controls inside header blocks */
 .header-right {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
+/* Grouping outline border wrapper for buttons controls */
 .controls {
     display: flex;
     background-color: var(--secondary-background-color);
@@ -42,6 +52,7 @@ ha-card {
     overflow: hidden;
 }
 
+/* Month navigation buttons */
 .control-button {
     padding: 4px 8px;
     cursor: pointer;
@@ -54,19 +65,23 @@ ha-card {
     box-sizing: border-box;
 }
 
+/* Hover overlay states for control buttons */
 .control-button:hover {
     background-color: rgba(var(--rgb-primary-text-color), 0.05);
 }
 
+/* Active click states overlay for control buttons */
 .control-button:active {
     background-color: rgba(var(--rgb-primary-text-color), 0.1);
 }
 
+/* Selected state styling for control buttons */
 .control-button.active {
     color: var(--primary-color);
     background-color: rgba(var(--rgb-primary-text-color), 0.1);
 }
 
+/* Today centering button overrides */
 .control-button.today {
     padding: 0 16px;
     font-weight: 500;
@@ -75,10 +90,12 @@ ha-card {
     border-right: 1px solid var(--divider-color);
 }
 
+/* Control icon size */
 .control-button ha-icon {
     --mdc-icon-size: 20px;
 }
 
+/* Main body content block wrapping calendar grids and sidebars */
 .main-content {
     display: flex;
     flex-grow: 1;
@@ -88,18 +105,22 @@ ha-card {
     flex-direction: row;
 }
 
+/* Left-positioned sidebar display mode */
 .main-content.pos-left {
     flex-direction: row-reverse;
 }
 
+/* Top-positioned sidebar display mode */
 .main-content.pos-top {
     flex-direction: column-reverse;
 }
 
+/* Bottom-positioned sidebar display mode */
 .main-content.pos-bottom {
     flex-direction: column;
 }
 
+/* Calendar month grid row/column display metrics */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -109,6 +130,7 @@ ha-card {
     width: 100%;
 }
 
+/* Week day name headers (e.g. 'MON', 'TUE') */
 .day-header {
     text-align: center;
     font-weight: bold;
@@ -117,6 +139,7 @@ ha-card {
     font-size: 0.9rem;
 }
 
+/* Individual calendar grid day cell */
 .day-cell {
     border: 1px solid var(--divider-color);
     padding: 4px;
@@ -125,20 +148,23 @@ ha-card {
     background: var(--card-background-color);
     border-radius: 4px;
     position: relative;
-    min-width: 0; /* Ensures equal width even with long content */
+    min-width: 0; /* Prevents overflow issues */
     min-height: 0;
     overflow: hidden;
 }
 
+/* Background overlay color for days outside active viewing month */
 .day-cell.other-month {
     background: var(--secondary-background-color);
     opacity: 0.6;
 }
 
+/* Colored outline representing current day cell */
 .day-cell.today {
     border: 2px solid var(--primary-color);
 }
 
+/* Date digit label text */
 .day-number {
     font-size: 0.8rem;
     font-weight: 500;
@@ -148,11 +174,13 @@ ha-card {
     flex-shrink: 0;
 }
 
+/* Today date digit label highlights */
 .day-cell.today .day-number {
     color: var(--primary-color);
     font-weight: bold;
 }
 
+/* Container hosting multiple event listings inside cells */
 .events-container {
     display: flex;
     flex-direction: column;
@@ -162,7 +190,7 @@ ha-card {
     min-height: 0;
 }
 
-/* Scrollbar styling for events container */
+/* Custom scrollbars inside day events container lists */
 .events-container::-webkit-scrollbar {
     width: 4px;
 }
@@ -171,6 +199,7 @@ ha-card {
     border-radius: 2px;
 }
 
+/* Sidebar listing calendar source names checks checkboxes */
 .sidebar {
     width: 200px;
     display: flex;
@@ -182,6 +211,7 @@ ha-card {
     padding-left: 16px;
 }
 
+/* Sidebar positioning: left mode */
 .main-content.pos-left .sidebar {
     border-left: none;
     border-right: 1px solid var(--divider-color);
@@ -189,6 +219,7 @@ ha-card {
     padding-right: 16px;
 }
 
+/* Sidebar positioning: top & bottom modes overrides */
 .main-content.pos-top .sidebar,
 .main-content.pos-bottom .sidebar {
     width: 100%;
@@ -202,6 +233,7 @@ ha-card {
     flex-wrap: wrap;
 }
 
+/* Sidebar positioning: bottom mode specifics */
 .main-content.pos-bottom .sidebar {
     border-bottom: none;
     border-top: 1px solid var(--divider-color);
@@ -209,6 +241,7 @@ ha-card {
     padding-top: 16px;
 }
 
+/* Interactive calendar toggle label checks badges */
 .calendar-toggle {
     display: flex;
     align-items: center;
@@ -225,16 +258,19 @@ ha-card {
     margin-bottom: 4px;
 }
 
+/* Hover states for calendar toggles */
 .calendar-toggle:hover {
     background-color: var(--divider-color);
 }
 
+/* Checked/Active state colors for calendar toggles */
 .calendar-toggle.active {
     background-color: var(--primary-color);
     color: var(--text-primary-color);
     border-color: var(--primary-color);
 }
 
+/* Calendar name text formatting */
 .calendar-name {
     font-size: 0.9rem;
     overflow: hidden;

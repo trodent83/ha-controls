@@ -1,11 +1,21 @@
+/* ==========================================================================
+   MULTI PROPERTY CARD EDITOR STYLESHEET
+   Styles the entity listings layout picker, action headers, and thresholds.
+   ========================================================================== */
+
+/* Sizing of layout mode selection box controls */
 .layout-select {
     width: 100%;
     margin-top: 10px;
 }
+
+/* Header action icons layout row grouping */
 .header-actions {
     display: flex;
     align-items: center;
 }
+
+/* Row wrapping icon/checkbox parameters options */
 .icon-settings-row {
     display: flex;
     justify-content: space-between;
@@ -14,6 +24,7 @@
     margin-bottom: 10px;
 }
 
+/* Gray background comparison block containers grouping threshold rules */
 .threshold-block {
     padding: 16px;
     border: 1px solid var(--divider-color);
@@ -21,6 +32,7 @@
     margin-bottom: 16px;
 }
 
+/* Sub-header flex row layout inside threshold panels */
 .threshold-sub-header {
     display: flex;
     justify-content: space-between;
@@ -28,6 +40,7 @@
     margin-bottom: 16px;
 }
 
+/* Font weight override for threshold row titles */
 .threshold-sub-header span {
     font-weight: 500;
 }

@@ -1,8 +1,30 @@
+/**
+ * TaskDataManager
+ * Utility class to query, filter, and fetch todo list items from Home Assistant.
+ * Connects over WebSocket calls and processes regular expression filters.
+ */
 export class TaskDataManager {
+  /**
+   * Instantiates TaskDataManager.
+   * 
+   * @param {Object} hass - Home Assistant global context instance
+   */
   constructor(hass) {
+    /**
+     * Home Assistant global context.
+     * @type {Object}
+     */
     this.hass = hass;
   }
 
+  /**
+   * Queries Home Assistant over WS to fetch todo items from configured entities,
+   * applying regex patterns to filter matching elements.
+   * 
+   * @param {Array<string|Object>} entities - Configured list of entities (either strings or config objects)
+   * @async
+   * @returns {Promise<Array<Object>>} Asynchronous promise containing the processed items list
+   */
   async fetchTasks(entities) {
     let allItems = [];
     for (const entityConf of entities) {

@@ -1,8 +1,26 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading.
+ * @type {string}
+ */
 const VERSION = "1.0.0";
 
+/**
+ * TimerCardFeature
+ * A custom Lovelace card feature (for use in Tile cards or other features compatible templates)
+ * that displays and manages a Home Assistant timer entity, updating its count dynamically.
+ * 
+ * @extends HAControlBase
+ */
 class TimerCardFeature extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks config object and parent stateObj context.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -11,24 +29,56 @@ class TimerCardFeature extends HAControlBase {
     };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Creates and returns the configuration editor element for this card feature.
+   * 
+   * @static
+   * @returns {HTMLElement} The timer-card-feature-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("timer-card-feature-editor");
   }
 
+  /**
+   * Returns default stub configuration details for this custom feature card.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       type: "custom:timer-card-feature"
     };
   }
 
+  /**
+   * Configures visual parameters on startup.
+   * 
+   * @param {Object} config - Raw feature config
+   */
   setConfig(config) {
     this.config = config;
   }
 
-  // Hook up to state changes to start/stop the GUI interval
+  /**
+   * Detects state changes to start/stop dynamic active timer tracking intervals.
+   * 
+   * @param {Map<string, any>} changedProps - Changed properties map
+   */
   updated(changedProps) {
     super.updated(changedProps);
     if (!this.hass) return;
@@ -46,11 +96,21 @@ class TimerCardFeature extends HAControlBase {
     }
   }
 
+  /**
+   * Establishes a periodic interval loop to force dynamic renders every second for ticking active timers.
+   * 
+   * @private
+   */
   _startTimer() {
     if (this._interval) return;
     this._interval = setInterval(() => this.requestUpdate(), 1000);
   }
 
+  /**
+   * Destroys ticking rendering interval timers when paused or inactive.
+   * 
+   * @private
+   */
   _stopTimer() {
     if (this._interval) {
       clearInterval(this._interval);
@@ -58,12 +118,20 @@ class TimerCardFeature extends HAControlBase {
     }
   }
 
+  /**
+   * LitElement lifecycle cleanups to avoid detached rendering memory leaks.
+   */
   disconnectedCallback() {
     super.disconnectedCallback();
     this._stopTimer();
   }
 
-  // Play or pause the timer based on its current state
+  /**
+   * Interactive click click toggles, initiating or pausing the timer entity.
+   * 
+   * @param {Event} e - Click event details
+   * @private
+   */
   _toggleTimer(e) {
     e.stopPropagation();
     const entityId = this.config?.entity || this.stateObj?.entity_id;
@@ -79,6 +147,12 @@ class TimerCardFeature extends HAControlBase {
     }
   }
 
+  /**
+   * Renders the timer visual display block layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this.config) return html``;
     

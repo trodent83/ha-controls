@@ -1,15 +1,50 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
 
+/**
+ * VacuumSelectCardEditor
+ * Visual configuration editor for VacuumSelectCard.
+ * Leverages Home Assistant's custom `<ha-form>` to generate a rich UI configuration form.
+ * 
+ * @extends HAControlBase
+ */
 class VacuumSelectCardEditor extends HAControlBase {
+  /**
+   * Defines the reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the editor config copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: { type: Object } };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/vacuum-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives the configuration object from Home Assistant Lovelace dashboard,
+   * setting default parameters for the editor form controls.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   */
   setConfig(config) {
     this._config = {
       columns: 4,      // Default column count
@@ -19,6 +54,13 @@ class VacuumSelectCardEditor extends HAControlBase {
     };
   }
 
+  /**
+   * Dynamically constructs the visual form schema based on the configured vacuum entity
+   * and its rooms/maps attributes provided by the active Home Assistant state connection.
+   * 
+   * @private
+   * @returns {Array<Object>} Array of form fields definition objects for ha-form
+   */
   _schema() {
     const vacuumId = this._config?.vacuum_entity;
     const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
@@ -115,6 +157,13 @@ class VacuumSelectCardEditor extends HAControlBase {
     return [...baseSchema, roomSchema];
   }
 
+  /**
+   * Renders the editor configuration form.
+   * Renders a blank screen if hass or _config are not yet loaded.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
     return html`
@@ -128,6 +177,13 @@ class VacuumSelectCardEditor extends HAControlBase {
     `;
   }
 
+  /**
+   * Dispatches a custom 'config-changed' event up to Lovelace card configuration frame
+   * to notify it that configuration options have been updated.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event containing updated config dictionary
+   * @private
+   */
   _valueChanged(ev) {
     const event = new CustomEvent("config-changed", {
       detail: { config: ev.detail.value },

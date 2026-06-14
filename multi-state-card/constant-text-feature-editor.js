@@ -1,17 +1,53 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
 
+/**
+ * ConstantTextFeatureEditor
+ * Visual configuration editor UI for the ConstantTextFeature custom card feature.
+ * Allows entering custom static text, custom CSS styles, fonts, etc.
+ * 
+ * @extends HAControlBase
+ */
 class ConstantTextFeatureEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, _config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/multi-state-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return "1.0.0"; }
 
+  /**
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
+   */
   setConfig(config) {
     this._config = config;
   }
 
+  /**
+   * Handles configuration values change event inside editor forms, dispatching update events.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event
+   * @private
+   */
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
     const value = ev.detail.value;
@@ -23,6 +59,12 @@ class ConstantTextFeatureEditor extends HAControlBase {
     }));
   }
 
+  /**
+   * Renders the editor configuration interface layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
 
