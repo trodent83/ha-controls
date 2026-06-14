@@ -6,7 +6,7 @@ const SCRIPT_NAME = "multi-state-card-loader.js";
 
 const loader = new HAControlLoader(SCRIPT_NAME, VERSION);
 loader.loadModules(
-  ["multi-state-card.css"],
+  ["multi-state-card.css", "multi-state-card-editor.css"],
   [
     "multi-state-card.js",
     "multi-state-card-editor.js",

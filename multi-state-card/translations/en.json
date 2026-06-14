@@ -21,5 +21,11 @@
   "float": "Float",
   "spin_slow": "Spin Slow",
   "add_entity": "Add Entity",
-  "add_feature": "Add Feature"
+  "add_feature": "Add Feature",
+  "text": "Text",
+  "color_inherit": "Color (empty to inherit)",
+  "font_size_placeholder": "Font Size (e.g. 12px)",
+  "font_weight": "Font Weight",
+  "normal": "Normal",
+  "bold": "Bold"
 }

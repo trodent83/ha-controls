@@ -177,7 +177,7 @@ class UniversalSelectCardEditor extends HAControlBase {
                     <div class="feature-add">
                         <feature-selector-card
                           .hass=${this.hass}
-                          label="Add Feature"
+                          label="${this._localize('add_feature')}"
                           @feature-selected=${(e) => this._addFeature(option, e)}
                         ></feature-selector-card>
                     </div>

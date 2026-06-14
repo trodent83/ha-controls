@@ -213,12 +213,6 @@ class TaskListCard extends HAControlBase {
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=${VERSION}">
-      <style>
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-      </style>
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">

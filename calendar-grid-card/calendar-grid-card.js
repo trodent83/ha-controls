@@ -77,7 +77,12 @@ class CalendarGridCard extends HAControlBase {
     if (!config.entities) {
       throw new Error("Please define entities");
     }
-    this.config = config;
+    this.config = {
+      first_day_of_week: 1,
+      default_view: "month",
+      orientation: "horizontal",
+      ...config
+    };
     // Reset fetch state on config change
     this._fetchedRange = { start: null, end: null };
     this._events = [];

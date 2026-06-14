@@ -35,13 +35,6 @@ class TaskListCardItem extends HAControlBase {
     const separatorStyle = (this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '') + (hidden ? 'display: none;' : '');
 
     return html`
-      <style>
-        :host { display: block; }
-        .task-item.readonly {
-          opacity: 0.5;
-          cursor: default;
-        }
-      </style>
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css?v=${VERSION}">
       <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${this.readonly ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>

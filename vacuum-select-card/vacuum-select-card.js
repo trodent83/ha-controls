@@ -183,8 +183,18 @@ class VacuumSelectCard extends HAControlBase {
     });
   }
 
-  setConfig(config) { 
-    this.config = config; 
+  setConfig(config) {
+    if (!config.vacuum_entity) {
+      throw new Error("You must configure vacuum_entity");
+    }
+    if (!config.output_entity) {
+      throw new Error("You must configure output_entity");
+    }
+    this.config = {
+      columns: 4,
+      show_toggle: true,
+      ...config
+    };
   }
 }
 

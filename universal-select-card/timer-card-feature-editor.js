@@ -5,6 +5,9 @@ class TimerCardFeatureEditor extends HAControlBase {
     return { ...super.properties, _config: {} };
   }
 
+  get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+  get translationVersion() { return "1.0.0"; }
+
   setConfig(config) {
     this._config = config;
   }
@@ -24,7 +27,7 @@ class TimerCardFeatureEditor extends HAControlBase {
     if (!this.hass || !this._config) return html``;
 
     const schema = [
-      { name: "entity", label: "Override Entity (Optional)", selector: { entity: { domain: "timer" } } }
+      { name: "entity", label: this._localize('override_entity'), selector: { entity: { domain: "timer" } } }
     ];
 
     return html`

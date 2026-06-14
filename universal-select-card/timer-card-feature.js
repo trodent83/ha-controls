@@ -11,6 +11,9 @@ class TimerCardFeature extends HAControlBase {
     };
   }
 
+  get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+  get translationVersion() { return VERSION; }
+
   static getConfigElement() {
     return document.createElement("timer-card-feature-editor");
   }
@@ -82,10 +85,10 @@ class TimerCardFeature extends HAControlBase {
     // Card features naturally inherit the stateObj from their parent card (like Tile),
     // but we support overriding it via config.entity
     const entityId = this.config.entity || this.stateObj?.entity_id;
-    if (!entityId || !entityId.startsWith('timer.')) return html`<div class="error">Invalid timer entity</div>`;
+    if (!entityId || !entityId.startsWith('timer.')) return html`<div class="error">${this._localize('invalid_timer')}</div>`;
 
     const stateObj = this.hass.states[entityId];
-    if (!stateObj) return html`<div class="error">Entity not found</div>`;
+    if (!stateObj) return html`<div class="error">${this._localize('entity_not_found')}</div>`;
 
     let displayLabel = stateObj.state;
 

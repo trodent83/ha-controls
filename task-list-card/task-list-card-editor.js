@@ -162,27 +162,6 @@ class TaskListCardEditor extends HAControlBase {
 
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-editor.css?v=${VERSION}">
-      <style>
-        .entity-row-container {
-          border: 1px solid var(--divider-color);
-          border-radius: 4px;
-          padding: 8px;
-          margin-bottom: 8px;
-        }
-        .filter-row {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .filters-list {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-top: 8px;
-          padding-top: 8px;
-          border-top: 1px solid var(--divider-color);
-        }
-      </style>
       <div class="card-config">
         <div class="options">
             <ha-textfield

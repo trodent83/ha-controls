@@ -5,6 +5,9 @@ class ConstantTextFeatureEditor extends HAControlBase {
     return { ...super.properties, _config: {} };
   }
 
+  get translationPath() { return "/local/ha-controls/multi-state-card/translations"; }
+  get translationVersion() { return "1.0.0"; }
+
   setConfig(config) {
     this._config = config;
   }
@@ -24,23 +27,23 @@ class ConstantTextFeatureEditor extends HAControlBase {
     if (!this.hass || !this._config) return html``;
 
     const schema = [
-      { name: "text", label: "Text", selector: { text: {} } },
+      { name: "text", label: this._localize('text'), selector: { text: {} } },
       {
         name: "",
         type: "grid",
         schema: [
-          { name: "color", label: "Color (empty to inherit)", selector: { "text": {} } },
-          { name: "font_size", label: "Font Size (e.g. 12px)", selector: { text: {} } }
+          { name: "color", label: this._localize('color_inherit'), selector: { "text": {} } },
+          { name: "font_size", label: this._localize('font_size_placeholder'), selector: { text: {} } }
         ]
       },
       {
         name: "font_weight",
-        label: "Font Weight",
+        label: this._localize('font_weight'),
         selector: {
           select: {
             options: [
-              { value: "normal", label: "Normal" },
-              { value: "bold", label: "Bold" }
+              { value: "normal", label: this._localize('normal') },
+              { value: "bold", label: this._localize('bold') }
             ],
             mode: "dropdown"
           }

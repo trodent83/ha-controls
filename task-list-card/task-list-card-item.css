@@ -55,3 +55,8 @@
 .task-source ha-icon {
   --mdc-icon-size: 14px;
 }
+
+.task-item.readonly {
+  opacity: 0.5;
+  cursor: default;
+}

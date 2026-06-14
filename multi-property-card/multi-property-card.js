@@ -239,14 +239,17 @@ class MultiPropertyCard extends HAControlBase {
     }));
   }
 
-  setConfig(config) { 
-    this.config = 
-    { 
-      show_label: true, 
-      show_value: true, 
+  setConfig(config) {
+    if (!config.entities) {
+      throw new Error("Please define entities");
+    }
+    this.config = {
+      show_label: true,
+      show_value: true,
       show_icon: true,
-      show_unavailable: false, // Hier auf false setzen
-      ...config }; 
+      show_unavailable: false,
+      ...config
+    };
   }
 }
 

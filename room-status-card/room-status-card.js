@@ -105,7 +105,11 @@ class RoomStatusCard extends HAControlBase {
   }
 
   setConfig(config) {
-    this.config = config;
+    this.config = {
+      name: "Room",
+      icon: "mdi:home",
+      ...config
+    };
   }
 }
 
