@@ -18,7 +18,7 @@ class TaskListCardItem extends HAControlBase {
   }
 
   _toggle() {
-    if (this.readonly) return;
+    if (this.readonly || (this.config.block_future_toggles !== false && this.task.isFuture)) return;
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }
 
@@ -34,9 +34,12 @@ class TaskListCardItem extends HAControlBase {
     const separatorClass = this.hasSeparator ? 'task-item-separator' : '';
     const separatorStyle = (this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '') + (hidden ? 'display: none;' : '');
 
+    const isFutureBlocked = this.config.block_future_toggles !== false && t.isFuture;
+    const isDisabled = this.readonly || isFutureBlocked;
+
     return html`
       <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css?v=${VERSION}">
-      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${this.readonly ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
+      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
         ${this.config.show_source ? (() => {

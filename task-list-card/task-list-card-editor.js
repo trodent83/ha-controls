@@ -212,6 +212,13 @@ class TaskListCardEditor extends HAControlBase {
                   @change="${this._valueChanged}"
                 ></ha-switch>
               </ha-formfield>
+              <ha-formfield label="${this._localize('block_future_toggles')}">
+                <ha-switch
+                  .checked="${this._config.block_future_toggles !== false}"
+                  .configValue="${'block_future_toggles'}"
+                  @change="${this._valueChanged}"
+                ></ha-switch>
+              </ha-formfield>
             </div>
         </div>
 

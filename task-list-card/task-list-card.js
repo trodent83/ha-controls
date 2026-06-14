@@ -46,6 +46,7 @@ class TaskListCard extends HAControlBase {
       merged_tasks_separator_color: 'var(--divider-color)',
       separator_mode: 'day',
       icon: 'mdi:calendar-check',
+      block_future_toggles: true,
       ...config
     };
     this._groups = [];
@@ -327,6 +328,7 @@ class TaskListCard extends HAControlBase {
 
   async _toggleTask(task) {
     if (this._processing) return;
+    if (this.config.block_future_toggles !== false && task.isFuture) return;
     this._toggledItems.push({ uid: task.uid, entity_id: task.entity_id });
     const oldStatus = task.status;
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
