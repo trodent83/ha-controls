@@ -208,4 +208,5 @@ window.customCardFeatures.push({
   type: "custom:icon-card-feature",
   name: "Icon Display",
   configurable: true,
+  tags: ["multi-state-card", "multi-property-card"],
 });

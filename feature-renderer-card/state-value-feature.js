@@ -137,4 +137,5 @@ window.customCardFeatures.push({
   type: "custom:state-value-feature",
   name: "State Value Display",
   configurable: true,
+  tags: ["multi-state-card", "multi-property-card"],
 });

@@ -194,4 +194,5 @@ window.customCardFeatures.push({
   name: "Timer Display",
   supported: (domain) => domain === "timer",
   configurable: true,
+  tags: ["multi-state-card", "multi-property-card"],
 });

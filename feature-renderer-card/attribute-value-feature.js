@@ -138,4 +138,5 @@ window.customCardFeatures.push({
   type: "custom:attribute-value-feature",
   name: "Attribute Value Display",
   configurable: true,
+  tags: ["multi-state-card", "multi-property-card"],
 });

@@ -109,5 +109,5 @@ window.customCardFeatures.push({
   type: "custom:constant-text-feature",
   name: "Constant Text",
   configurable: true,
-  tags: ["multi-state-card"],
+  tags: ["multi-state-card", "multi-property-card"],
 });
