@@ -17,13 +17,26 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 class TaskListCardEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Tracks local config instance copy.
+   * Tracks local config instance copy and active tab selection state.
    * 
    * @static
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { ...super.properties, _config: {} };
+    return { 
+      ...super.properties, 
+      _config: {},
+      _activeTab: { type: String }
+    };
+  }
+
+  /**
+   * Initializes the TaskListCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   /**
@@ -278,6 +291,76 @@ class TaskListCardEditor extends HAControlBase {
   }
 
   /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only task list card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.title !== undefined) cleaned.title = this._config.title;
+    if (this._config.icon !== undefined) cleaned.icon = this._config.icon;
+    if (this._config.max_days !== undefined) cleaned.max_days = this._config.max_days;
+    if (this._config.show_no_due_date !== undefined) cleaned.show_no_due_date = this._config.show_no_due_date;
+    if (this._config.show_completed !== undefined) cleaned.show_completed = this._config.show_completed;
+    if (this._config.show_refresh_button !== undefined) cleaned.show_refresh_button = this._config.show_refresh_button;
+    if (this._config.show_delete_completed_button !== undefined) cleaned.show_delete_completed_button = this._config.show_delete_completed_button;
+    if (this._config.block_future_toggles !== undefined) cleaned.block_future_toggles = this._config.block_future_toggles;
+    if (this._config.show_due_date !== undefined) cleaned.show_due_date = this._config.show_due_date;
+    if (this._config.show_description !== undefined) cleaned.show_description = this._config.show_description;
+    if (this._config.show_due_in_days !== undefined) cleaned.show_due_in_days = this._config.show_due_in_days;
+    if (this._config.merge_tasks_same_day !== undefined) cleaned.merge_tasks_same_day = this._config.merge_tasks_same_day;
+    if (this._config.show_source !== undefined) cleaned.show_source = this._config.show_source;
+    if (this._config.separator_mode !== undefined) cleaned.separator_mode = this._config.separator_mode;
+    if (this._config.default_due_date_color !== undefined) cleaned.default_due_date_color = this._config.default_due_date_color;
+    if (this._config.date_separator_color !== undefined) cleaned.date_separator_color = this._config.date_separator_color;
+    if (this._config.day_separator_color !== undefined) cleaned.day_separator_color = this._config.day_separator_color;
+    if (this._config.due_in_days_separator_color !== undefined) cleaned.due_in_days_separator_color = this._config.due_in_days_separator_color;
+    if (this._config.merged_tasks_separator_color !== undefined) cleaned.merged_tasks_separator_color = this._config.merged_tasks_separator_color;
+    if (this._config.source_color !== undefined) cleaned.source_color = this._config.source_color;
+    
+    if (this._config.entities && Array.isArray(this._config.entities)) {
+      cleaned.entities = this._config.entities.map(ent => {
+        if (typeof ent === 'object') {
+          const e = { entity: ent.entity };
+          if (ent.filters !== undefined) e.filters = ent.filters;
+          return e;
+        }
+        return ent;
+      });
+    }
+    
+    if (this._config.due_date_colors && Array.isArray(this._config.due_date_colors)) {
+      cleaned.due_date_colors = this._config.due_date_colors.map(rule => {
+        const r = {};
+        if (rule.days !== undefined) r.days = rule.days;
+        if (rule.color !== undefined) r.color = rule.color;
+        if (rule.operator !== undefined) r.operator = rule.operator;
+        return r;
+      });
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:task-list-card",
+      entities: []
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
    * Renders the editor configuration page layout.
    * 
    * @protected
@@ -290,261 +373,314 @@ class TaskListCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('task-list-card-editor.css')}
-      <div class="card-config">
-        <div class="options">
-            <ha-textfield
-              label="${this._localize('title')}"
-              .value="${this._config.title || ''}"
-              .configValue="${'title'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-icon-picker
-              label="${this._localize('icon')}"
-              .value="${this._config.icon === undefined ? 'mdi:calendar-check' : this._config.icon}"
-              .configValue="${'icon'}"
-              @value-changed="${(e) => this._iconChanged(e)}"
-            ></ha-icon-picker>
-            <ha-textfield
-              label="${this._localize('max_days')}"
-              type="number"
-              .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
-              .configValue="${'max_days'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <div class="switches-grid">
-              <ha-formfield label="${this._localize('show_no_due_date')}">
-                <ha-switch
-                  .checked="${this._config.show_no_due_date !== false}"
-                  .configValue="${'show_no_due_date'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_completed')}">
-                <ha-switch
-                  .checked="${this._config.show_completed !== false}"
-                  .configValue="${'show_completed'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_refresh_button')}">
-                <ha-switch
-                  .checked="${this._config.show_refresh_button === true}"
-                  .configValue="${'show_refresh_button'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_delete_completed_button')}">
-                <ha-switch
-                  .checked="${this._config.show_delete_completed_button === true}"
-                  .configValue="${'show_delete_completed_button'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('block_future_toggles')}">
-                <ha-switch
-                  .checked="${this._config.block_future_toggles !== false}"
-                  .configValue="${'block_future_toggles'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-            </div>
+      
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
         </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'entities' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'entities'; }}
+        >
+          ${this._localize('entities') || 'Entities'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'rules' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'rules'; }}
+        >
+          ${this._localize('rules') || 'Rules'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'appearance' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'appearance'; }}
+        >
+          ${this._localize('appearance') || 'Appearance'}
+        </div>
+      </div>
 
-        <ha-expansion-panel header="${this._localize('entities')}" outlined expanded class="panel">
-          <div class="entities-list">
-            ${entities.map((entityConf, index) => {
-              const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
-              let filters = [];
-              if (typeof entityConf === 'object') {
-                if (entityConf.filters) {
-                  filters = entityConf.filters;
-                } else if (entityConf.filter) {
-                  filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
-                }
-              }
-
-              return html`
-              <div class="entity-row-container">
-                <div class="entity-row">
-                  <ha-entity-picker
-                    .hass="${this.hass}"
-                    .value="${entityId}"
-                    .includeDomains="${['todo']}"
-                    @value-changed="${(e) => this._entityChanged(e, index)}"
-                  ></ha-entity-picker>
-                  <ha-icon-button
-                    @click="${() => this._removeEntity(index)}"
-                  ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
-                </div>
-                <div class="filters-list">
-                  ${filters.map((filter, filterIndex) => html`
-                    <div class="filter-row">
-                      <ha-textfield
-                        label="${this._localize('filter_regex')}"
-                        .value="${filter.pattern || ''}"
-                        @input="${(e) => this._filterChanged(e, index, filterIndex, 'pattern')}"
-                      ></ha-textfield>
-                      <ha-formfield label="${this._localize('case_sensitive')}">
-                        <ha-switch
-                          .checked="${filter.case_sensitive !== false}"
-                          @change="${(e) => this._filterChanged(e, index, filterIndex, 'case_sensitive')}"
-                        ></ha-switch>
-                      </ha-formfield>
-                      <ha-icon-button
-                        @click="${() => this._removeFilter(index, filterIndex)}"
-                      ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
-                    </div>
-                  `)}
-                  <ha-button @click="${() => this._addFilter(index)}">${this._localize('add_filter')}</ha-button>
-                </div>
+      ${this._activeTab === 'general' ? html`
+        <div class="card-config" style="margin-top: 0;">
+          <div class="options">
+              <ha-textfield
+                label="${this._localize('title')}"
+                .value="${this._config.title || ''}"
+                .configValue="${'title'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
+              <ha-icon-picker
+                label="${this._localize('icon')}"
+                .value="${this._config.icon === undefined ? 'mdi:calendar-check' : this._config.icon}"
+                .configValue="${'icon'}"
+                @value-changed="${(e) => this._iconChanged(e)}"
+              ></ha-icon-picker>
+              <ha-textfield
+                label="${this._localize('max_days')}"
+                type="number"
+                .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
+                .configValue="${'max_days'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
+              <div class="switches-grid">
+                <ha-formfield label="${this._localize('show_no_due_date')}">
+                  <ha-switch
+                    .checked="${this._config.show_no_due_date !== false}"
+                    .configValue="${'show_no_due_date'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_completed')}">
+                  <ha-switch
+                    .checked="${this._config.show_completed !== false}"
+                    .configValue="${'show_completed'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_refresh_button')}">
+                  <ha-switch
+                    .checked="${this._config.show_refresh_button === true}"
+                    .configValue="${'show_refresh_button'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_delete_completed_button')}">
+                  <ha-switch
+                    .checked="${this._config.show_delete_completed_button === true}"
+                    .configValue="${'show_delete_completed_button'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('block_future_toggles')}">
+                  <ha-switch
+                    .checked="${this._config.block_future_toggles !== false}"
+                    .configValue="${'block_future_toggles'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
               </div>
-            `})}
+          </div>
+        </div>
+      ` : ''}
+
+      ${this._activeTab === 'entities' ? html`
+        <div class="card-config" style="margin-top: 0;">
+          <ha-expansion-panel header="${this._localize('entities')}" outlined expanded class="panel">
+            <div class="entities-list">
+              ${entities.map((entityConf, index) => {
+                const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
+                let filters = [];
+                if (typeof entityConf === 'object') {
+                  if (entityConf.filters) {
+                    filters = entityConf.filters;
+                  } else if (entityConf.filter) {
+                    filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+                  }
+                }
+
+                return html`
+                <div class="entity-row-container">
+                  <div class="entity-row">
+                    <ha-entity-picker
+                      .hass="${this.hass}"
+                      .value="${entityId}"
+                      .includeDomains="${['todo']}"
+                      @value-changed="${(e) => this._entityChanged(e, index)}"
+                    ></ha-entity-picker>
+                    <ha-icon-button
+                      @click="${() => this._removeEntity(index)}"
+                    ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                  </div>
+                  <div class="filters-list">
+                    ${filters.map((filter, filterIndex) => html`
+                      <div class="filter-row">
+                        <ha-textfield
+                          label="${this._localize('filter_regex')}"
+                          .value="${filter.pattern || ''}"
+                          @input="${(e) => this._filterChanged(e, index, filterIndex, 'pattern')}"
+                        ></ha-textfield>
+                        <ha-formfield label="${this._localize('case_sensitive')}">
+                          <ha-switch
+                            .checked="${filter.case_sensitive !== false}"
+                            @change="${(e) => this._filterChanged(e, index, filterIndex, 'case_sensitive')}"
+                          ></ha-switch>
+                        </ha-formfield>
+                        <ha-icon-button
+                          @click="${() => this._removeFilter(index, filterIndex)}"
+                        ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
+                      </div>
+                    `)}
+                    <ha-button @click="${() => this._addFilter(index)}">${this._localize('add_filter')}</ha-button>
+                  </div>
+                </div>
+              `})}
+              <div class="add-button">
+                <ha-button raised @click="${this._addEntity}">
+                  <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                  ${this._localize('add_entity')}
+                </ha-button>
+              </div>
+            </div>
+          </ha-expansion-panel>
+        </div>
+      ` : ''}
+
+      ${this._activeTab === 'rules' ? html`
+        <div class="card-config" style="margin-top: 0;">
+          <ha-expansion-panel header="${this._localize('due_date_colors')}" outlined expanded class="panel">
+            <div class="due-date-colors">
+            ${due_date_colors.map((rule, index) => html`
+              <div class="due-date-color-row">
+                <ha-select
+                  label="${this._localize('operator')}"
+                  class="operator"
+                  .value="${rule.operator || '<='}"
+                  @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
+                  @closed="${(e) => e.stopPropagation()}"
+                  fixedMenuPosition
+                  naturalMenuWidth
+                >
+                  <mwc-list-item value="=">=</mwc-list-item>
+                  <mwc-list-item value="<>">&lt;&gt;</mwc-list-item>
+                  <mwc-list-item value="<">&lt;</mwc-list-item>
+                  <mwc-list-item value="<=">&lt;=</mwc-list-item>
+                  <mwc-list-item value=">">&gt;</mwc-list-item>
+                  <mwc-list-item value=">=">&gt;=</mwc-list-item>
+                </ha-select>
+                <ha-textfield
+                  label="${this._localize('days')}"
+                  type="number"
+                  class="days"
+                  .value="${rule.days}"
+                  @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
+                ></ha-textfield>
+                <ha-textfield
+                  label="${this._localize('color')}"
+                  class="color"
+                  .value="${rule.color}"
+                  @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
+                ></ha-textfield>
+                <ha-icon-button
+                  @click="${() => this._removeDueDateColor(index)}"
+                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+              </div>
+            `)}
             <div class="add-button">
-              <ha-button raised @click="${this._addEntity}">
+              <ha-button raised @click="${this._addDueDateColor}">
                 <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-                ${this._localize('add_entity')}
+                ${this._localize('add_rule')}
               </ha-button>
             </div>
           </div>
-        </ha-expansion-panel>
+          </ha-expansion-panel>
+        </div>
+      ` : ''}
 
-        <ha-expansion-panel header="${this._localize('due_date_colors')}" outlined class="panel">
-          <div class="due-date-colors">
-          ${due_date_colors.map((rule, index) => html`
-            <div class="due-date-color-row">
+      ${this._activeTab === 'appearance' ? html`
+        <div class="card-config" style="margin-top: 0;">
+          <ha-expansion-panel header="${this._localize('appearance')}" outlined expanded class="panel">
+            <div class="options">
+              <div class="switches-grid">
+                <ha-formfield label="${this._localize('show_due_date')}">
+                  <ha-switch
+                    .checked="${this._config.show_due_date !== false}"
+                    .configValue="${'show_due_date'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_description')}">
+                  <ha-switch
+                    .checked="${this._config.show_description === true}"
+                    .configValue="${'show_description'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_due_in_days')}">
+                  <ha-switch
+                    .checked="${this._config.show_due_in_days === true}"
+                    .configValue="${'show_due_in_days'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('merge_tasks_same_day')}">
+                  <ha-switch
+                    .checked="${this._config.merge_tasks_same_day === true}"
+                    .configValue="${'merge_tasks_same_day'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_source')}">
+                  <ha-switch
+                    .checked="${this._config.show_source === true}"
+                    .configValue="${'show_source'}"
+                    @change="${this._valueChanged}"
+                  ></ha-switch>
+                </ha-formfield>
+              </div>
               <ha-select
-                label="${this._localize('operator')}"
-                class="operator"
-                .value="${rule.operator || '<='}"
-                @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
+                label="${this._localize('separator_mode')}"
+                .value="${this._config.separator_mode || 'day'}"
+                .configValue="${'separator_mode'}"
+                @selected="${this._valueChanged}"
                 @closed="${(e) => e.stopPropagation()}"
                 fixedMenuPosition
                 naturalMenuWidth
               >
-                <mwc-list-item value="=">=</mwc-list-item>
-                <mwc-list-item value="<>">&lt;&gt;</mwc-list-item>
-                <mwc-list-item value="<">&lt;</mwc-list-item>
-                <mwc-list-item value="<=">&lt;=</mwc-list-item>
-                <mwc-list-item value=">">&gt;</mwc-list-item>
-                <mwc-list-item value=">=">&gt;=</mwc-list-item>
+                <mwc-list-item value="day">${this._localize('day')}</mwc-list-item>
+                <mwc-list-item value="week">${this._localize('week')}</mwc-list-item>
+                <mwc-list-item value="month">${this._localize('month')}</mwc-list-item>
               </ha-select>
               <ha-textfield
-                label="${this._localize('days')}"
-                type="number"
-                class="days"
-                .value="${rule.days}"
-                @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
+                label="${this._localize('default_color')}"
+                .value="${this._config.default_due_date_color || ''}"
+                .configValue="${'default_due_date_color'}"
+                @input="${this._valueChanged}"
               ></ha-textfield>
               <ha-textfield
-                label="${this._localize('color')}"
-                class="color"
-                .value="${rule.color}"
-                @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
+                label="${this._localize('date_separator_color')}"
+                .value="${this._config.date_separator_color || ''}"
+                .configValue="${'date_separator_color'}"
+                @input="${this._valueChanged}"
               ></ha-textfield>
-              <ha-icon-button
-                @click="${() => this._removeDueDateColor(index)}"
-              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+              <ha-textfield
+                label="${this._localize('separator_color')}"
+                .value="${this._config.day_separator_color || ''}"
+                .configValue="${'day_separator_color'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
+              <ha-textfield
+                label="${this._localize('due_in_days_separator_color')}"
+                .value="${this._config.due_in_days_separator_color || ''}"
+                .configValue="${'due_in_days_separator_color'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
+              <ha-textfield
+                label="${this._localize('merged_tasks_separator_color')}"
+                .value="${this._config.merged_tasks_separator_color || ''}"
+                .configValue="${'merged_tasks_separator_color'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
+              <ha-textfield
+                label="${this._localize('source_color')}"
+                .value="${this._config.source_color || ''}"
+                .configValue="${'source_color'}"
+                @input="${this._valueChanged}"
+              ></ha-textfield>
             </div>
-          `)}
-          <div class="add-button">
-            <ha-button raised @click="${this._addDueDateColor}">
-              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-              ${this._localize('add_rule')}
-            </ha-button>
-          </div>
+          </ha-expansion-panel>
         </div>
-        </ha-expansion-panel>
+      ` : ''}
 
-        <ha-expansion-panel header="${this._localize('appearance')}" outlined class="panel">
-          <div class="options">
-            <div class="switches-grid">
-              <ha-formfield label="${this._localize('show_due_date')}">
-                <ha-switch
-                  .checked="${this._config.show_due_date !== false}"
-                  .configValue="${'show_due_date'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_description')}">
-                <ha-switch
-                  .checked="${this._config.show_description === true}"
-                  .configValue="${'show_description'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_due_in_days')}">
-                <ha-switch
-                  .checked="${this._config.show_due_in_days === true}"
-                  .configValue="${'show_due_in_days'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('merge_tasks_same_day')}">
-                <ha-switch
-                  .checked="${this._config.merge_tasks_same_day === true}"
-                  .configValue="${'merge_tasks_same_day'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-              <ha-formfield label="${this._localize('show_source')}">
-                <ha-switch
-                  .checked="${this._config.show_source === true}"
-                  .configValue="${'show_source'}"
-                  @change="${this._valueChanged}"
-                ></ha-switch>
-              </ha-formfield>
-            </div>
-            <ha-select
-              label="${this._localize('separator_mode')}"
-              .value="${this._config.separator_mode || 'day'}"
-              .configValue="${'separator_mode'}"
-              @selected="${this._valueChanged}"
-              @closed="${(e) => e.stopPropagation()}"
-              fixedMenuPosition
-              naturalMenuWidth
-            >
-              <mwc-list-item value="day">${this._localize('day')}</mwc-list-item>
-              <mwc-list-item value="week">${this._localize('week')}</mwc-list-item>
-              <mwc-list-item value="month">${this._localize('month')}</mwc-list-item>
-            </ha-select>
-            <ha-textfield
-              label="${this._localize('default_color')}"
-              .value="${this._config.default_due_date_color || ''}"
-              .configValue="${'default_due_date_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-textfield
-              label="${this._localize('date_separator_color')}"
-              .value="${this._config.date_separator_color || ''}"
-              .configValue="${'date_separator_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-textfield
-              label="${this._localize('separator_color')}"
-              .value="${this._config.day_separator_color || ''}"
-              .configValue="${'day_separator_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-textfield
-              label="${this._localize('due_in_days_separator_color')}"
-              .value="${this._config.due_in_days_separator_color || ''}"
-              .configValue="${'due_in_days_separator_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-textfield
-              label="${this._localize('merged_tasks_separator_color')}"
-              .value="${this._config.merged_tasks_separator_color || ''}"
-              .configValue="${'merged_tasks_separator_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-            <ha-textfield
-              label="${this._localize('source_color')}"
-              .value="${this._config.source_color || ''}"
-              .configValue="${'source_color'}"
-              @input="${this._valueChanged}"
-            ></ha-textfield>
-          </div>
-        </ha-expansion-panel>
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
       </div>
     `;
   }

@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.7";
+const VERSION = "1.0.8";
 
 // Name of this loader module script
 const SCRIPT_NAME = "vacuum-select-card-loader.js";
@@ -16,6 +16,6 @@ const loader = new HAControlLoader(SCRIPT_NAME, VERSION);
 
 // Dynamically load stylesheets and scripts needed by the control
 loader.loadModules(
-  ["vacuum-select-card.css"],
+  ["vacuum-select-card.css", "vacuum-select-card-editor.css"],
   ["vacuum-select-card.js", "vacuum-select-card-editor.js"]
 );

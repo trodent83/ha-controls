@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.27";
+const VERSION = "1.0.28";
 
 // Name of this loader module script
 const SCRIPT_NAME = "room-status-card-loader.js";

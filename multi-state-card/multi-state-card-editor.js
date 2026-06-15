@@ -15,13 +15,26 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.16';
 class MultiStateCardEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Tracks local config instance copy.
+   * Tracks local config instance copy and active tab selection state.
    * 
    * @static
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { ...super.properties, _config: {} };
+    return { 
+      ...super.properties, 
+      _config: {},
+      _activeTab: { type: String }
+    };
+  }
+
+  /**
+   * Initializes the MultiStateCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   /**
@@ -226,6 +239,47 @@ class MultiStateCardEditor extends HAControlBase {
   }
 
   /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only multi state card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
+    
+    if (this._config.entities && Array.isArray(this._config.entities)) {
+      cleaned.entities = this._config.entities.map(ent => {
+        const e = {};
+        if (ent.entity !== undefined) e.entity = ent.entity;
+        if (ent.tap_action !== undefined) e.tap_action = ent.tap_action;
+        if (ent.hold_action !== undefined) e.hold_action = ent.hold_action;
+        if (ent.features !== undefined) e.features = ent.features;
+        return e;
+      });
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:multi-state-card",
+      entities: []
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
    * Renders the editor configuration page layout.
    * 
    * @protected
@@ -236,124 +290,153 @@ class MultiStateCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('multi-state-card-editor.css')}
-      <ha-card .header=${this._localize('global_settings')}>
-        <div class="card-content">
-          <ha-form
-            .hass=${this.hass}
-            .data=${this._config}
-            .schema=${this._globalSchema()}
-            .computeLabel=${(schema) => schema.label || schema.name}
-            @value-changed=${this._globalValueChanged}
-          ></ha-form>
+      
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
         </div>
-      </ha-card>
+        <div 
+          class="ha-tab ${this._activeTab === 'entities' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'entities'; }}
+        >
+          ${this._localize('entities') || 'Entities'}
+        </div>
+      </div>
 
-      <div class="card-config">
-        <div class="entities-container">
-          ${(this._config.entities || []).map((ent, idx) => {
-            const entityLabel = ent.name || ent.entity || `Item ${idx + 1}`;
+      ${this._activeTab === 'general' ? html`
+        <ha-card .header=${this._localize('global_settings')}>
+          <div class="card-content">
+            <ha-form
+              .hass=${this.hass}
+              .data=${this._config}
+              .schema=${this._globalSchema()}
+              .computeLabel=${(schema) => schema.label || schema.name}
+              @value-changed=${this._globalValueChanged}
+            ></ha-form>
+          </div>
+        </ha-card>
+      ` : html`
+        <div class="card-config" style="margin-top: 0;">
+          <div class="entities-container">
+            ${(this._config.entities || []).map((ent, idx) => {
+              const entityLabel = ent.name || ent.entity || `Item ${idx + 1}`;
 
-            const combinedData = {
-              entity: ent.entity || "",
-              tap_action: ent.tap_action || { action: "none" },
-              hold_action: ent.hold_action || { action: "none" }
-            };
+              const combinedData = {
+                entity: ent.entity || "",
+                tap_action: ent.tap_action || { action: "none" },
+                hold_action: ent.hold_action || { action: "none" }
+              };
 
-            const combinedSchema = [
-              { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
-              { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
-              { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
-            ];
+              const combinedSchema = [
+                { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
+                { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
+                { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
+              ];
 
-            return html`
-              <ha-expansion-panel>
-                  <div slot="header" class="panel-header">
-                    <div class="panel-title">${entityLabel}</div>
-                    <div class="header-actions">
-                      <ha-icon-button
-                        @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, -1); }}
-                        .disabled=${idx === 0}
-                      ><ha-icon icon="mdi:arrow-up"></ha-icon></ha-icon-button>
-                      <ha-icon-button
-                        @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, 1); }}
-                        .disabled=${idx === (this._config.entities || []).length - 1}
-                      ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
-                      <ha-icon-button
-                        class="delete-button"
-                        @click=${(e) => { e.stopPropagation(); this._removeEntity(idx); }}
-                      ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+              return html`
+                <ha-expansion-panel>
+                    <div slot="header" class="panel-header">
+                      <div class="panel-title">${entityLabel}</div>
+                      <div class="header-actions">
+                        <ha-icon-button
+                          @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, -1); }}
+                          .disabled=${idx === 0}
+                        ><ha-icon icon="mdi:arrow-up"></ha-icon></ha-icon-button>
+                        <ha-icon-button
+                          @click=${(e) => { e.stopPropagation(); this._moveEntity(idx, 1); }}
+                          .disabled=${idx === (this._config.entities || []).length - 1}
+                        ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
+                        <ha-icon-button
+                          class="delete-button"
+                          @click=${(e) => { e.stopPropagation(); this._removeEntity(idx); }}
+                        ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div class="panel-content">
-                    <ha-form
-                      .hass=${this.hass}
-                      .data=${combinedData}
-                      .schema=${combinedSchema}
-                      .computeLabel=${(schema) => schema.label || schema.name}
-                      @value-changed=${(e) => {
-                        const ents = [...this._config.entities];
-                        const newValue = { ...e.detail.value };
-                        
-                        for (const key in newValue) {
-                          if (newValue[key] === "") {
-                            delete newValue[key];
-                            delete ents[idx][key];
+                    <div class="panel-content">
+                      <ha-form
+                        .hass=${this.hass}
+                        .data=${combinedData}
+                        .schema=${combinedSchema}
+                        .computeLabel=${(schema) => schema.label || schema.name}
+                        @value-changed=${(e) => {
+                          const ents = [...this._config.entities];
+                          const newValue = { ...e.detail.value };
+                          
+                          for (const key in newValue) {
+                            if (newValue[key] === "") {
+                              delete newValue[key];
+                              delete ents[idx][key];
+                            }
                           }
-                        }
 
-                        ents[idx] = { ...ents[idx], ...newValue };
-                        this._config = { ...this._config, entities: ents };
-                        this._fireConfigChanged();
-                      }}
-                    ></ha-form>
+                          ents[idx] = { ...ents[idx], ...newValue };
+                          this._config = { ...this._config, entities: ents };
+                          this._fireConfigChanged();
+                        }}
+                      ></ha-form>
 
-                    <div class="features-section">
-                      <div class="features-header">${this._localize('features')}</div>
-                      <div class="features-list">
-                        ${(ent.features || []).map((feature, fIdx) => html`
-                          <div class="feature-item">
-                            <div class="feature-item-header">
-                              <span>${this._getFeatureName(feature.type)}</span>
-                              <ha-icon-button
-                                @click=${() => this._removeFeature(idx, fIdx)}
-                              ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                      <div class="features-section">
+                        <div class="features-header">${this._localize('features')}</div>
+                        <div class="features-list">
+                          ${(ent.features || []).map((feature, fIdx) => html`
+                            <div class="feature-item">
+                              <div class="feature-item-header">
+                                <span>${this._getFeatureName(feature.type)}</span>
+                                <ha-icon-button
+                                  @click=${() => this._removeFeature(idx, fIdx)}
+                                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                              </div>
+                              <feature-renderer-editor-card
+                                .hass=${this.hass}
+                                .config=${feature}
+                                @config-changed=${(e) => {
+                                  e.stopPropagation();
+                                  this._updateFeature(idx, fIdx, e.detail.config);
+                                }}
+                              ></feature-renderer-editor-card>
                             </div>
-                            <feature-renderer-editor-card
-                              .hass=${this.hass}
-                              .config=${feature}
-                              @config-changed=${(e) => {
-                                e.stopPropagation();
-                                this._updateFeature(idx, fIdx, e.detail.config);
-                              }}
-                            ></feature-renderer-editor-card>
-                          </div>
-                        `)}
-                      </div>
-                      <div class="feature-add">
-                        <feature-selector-card
-                          .hass=${this.hass}
-                          .label=${this._localize('add_feature')}
-                          .tags=${this.featureTags}
-                          @feature-selected=${(e) => this._addFeature(idx, e)}
-                        ></feature-selector-card>
+                          `)}
+                        </div>
+                        <div class="feature-add">
+                          <feature-selector-card
+                            .hass=${this.hass}
+                            .label=${this._localize('add_feature')}
+                            .tags=${this.featureTags}
+                            @feature-selected=${(e) => this._addFeature(idx, e)}
+                          ></feature-selector-card>
+                        </div>
                       </div>
                     </div>
-                  </div>
-              </ha-expansion-panel>
-              ${idx < (this._config.entities || []).length - 1
-                ? html`<div class="entity-separator"></div>`
-                : ''}
-            `;
-          })}
-        </div>
+                </ha-expansion-panel>
+                ${idx < (this._config.entities || []).length - 1
+                  ? html`<div class="entity-separator"></div>`
+                  : ''}
+              `;
+            })}
+          </div>
 
-        <div class="add-button-container">
-          <ha-button raised @click=${this._addEntity}>
-            <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
-            ${this._localize('add_entity')}
-          </ha-button>
+          <div class="add-button-container">
+            <ha-button raised @click=${this._addEntity}>
+              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+              ${this._localize('add_entity')}
+            </ha-button>
+          </div>
         </div>
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
       </div>
     `;
   }

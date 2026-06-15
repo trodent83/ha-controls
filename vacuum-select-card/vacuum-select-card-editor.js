@@ -16,13 +16,26 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
 class VacuumSelectCardEditor extends HAControlBase {
   /**
    * Defines the reactive properties tracked by LitElement.
-   * Inherits properties from HAControlBase and tracks the editor config copy.
+   * Inherits properties from HAControlBase, tracks the editor config copy and active tab selection state.
    * 
    * @static
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { ...super.properties, _config: { type: Object } };
+    return { 
+      ...super.properties, 
+      _config: { type: Object },
+      _activeTab: { type: String }
+    };
+  }
+
+  /**
+   * Initializes the VacuumSelectCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   /**
@@ -55,19 +68,13 @@ class VacuumSelectCardEditor extends HAControlBase {
   }
 
   /**
-   * Dynamically constructs the visual form schema based on the configured vacuum entity
-   * and its rooms/maps attributes provided by the active Home Assistant state connection.
+   * Dynamically constructs the visual form schema for general settings.
    * 
    * @private
    * @returns {Array<Object>} Array of form fields definition objects for ha-form
    */
-  _schema() {
-    const vacuumId = this._config?.vacuum_entity;
-    const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
-    const currentMap = vacuum?.attributes?.selected_map;
-    const roomsData = vacuum?.attributes?.rooms?.[currentMap] || [];
-
-    const baseSchema = [
+  _baseSchema() {
+    return [
       { name: "vacuum_entity", label: this._localize('vacuum_entity'), selector: { entity: { domain: "vacuum" } } },
       { name: "output_entity", label: this._localize('selection_helper'), selector: { entity: {} } },
       { name: "currently_cleaning_entity", label: this._localize('currently_cleaning'), selector: { entity: {} } },
@@ -117,44 +124,111 @@ class VacuumSelectCardEditor extends HAControlBase {
         ] 
       }
     ];
+  }
 
-    if (roomsData.length === 0) return baseSchema;
+  /**
+   * Dynamically constructs the visual form schema for rooms settings.
+   * 
+   * @private
+   * @returns {Array<Object>} Array of form fields definition objects for ha-form
+   */
+  _roomsSchema() {
+    const vacuumId = this._config?.vacuum_entity;
+    const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
+    const currentMap = vacuum?.attributes?.selected_map;
+    const roomsData = vacuum?.attributes?.rooms?.[currentMap] || [];
 
-    const roomSchema = {
-      name: "rooms",
-      type: "grid",
-      schema: roomsData.map(room => ({
-        name: room.id.toString(),
-        label: this._localize('room', { name: room.name }),
-        type: "expandable",
-        schema: [
-          { name: "label", label: this._localize('custom_name'), selector: { text: {} } },
-          { name: "icon", label: this._localize('custom_icon'), selector: { icon: {} } },
-          { 
-            name: "animation", 
-            label: this._localize('animation_class'), 
-            selector: { 
-              select: { 
-                options: [
-                    { value: "none", label: this._localize('none_static') },
-                    { value: "spinning", label: this._localize('spinning') },
-                    { value: "pulsing", label: this._localize('pulsing') },
-                    { value: "flash", label: this._localize('flashing') },
-                    { value: "bounce", label: this._localize('bouncing') },
-                    { value: "shake", label: this._localize('shaking') },
-                    { value: "float", label: this._localize('floating') },
-                    { value: "spin-slow", label: this._localize('slow_spin') }
-                  ],
-                mode: "list"
+    if (roomsData.length === 0) return [];
+
+    return [
+      {
+        name: "rooms",
+        type: "grid",
+        schema: roomsData.map(room => ({
+          name: room.id.toString(),
+          label: this._localize('room', { name: room.name }),
+          type: "expandable",
+          schema: [
+            { name: "label", label: this._localize('custom_name'), selector: { text: {} } },
+            { name: "icon", label: this._localize('custom_icon'), selector: { icon: {} } },
+            { 
+              name: "animation", 
+              label: this._localize('animation_class'), 
+              selector: { 
+                select: { 
+                  options: [
+                      { value: "none", label: this._localize('none_static') },
+                      { value: "spinning", label: this._localize('spinning') },
+                      { value: "pulsing", label: this._localize('pulsing') },
+                      { value: "flash", label: this._localize('flashing') },
+                      { value: "bounce", label: this._localize('bouncing') },
+                      { value: "shake", label: this._localize('shaking') },
+                      { value: "float", label: this._localize('floating') },
+                      { value: "spin-slow", label: this._localize('slow_spin') }
+                    ],
+                  mode: "list"
+                } 
               } 
-            } 
-          },
-          { name: "disabled", label: this._localize('disable_room'), selector: { boolean: {} } }
-        ]
-      }))
-    };
+            },
+            { name: "disabled", label: this._localize('disable_room'), selector: { boolean: {} } }
+          ]
+        }))
+      }
+    ];
+  }
 
-    return [...baseSchema, roomSchema];
+  /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only vacuum select card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.vacuum_entity !== undefined) cleaned.vacuum_entity = this._config.vacuum_entity;
+    if (this._config.output_entity !== undefined) cleaned.output_entity = this._config.output_entity;
+    if (this._config.currently_cleaning_entity !== undefined) cleaned.currently_cleaning_entity = this._config.currently_cleaning_entity;
+    if (this._config.readonly_entity !== undefined) cleaned.readonly_entity = this._config.readonly_entity;
+    if (this._config.mark_active_room !== undefined) cleaned.mark_active_room = this._config.mark_active_room;
+    if (this._config.mark_animation !== undefined) cleaned.mark_animation = this._config.mark_animation;
+    if (this._config.mark_animation_background !== undefined) cleaned.mark_animation_background = this._config.mark_animation_background;
+    if (this._config.mark_animation_foreground !== undefined) cleaned.mark_animation_foreground = this._config.mark_animation_foreground;
+    if (this._config.columns !== undefined) cleaned.columns = this._config.columns;
+    if (this._config.show_toggle !== undefined) cleaned.show_toggle = this._config.show_toggle;
+    if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
+    if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;
+    
+    if (this._config.rooms && typeof this._config.rooms === 'object') {
+      cleaned.rooms = {};
+      for (const [roomId, roomConf] of Object.entries(this._config.rooms)) {
+        const r = {};
+        if (roomConf.label !== undefined) r.label = roomConf.label;
+        if (roomConf.icon !== undefined) r.icon = roomConf.icon;
+        if (roomConf.animation !== undefined) r.animation = roomConf.animation;
+        if (roomConf.disabled !== undefined) r.disabled = roomConf.disabled;
+        cleaned.rooms[roomId] = r;
+      }
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:vacuum-select-card",
+      vacuum_entity: "",
+      rooms: {}
+    };
+    this._fireConfigChanged();
   }
 
   /**
@@ -166,14 +240,63 @@ class VacuumSelectCardEditor extends HAControlBase {
    */
   render() {
     if (!this.hass || !this._config) return html``;
+    const vacuumId = this._config?.vacuum_entity;
+    const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
+    const currentMap = vacuum?.attributes?.selected_map;
+    const roomsData = vacuum?.attributes?.rooms?.[currentMap] || [];
+
     return html`
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema()}
-        .computeLabel=${(s) => s.label || s.name}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
+      ${this.renderStyle('vacuum-select-card-editor.css')}
+      
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'rooms' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'rooms'; }}
+        >
+          ${this._localize('rooms') || 'Rooms'}
+        </div>
+      </div>
+
+      ${this._activeTab === 'general' ? html`
+        <ha-form
+          .hass=${this.hass}
+          .data=${this._config}
+          .schema=${this._baseSchema()}
+          .computeLabel=${(s) => s.label || s.name}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      ` : html`
+        ${roomsData.length === 0 ? html`
+          <div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">
+            ${this._localize('no_rooms_found') || 'No rooms found for the selected vacuum entity.'}
+          </div>
+        ` : html`
+          <ha-form
+            .hass=${this.hass}
+            .data=${this._config}
+            .schema=${this._roomsSchema()}
+            .computeLabel=${(s) => s.label || s.name}
+            @value-changed=${this._valueChanged}
+          ></ha-form>
+        `}
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
+      </div>
     `;
   }
 

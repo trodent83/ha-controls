@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.10";
+const VERSION = "1.0.11";
 
 // Name of this loader module script
 const SCRIPT_NAME = "task-list-card-loader.js";

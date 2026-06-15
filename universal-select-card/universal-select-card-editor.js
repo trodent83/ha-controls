@@ -16,13 +16,26 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.4';
 class UniversalSelectCardEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Inherits properties from HAControlBase and tracks the editor config copy.
+   * Inherits properties from HAControlBase, tracks the editor config copy and active tab selection state.
    * 
    * @static
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { ...super.properties, _config: { type: Object } };
+    return { 
+      ...super.properties, 
+      _config: { type: Object },
+      _activeTab: { type: String }
+    };
+  }
+
+  /**
+   * Initializes the UniversalSelectCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   /**
@@ -94,6 +107,55 @@ class UniversalSelectCardEditor extends HAControlBase {
   }
 
   /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only universal select card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.entity !== undefined) cleaned.entity = this._config.entity;
+    if (this._config.lock_entity !== undefined) cleaned.lock_entity = this._config.lock_entity;
+    if (this._config.show_label !== undefined) cleaned.show_label = this._config.show_label;
+    if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
+    if (this._config.options_order !== undefined) cleaned.options_order = this._config.options_order;
+    
+    if (this._config.options_config && typeof this._config.options_config === 'object') {
+      cleaned.options_config = {};
+      for (const [optName, optConf] of Object.entries(this._config.options_config)) {
+        const o = {};
+        if (optConf.label !== undefined) o.label = optConf.label;
+        if (optConf.icon !== undefined) o.icon = optConf.icon;
+        if (optConf.color !== undefined) o.color = optConf.color;
+        if (optConf.animation !== undefined) o.animation = optConf.animation;
+        if (optConf.hide_label_if_active !== undefined) o.hide_label_if_active = optConf.hide_label_if_active;
+        if (optConf.hold_action !== undefined) o.hold_action = optConf.hold_action;
+        if (optConf.features !== undefined) o.features = optConf.features;
+        cleaned.options_config[optName] = o;
+      }
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:universal-select-card",
+      entity: ""
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
    * Renders the editor configuration page layout.
    * Generates forms for base variables and iterates over select options to generate panels.
    * 
@@ -123,16 +185,49 @@ class UniversalSelectCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('universal-select-card-editor.css')}
-      <ha-form
-        .hass=${this.hass}
-        .data=${data}
-        .schema=${this._baseSchema()}
-        .computeLabel=${(s) => s.label || s.name}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
       
-      <div class="options-list">
-        ${options.map((option, idx) => this._renderOption(option, idx, options.length))}
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'options' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'options'; }}
+        >
+          ${this._localize('options') || 'Options'}
+        </div>
+      </div>
+
+      ${this._activeTab === 'general' ? html`
+        <ha-form
+          .hass=${this.hass}
+          .data=${data}
+          .schema=${this._baseSchema()}
+          .computeLabel=${(s) => s.label || s.name}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      ` : html`
+        <div class="options-list" style="margin-top: 0;">
+          ${options.length === 0 ? html`
+            <div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">
+              ${this._localize('no_options_found') || 'No options found for the selected entity.'}
+            </div>
+          ` : options.map((option, idx) => this._renderOption(option, idx, options.length))}
+        </div>
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
       </div>
     `;
   }

@@ -16,7 +16,7 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
 class RoomStatusCardEditor extends HAControlBase {
   /**
    * Defines reactive properties tracked by LitElement.
-   * Tracks editor config copy.
+   * Tracks editor config copy and tab selection state.
    * 
    * @static
    * @returns {Object} LitElement properties definition
@@ -24,8 +24,18 @@ class RoomStatusCardEditor extends HAControlBase {
   static get properties() {
     return {
       ...super.properties,
-      _config: { type: Object }
+      _config: { type: Object },
+      _activeTab: { type: String }
     };
+  }
+
+  /**
+   * Initializes the RoomStatusCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   /**
@@ -249,6 +259,49 @@ class RoomStatusCardEditor extends HAControlBase {
   }
 
   /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only room status card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.name !== undefined) cleaned.name = this._config.name;
+    if (this._config.icon !== undefined) cleaned.icon = this._config.icon;
+    if (this._config.show_header !== undefined) cleaned.show_header = this._config.show_header;
+    if (this._config.show_icon !== undefined) cleaned.show_icon = this._config.show_icon;
+    
+    if (this._config.badges && Array.isArray(this._config.badges)) {
+      cleaned.badges = this._config.badges.map(badge => {
+        const b = {};
+        if (badge.entity !== undefined) b.entity = badge.entity;
+        if (badge.color !== undefined) b.color = badge.color;
+        if (badge.features !== undefined) b.features = badge.features;
+        return b;
+      });
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:room-status-card",
+      badges: []
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
    * Renders the editor configuration interface layout.
    * 
    * @protected
@@ -261,96 +314,125 @@ class RoomStatusCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('room-status-card-editor.css')}
-      <ha-form
-        .hass=${this.hass}
-        .data=${this._config}
-        .schema=${this._schema()}
-        .computeLabel=${(schema) => schema.label || schema.name}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
+      
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'badges' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'badges'; }}
+        >
+          ${this._localize('badges') || 'Badges'}
+        </div>
+      </div>
 
-      <div class="badges-section" style="margin-top: 16px;">
-        <h3>${this._localize('badges')}</h3>
-        ${badges.map((badge, idx) => {
-          const entityId = badge.entity;
-          const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
-          const friendlyName = stateObj?.attributes?.friendly_name || entityId;
-          
-          const badgeSchema = [
-            { name: "entity", selector: { entity: {} } },
-            { name: "color", label: this._localize('default_color') || 'Color', selector: { text: {} } }
-          ];
-          
-          const badgeData = { ...badge };
+      ${this._activeTab === 'general' ? html`
+        <ha-form
+          .hass=${this.hass}
+          .data=${this._config}
+          .schema=${this._schema()}
+          .computeLabel=${(schema) => schema.label || schema.name}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      ` : html`
+        <div class="badges-section" style="margin-top: 0;">
+          <h3>${this._localize('badges')}</h3>
+          ${badges.map((badge, idx) => {
+            const entityId = badge.entity;
+            const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
+            const friendlyName = stateObj?.attributes?.friendly_name || entityId;
+            
+            const badgeSchema = [
+              { name: "entity", selector: { entity: {} } },
+              { name: "color", label: this._localize('default_color') || 'Color', selector: { text: {} } }
+            ];
+            
+            const badgeData = { ...badge };
 
-          return html`
-            <ha-expansion-panel outlined style="margin-bottom: 12px; display: block;">
-              <div slot="header" class="badge-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <span>${friendlyName || this._localize('badge_num', { num: idx + 1 })}</span>
-                <div @click=${(e) => e.stopPropagation()}>
-                  <ha-icon-button
-                    @click=${() => this._moveBadge(idx, -1)}
-                    .disabled=${idx === 0}
-                  ><ha-icon icon="mdi:arrow-up"></ha-icon></ha-icon-button>
-                  <ha-icon-button
-                    @click=${() => this._moveBadge(idx, 1)}
-                    .disabled=${idx === badges.length - 1}
-                  ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
-                  <ha-icon-button
-                    class="remove-btn-compact"
-                    @click=${() => this._removeBadge(idx)}
-                  ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+            return html`
+              <ha-expansion-panel outlined style="margin-bottom: 12px; display: block;">
+                <div slot="header" class="badge-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span>${friendlyName || this._localize('badge_num', { num: idx + 1 })}</span>
+                  <div @click=${(e) => e.stopPropagation()}>
+                    <ha-icon-button
+                      @click=${() => this._moveBadge(idx, -1)}
+                      .disabled=${idx === 0}
+                    ><ha-icon icon="mdi:arrow-up"></ha-icon></ha-icon-button>
+                    <ha-icon-button
+                      @click=${() => this._moveBadge(idx, 1)}
+                      .disabled=${idx === badges.length - 1}
+                    ><ha-icon icon="mdi:arrow-down"></ha-icon></ha-icon-button>
+                    <ha-icon-button
+                      class="remove-btn-compact"
+                      @click=${() => this._removeBadge(idx)}
+                    ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                  </div>
                 </div>
-              </div>
-              
-              <div class="badge-content" style="padding: 16px;">
-                <ha-form
-                  .hass=${this.hass}
-                  .data=${badgeData}
-                  .schema=${badgeSchema}
-                  .computeLabel=${(schema) => schema.label || schema.name}
-                  @value-changed=${(e) => this._badgeChanged(e, idx)}
-                ></ha-form>
+                
+                <div class="badge-content" style="padding: 16px;">
+                  <ha-form
+                    .hass=${this.hass}
+                    .data=${badgeData}
+                    .schema=${badgeSchema}
+                    .computeLabel=${(schema) => schema.label || schema.name}
+                    @value-changed=${(e) => this._badgeChanged(e, idx)}
+                  ></ha-form>
 
-                <!-- Features list under badge -->
-                <div class="features-section" style="margin-top: 16px;">
-                  <h4 style="margin-bottom: 8px;">${this._localize('features') || 'Features'}</h4>
-                  <div class="features-list">
-                    ${(badge.features || []).map((feature, fIdx) => html`
-                      <div class="feature-item" style="border: 1px solid var(--divider-color); padding: 8px; margin-bottom: 8px; border-radius: 4px; background: var(--card-background-color);">
-                        <div class="feature-item-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                          <span style="font-weight: 500;">${this._getFeatureName(feature.type)}</span>
-                          <ha-icon-button
-                            @click=${() => this._removeFeature(idx, fIdx)}
-                          ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                  <!-- Features list under badge -->
+                  <div class="features-section" style="margin-top: 16px;">
+                    <h4 style="margin-bottom: 8px;">${this._localize('features') || 'Features'}</h4>
+                    <div class="features-list">
+                      ${(badge.features || []).map((feature, fIdx) => html`
+                        <div class="feature-item" style="border: 1px solid var(--divider-color); padding: 8px; margin-bottom: 8px; border-radius: 4px; background: var(--card-background-color);">
+                          <div class="feature-item-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 500;">${this._getFeatureName(feature.type)}</span>
+                            <ha-icon-button
+                              @click=${() => this._removeFeature(idx, fIdx)}
+                            ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
+                          </div>
+                          <feature-renderer-editor-card
+                            .hass=${this.hass}
+                            .config=${feature}
+                            @config-changed=${(e) => {
+                              e.stopPropagation();
+                              this._updateFeature(idx, fIdx, e.detail.config);
+                            }}
+                          ></feature-renderer-editor-card>
                         </div>
-                        <feature-renderer-editor-card
-                          .hass=${this.hass}
-                          .config=${feature}
-                          @config-changed=${(e) => {
-                            e.stopPropagation();
-                            this._updateFeature(idx, fIdx, e.detail.config);
-                          }}
-                        ></feature-renderer-editor-card>
-                      </div>
-                    `)}
-                  </div>
-                  <div class="feature-add" style="margin-top: 8px;">
-                    <feature-selector-card
-                      .hass=${this.hass}
-                      .label=${this._localize('add_feature')}
-                      .tags=${this.featureTags}
-                      @feature-selected=${(e) => this._addFeature(idx, e)}
-                    ></feature-selector-card>
+                      `)}
+                    </div>
+                    <div class="feature-add" style="margin-top: 8px;">
+                      <feature-selector-card
+                        .hass=${this.hass}
+                        .label=${this._localize('add_feature')}
+                        .tags=${this.featureTags}
+                        @feature-selected=${(e) => this._addFeature(idx, e)}
+                      ></feature-selector-card>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </ha-expansion-panel>
-          `;
-        })}
-        
-        <ha-button raised @click=${this._addBadge} style="margin-top: 8px;">
-          <ha-icon icon="mdi:plus" slot="icon"></ha-icon> ${this._localize('add_badge')}
+              </ha-expansion-panel>
+            `;
+          })}
+          
+          <ha-button raised @click=${this._addBadge} style="margin-top: 8px;">
+            <ha-icon icon="mdi:plus" slot="icon"></ha-icon> ${this._localize('add_badge')}
+          </ha-button>
+        </div>
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
         </ha-button>
       </div>
     `;
