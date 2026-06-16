@@ -59,6 +59,16 @@ class RoomStatusCardEditor extends HAControlBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "name",
+      "icon",
+      "header_settings",
+      "show_header",
+      "show_icon",
+      "badges"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -314,6 +324,7 @@ class RoomStatusCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('room-status-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

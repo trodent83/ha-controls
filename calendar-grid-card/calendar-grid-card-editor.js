@@ -80,6 +80,20 @@ class CalendarGridCardEditor extends HAControlBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "first_day_of_week",
+      "orientation",
+      "default_view",
+      "day_names",
+      "today_background",
+      "today_border",
+      "show_finished_events",
+      "show_refresh_button",
+      "sidebar_position",
+      "entities"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -269,6 +283,7 @@ class CalendarGridCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('calendar-grid-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

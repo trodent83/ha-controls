@@ -59,6 +59,15 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "show_label",
+      "show_value",
+      "show_unavailable",
+      "layout",
+      "entities"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -377,6 +386,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
 
     return html`
       ${this.renderStyle('multi-property-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

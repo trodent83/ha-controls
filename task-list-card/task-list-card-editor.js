@@ -74,6 +74,33 @@ class TaskListCardEditor extends HAControlBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "title",
+      "icon",
+      "max_days",
+      "show_no_due_date",
+      "show_completed",
+      "show_refresh_button",
+      "show_delete_completed_button",
+      "block_future_toggles",
+      "show_due_date",
+      "show_description",
+      "show_due_in_days",
+      "merge_tasks_same_day",
+      "show_source",
+      "separator_mode",
+      "default_due_date_color",
+      "date_separator_color",
+      "day_separator_color",
+      "due_in_days_separator_color",
+      "merged_tasks_separator_color",
+      "source_color",
+      "entities",
+      "entity",
+      "due_date_colors"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -373,6 +400,7 @@ class TaskListCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('task-list-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

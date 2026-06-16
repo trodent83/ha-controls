@@ -5,6 +5,16 @@ export const css = LitElement.prototype.css;
 // Global translation cache shared across card instances to prevent duplicate HTTP requests
 const translationCache = {};
 
+// Standard Home Assistant wrapper metadata config keys that should always be allowed
+const STANDARD_HA_KEYS = new Set([
+  "type",
+  "view_layout",
+  "layout_options",
+  "grid_options",
+  "visibility",
+  "card_mod"
+]);
+
 /**
  * HAControlBase
  * Base class for all custom Home Assistant controls.
@@ -197,6 +207,47 @@ export class HAControlBase extends LitElement {
    */
   renderWarning(message) {
     return html`<ha-alert alert-type="warning" dismissable="false">${message}</ha-alert>`;
+  }
+
+  /**
+   * Checks config for unrecognized keys.
+   * @param {Object} config - The active configuration object
+   * @param {Array<string>} knownKeys - Valid keys declared by the specific card editor
+   * @returns {Array<string>} List of unrecognized keys found
+   * @protected
+   */
+  _validateConfigKeys(config, knownKeys) {
+    if (!config) return [];
+    const validSet = new Set([...STANDARD_HA_KEYS, ...knownKeys]);
+    return Object.keys(config).filter(key => !validSet.has(key));
+  }
+
+  /**
+   * Renders a standardized alert banner if unrecognized settings are found in the config.
+   * @returns {import('lit-html').TemplateResult} The warning alert template, or empty template
+   * @protected
+   */
+  renderConfigValidationWarning() {
+    if (!this._unrecognizedKeys || this._unrecognizedKeys.length === 0) return html``;
+    
+    // Check if translations are loaded for localized alert, otherwise use fallback strings
+    const localizedTitle = this._localize('unrecognized_settings', { keys: this._unrecognizedKeys.join(', ') });
+    const title = localizedTitle !== 'unrecognized_settings' 
+      ? localizedTitle 
+      : `Unrecognized configuration settings: ${this._unrecognizedKeys.join(', ')}`;
+      
+    const localizedDesc = this._localize('clean_settings_desc');
+    const desc = localizedDesc !== 'clean_settings_desc' 
+      ? localizedDesc 
+      : 'You can use the Clean button below to sanitize your configuration.';
+
+    return html`
+      <ha-alert alert-type="warning" dismissable="false" style="display: block; margin-bottom: 16px;">
+        <strong>${title}</strong>
+        <br/>
+        ${desc}
+      </ha-alert>
+    `;
   }
 }
 

@@ -42,5 +42,7 @@
   "due_in_days_separator_color": "Due In Days Separator Color",
   "merged_tasks_separator_color": "Merged Tasks Separator Color",
   "source_color": "Source Color",
-  "block_future_toggles": "Block completing future tasks"
+  "block_future_toggles": "Block completing future tasks",
+  "unrecognized_settings": "Unrecognized configuration settings: {keys}",
+  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration."
 }

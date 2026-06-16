@@ -65,6 +65,23 @@ class VacuumSelectCardEditor extends HAControlBase {
       rooms: {},       // Ensure rooms object exists
       ...config
     };
+
+    const knownKeys = [
+      "vacuum_entity",
+      "output_entity",
+      "currently_cleaning_entity",
+      "readonly_entity",
+      "mark_active_room",
+      "mark_animation",
+      "mark_animation_background",
+      "mark_animation_foreground",
+      "columns",
+      "show_toggle",
+      "selection_color",
+      "selection_foreground",
+      "rooms"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -247,6 +264,7 @@ class VacuumSelectCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('vacuum-select-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

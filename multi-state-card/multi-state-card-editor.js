@@ -58,6 +58,13 @@ class MultiStateCardEditor extends HAControlBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "layout",
+      "entities",
+      "show_unavailable"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -290,6 +297,7 @@ class MultiStateCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('multi-state-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 

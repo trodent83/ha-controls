@@ -59,6 +59,16 @@ class UniversalSelectCardEditor extends HAControlBase {
    */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "entity",
+      "lock_entity",
+      "show_label",
+      "layout",
+      "options_order",
+      "options_config"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
@@ -185,6 +195,7 @@ class UniversalSelectCardEditor extends HAControlBase {
 
     return html`
       ${this.renderStyle('universal-select-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
       <div class="ha-tabs">
         <div 
