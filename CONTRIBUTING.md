@@ -63,7 +63,17 @@ loader.loadModules(
 ```
 
 > [!IMPORTANT]
-> **Mandatory Version Increment Rule:** Whenever you modify *any* file inside a control's directory (logic, styles, translations, features), you **must** increment the `VERSION` constant string in the card's loader file (e.g. `example-card-loader.js`). This acts as the cache-busting query parameter for Home Assistant client browsers and guarantees updates are delivered properly.
+> **Mandatory Version Increment and Caching Rules:**
+> 1. **Control Directory Updates:** Whenever you modify *any* file inside a control's directory (logic, styles, translations, features), you **must** increment the `VERSION` constant string in the card's loader file (e.g., `example-card-loader.js`). This acts as the cache-busting query parameter for Home Assistant client browsers and guarantees updates are delivered properly.
+> 2. **Base Class Updates:** If any shared base class (such as [ha-control-base.js](file:///d:/Ha/ha-controls/ha-control-base.js) or [ha-control-threshold-base.js](file:///d:/Ha/ha-controls/ha-control-threshold-base.js)) is modified, the version query parameter (e.g., `?v=0.6.0`) in the import statements of all cards and loaders that reference them **must** be updated repository-wide.
+> 3. **Universal Import/Link Versioning:** Every script or stylesheet import/link (including those for base classes and shared utility imports) **must** include a versioning query parameter (e.g., `?v=${VERSION}` or `?v=X.Y.Z`) to avoid stale browser caching and ensure immediate reloading of changes.
+>
+> **Versioning Scheme (Semantic Versioning):**
+> Both release versions (documented in `CHANGELOG.md`) and card/loader versions (defined as `const VERSION = "X.Y.Z"` inside loader scripts) follow the Semantic Versioning (SemVer) standard (`MAJOR.MINOR.PATCH`). Increment the numbers as follows:
+> * **MAJOR (X.y.z):** Changes on incompatible or breaking changes (e.g., changing card configuration schemas in a way that requires users to rewrite their dashboard YAML, or making incompatible public API redesigns to base classes).
+> * **MINOR (x.Y.z):** Changes when new features or functionality are added in a backwards-compatible manner (e.g., adding a new optional YAML configuration property, introducing a new card translation, or supporting a new visual loading overlay).
+> * **PATCH (x.y.Z):** Changes for backwards-compatible bug fixes and small improvements (e.g., correcting visual layout alignment, fixing race conditions on initial loads, or cleaning up typos).
+
 
 
 ### 3. Separation of Styling and Logic
