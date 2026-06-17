@@ -279,8 +279,14 @@ class RoomStatusCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
-    if (this._config.name !== undefined) cleaned.name = this._config.name;
-    if (this._config.icon !== undefined) cleaned.icon = this._config.icon;
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
+    addIfDiff("name", "Room");
+    addIfDiff("icon", "mdi:home");
     if (this._config.show_header !== undefined) cleaned.show_header = this._config.show_header;
     if (this._config.show_icon !== undefined) cleaned.show_icon = this._config.show_icon;
     

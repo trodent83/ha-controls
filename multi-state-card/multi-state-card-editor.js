@@ -256,7 +256,14 @@ class MultiStateCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
     if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
+    addIfDiff("show_unavailable", false);
     
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {

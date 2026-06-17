@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.4] - 2026-06-17
+
+### Fixed
+- **Configuration Cleaning and Default Values Pruning**:
+  - Implemented dynamic default-value pruning in visual editor `_cleanConfig()` methods across all 7 custom cards (`calendar-grid-card`, `task-list-card`, `vacuum-select-card`, `universal-select-card`, `room-status-card`, `multi-state-card`, `multi-property-card`).
+  - Added an `addIfDiff` helper logic to sanitize and prune configurations containing properties matching their explicit default values, keeping Lovelace dashboard YAML configs minimal and clean.
+  - Bumped version numbers on all 7 custom loader files to force browser caching updates.
+
 ## [1.0.3] - 2026-06-17
 
 ### Added

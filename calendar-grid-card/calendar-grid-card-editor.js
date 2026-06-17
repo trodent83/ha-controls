@@ -224,15 +224,22 @@ class CalendarGridCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
-    if (this._config.first_day_of_week !== undefined) cleaned.first_day_of_week = this._config.first_day_of_week;
-    if (this._config.orientation !== undefined) cleaned.orientation = this._config.orientation;
-    if (this._config.default_view !== undefined) cleaned.default_view = this._config.default_view;
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
+    addIfDiff("first_day_of_week", 1);
+    addIfDiff("orientation", "horizontal");
+    addIfDiff("default_view", "month");
+    addIfDiff("show_finished_events", true);
+    addIfDiff("show_refresh_button", true);
+    addIfDiff("sidebar_position", "right");
+
     if (this._config.day_names !== undefined) cleaned.day_names = this._config.day_names;
     if (this._config.today_background !== undefined) cleaned.today_background = this._config.today_background;
     if (this._config.today_border !== undefined) cleaned.today_border = this._config.today_border;
-    if (this._config.show_finished_events !== undefined) cleaned.show_finished_events = this._config.show_finished_events;
-    if (this._config.show_refresh_button !== undefined) cleaned.show_refresh_button = this._config.show_refresh_button;
-    if (this._config.sidebar_position !== undefined) cleaned.sidebar_position = this._config.sidebar_position;
     
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
