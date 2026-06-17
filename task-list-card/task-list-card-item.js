@@ -45,7 +45,8 @@ class TaskListCardItem extends HAControlBase {
    * @private
    */
   _toggle() {
-    if (this.readonly || (this.config.block_future_toggles !== false && this.task.isFuture)) return;
+    const blockFuture = String(this.config.block_future_toggles) !== 'false';
+    if (this.readonly || (blockFuture && this.task.isFuture)) return;
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }
 
@@ -81,7 +82,8 @@ class TaskListCardItem extends HAControlBase {
     const separatorClass = this.hasSeparator ? 'task-item-separator' : '';
     const separatorStyle = (this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '') + (hidden ? 'display: none;' : '');
 
-    const isFutureBlocked = this.config.block_future_toggles !== false && t.isFuture;
+    const blockFuture = String(this.config.block_future_toggles) !== 'false';
+    const isFutureBlocked = blockFuture && t.isFuture;
     const isDisabled = this.readonly || isFutureBlocked;
 
     return html`

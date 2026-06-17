@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Enabled clickable location mapping using Google Maps external search queries.
   - Added support for attendee response status indicators (Accepted, Declined, Tentative, Unknown).
 
+### Fixed
+- **Task List Future Completion Blocking**:
+  - Implemented robust regex-based due date parser for checking if tasks are scheduled in the future, correctly evaluating ISO date-only and ISO datetime strings against the user's local day boundaries.
+  - Normalized visual editor configuration toggle validation checking for `block_future_toggles` to handle string-based `"false"` values safely alongside standard booleans.
+
 ## [1.0.2] - 2026-06-17
 
 ### Added

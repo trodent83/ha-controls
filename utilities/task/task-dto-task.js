@@ -79,16 +79,30 @@ export class Task {
    */
   get isFuture() {
     if (!this.due) return false;
+    
+    // Get current local date at midnight (start of today)
     const now = new Date();
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
     let taskDate;
-    if (this.due.length === 10) {
-      const [year, month, day] = this.due.split('-').map(Number);
-      taskDate = new Date(Date.UTC(year, month - 1, day));
+    const dueStr = String(this.due).trim();
+    
+    // Check if it's a date-only YYYY-MM-DD string
+    const match = dueStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      const year = parseInt(match[1]);
+      const month = parseInt(match[2]);
+      const day = parseInt(match[3]);
+      // Parse as local date at midnight
+      taskDate = new Date(year, month - 1, day);
     } else {
-      const d = new Date(this.due);
-      taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      // Parse as full date-time or other string
+      const d = new Date(dueStr);
+      if (isNaN(d.getTime())) return false;
+      // Get the local date components of the task date
+      taskDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
-    return taskDate > today;
+    
+    return taskDate > todayLocal;
   }
 }

@@ -488,7 +488,8 @@ class TaskListCard extends HAControlBase {
    */
   async _toggleTask(task) {
     if (this._processing) return;
-    if (this.config.block_future_toggles !== false && task.isFuture) return;
+    const blockFuture = String(this.config.block_future_toggles) !== 'false';
+    if (blockFuture && task.isFuture) return;
     this._toggledItems.push({ uid: task.uid, entity_id: task.entity_id });
     const oldStatus = task.status;
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
