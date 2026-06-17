@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
 /**
  * ConstantTextFeatureEditor
