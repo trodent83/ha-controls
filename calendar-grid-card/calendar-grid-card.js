@@ -31,7 +31,8 @@ class CalendarGridCard extends HAControlBase {
       _events: { state: true },
       _currentDate: { state: true },
       _sidebarOpen: { state: true },
-      _disabledCalendars: { state: true }
+      _disabledCalendars: { state: true },
+      _fetching: { state: true }
     };
   }
 
@@ -104,6 +105,12 @@ class CalendarGridCard extends HAControlBase {
      * @private
      */
     this._fetchTimer = null;
+    /**
+     * Reactive state property tracking active event fetches.
+     * @type {boolean}
+     * @private
+     */
+    this._fetching = false;
   }
 
   /**
@@ -299,12 +306,22 @@ class CalendarGridCard extends HAControlBase {
   async _fetchEvents(start, end) {
     if (!this.hass || !this.config) return;
 
+    this._fetching = true;
+    this.requestUpdate();
+
     // Mark as fetching/fetched for this range to prevent loops
     this._fetchedRange = { start: start.toISOString(), end: end.toISOString() };
 
     const entities = this.config.entities || [this.config.entity];
     const dataManager = new CalendarDataManager(this.hass);
-    this._events = await dataManager.fetchEvents(entities, start, end);
+    try {
+      this._events = await dataManager.fetchEvents(entities, start, end);
+    } catch (e) {
+      console.error("Error fetching calendar events", e);
+    } finally {
+      this._fetching = false;
+      this.requestUpdate();
+    }
   }
 
   /**
@@ -579,6 +596,11 @@ class CalendarGridCard extends HAControlBase {
                         </div>
                     `;
                 })}
+            </div>
+          ` : ''}
+          ${this._fetching ? html`
+            <div class="loading-overlay">
+              <ha-icon icon="mdi:loading" class="spinning"></ha-icon>
             </div>
           ` : ''}
         </div>

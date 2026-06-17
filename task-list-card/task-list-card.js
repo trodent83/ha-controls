@@ -190,8 +190,9 @@ class TaskListCard extends HAControlBase {
     
     const oldHass = changedProps.get("hass");
     if (!oldHass) {
-      // First update cycle. setConfig already triggered the initial fetch,
-      // so we avoid setting a redundant 500ms debounce fetch timer.
+      // First update cycle. Since setConfig is called before hass is set,
+      // the initial fetch in setConfig was skipped. We perform the fetch now.
+      this._fetchItems();
       return;
     }
 
@@ -353,27 +354,34 @@ class TaskListCard extends HAControlBase {
             </div>
           </div>
         ` : ""}
-        <div class="task-list">
-          ${groups.map((group) => {
-      if (!group.isVisible) return html``;
-      const taskDate = group.date;
-      const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
-        ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
-        : html``;
-      lastDate = taskDate;
+        <div class="task-list-wrapper">
+          <div class="task-list">
+            ${groups.map((group) => {
+        if (!group.isVisible) return html``;
+        const taskDate = group.date;
+        const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
+          ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
+          : html``;
+        lastDate = taskDate;
 
-      return html`
-              ${daySeparator}
-              <task-list-card-row
-                .hass=${this.hass}
-                .config=${this.config}
-                .day=${group}
-                .readonly=${!!this._processing}
-                @toggle-task=${(e) => this._toggleTask(e.detail.task)}
-              ></task-list-card-row>
-            `;
-    })}
-          ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
+        return html`
+                ${daySeparator}
+                <task-list-card-row
+                  .hass=${this.hass}
+                  .config=${this.config}
+                  .day=${group}
+                  .readonly=${!!this._processing}
+                  @toggle-task=${(e) => this._toggleTask(e.detail.task)}
+                ></task-list-card-row>
+              `;
+      })}
+            ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
+          </div>
+          ${this._processing === 'refresh' ? html`
+            <div class="loading-overlay">
+              <ha-icon icon="mdi:loading" class="spinning"></ha-icon>
+            </div>
+          ` : ''}
         </div>
       </ha-card>
           ${this.config.show_delete_completed_button ? html`

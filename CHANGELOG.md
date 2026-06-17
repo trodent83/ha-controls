@@ -6,10 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.0.2] - 2026-06-17
 
+### Added
+- **Task List Loading Overlay**:
+  - Implemented a premium glassmorphism loading overlay with a centered spinning progress indicator (`mdi:loading`) that overlays the task list container during refresh operations.
+- **Calendar Grid Loading Overlay**:
+  - Implemented a premium glassmorphism loading overlay with a centered spinning progress indicator (`mdi:loading`) that overlays the calendar grid container during event-fetching operations.
+
 ### Fixed
 - **Migration of Deprecated UI Components**:
   - Replaced the deprecated `<ha-textfield>` element with `<ha-input>` in HTML templates and CSS stylesheet selectors repository-wide.
   - Replaced the deprecated `<mwc-list-item>` element with `<ha-list-item>` in HTML templates inside select dropdowns to support Web Awesome standards.
+- **Task List Loading Issue**:
+  - Fixed a race condition where task items were not fetched on the initial load because `hass` was unset when `setConfig` ran, and the first lifecycle update cycle was erroneously skipped. Added an immediate fetch operation in the first update cycle when `oldHass` is undefined.
 - **Documentation**:
   - Added a list of standard Home Assistant UI component dependencies to `README.md`.
   - Added a verification guideline to `CONTRIBUTING.md` instructing contributors to verify UI elements support on Home Assistant updates.
