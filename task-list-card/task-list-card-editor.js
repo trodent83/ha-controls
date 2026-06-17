@@ -25,7 +25,7 @@ class TaskListCardEditor extends HAControlBase {
   static get properties() {
     return { 
       ...super.properties, 
-      _config: {},
+      _config: { type: Object },
       _activeTab: { type: String }
     };
   }
@@ -564,8 +564,13 @@ class TaskListCardEditor extends HAControlBase {
                   label="${this._localize('operator')}"
                   class="operator"
                   .value="${rule.operator || '<='}"
-                  @selected="${(e) => this._dueDateColorChanged(e, index, 'operator')}"
-                  @closed="${(e) => e.stopPropagation()}"
+                  @closed="${(e) => {
+                    e.stopPropagation();
+                    const target = e.target;
+                    if (target.value !== undefined && target.value !== rule.operator) {
+                      this._dueDateColorChanged({ target }, index, 'operator');
+                    }
+                  }}"
                   fixedMenuPosition
                   naturalMenuWidth
                 >
@@ -580,13 +585,13 @@ class TaskListCardEditor extends HAControlBase {
                   label="${this._localize('days')}"
                   type="number"
                   class="days"
-                  .value="${rule.days}"
+                  .value="${rule.days !== undefined && rule.days !== null ? rule.days : ''}"
                   @input="${(e) => this._dueDateColorChanged(e, index, 'days')}"
                 ></ha-textfield>
                 <ha-textfield
                   label="${this._localize('color')}"
                   class="color"
-                  .value="${rule.color}"
+                  .value="${rule.color ?? ''}"
                   @input="${(e) => this._dueDateColorChanged(e, index, 'color')}"
                 ></ha-textfield>
                 <ha-icon-button
@@ -650,8 +655,13 @@ class TaskListCardEditor extends HAControlBase {
                 label="${this._localize('separator_mode')}"
                 .value="${this._config.separator_mode || 'day'}"
                 .configValue="${'separator_mode'}"
-                @selected="${this._valueChanged}"
-                @closed="${(e) => e.stopPropagation()}"
+                @closed="${(e) => {
+                  e.stopPropagation();
+                  const target = e.target;
+                  if (target.value !== undefined && target.value !== this._config.separator_mode) {
+                    this._valueChanged({ target });
+                  }
+                }}"
                 fixedMenuPosition
                 naturalMenuWidth
               >

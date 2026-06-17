@@ -25,7 +25,7 @@ class CalendarGridCardEditor extends HAControlBase {
   static get properties() {
     return { 
       ...super.properties, 
-      _config: {}, 
+      _config: { type: Object }, 
       _dayNamesExpanded: { state: true },
       _activeTab: { type: String }
     };

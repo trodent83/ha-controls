@@ -24,7 +24,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
   static get properties() {
     return { 
       ...super.properties, 
-      _config: {},
+      _config: { type: Object },
       _activeTab: { type: String }
     };
   }
