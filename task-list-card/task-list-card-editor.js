@@ -328,25 +328,34 @@ class TaskListCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
     if (this._config.title !== undefined) cleaned.title = this._config.title;
-    if (this._config.icon !== undefined) cleaned.icon = this._config.icon;
+    addIfDiff("icon", "mdi:calendar-check");
     if (this._config.max_days !== undefined) cleaned.max_days = this._config.max_days;
-    if (this._config.show_no_due_date !== undefined) cleaned.show_no_due_date = this._config.show_no_due_date;
-    if (this._config.show_completed !== undefined) cleaned.show_completed = this._config.show_completed;
-    if (this._config.show_refresh_button !== undefined) cleaned.show_refresh_button = this._config.show_refresh_button;
-    if (this._config.show_delete_completed_button !== undefined) cleaned.show_delete_completed_button = this._config.show_delete_completed_button;
-    if (this._config.block_future_toggles !== undefined) cleaned.block_future_toggles = this._config.block_future_toggles;
-    if (this._config.show_due_date !== undefined) cleaned.show_due_date = this._config.show_due_date;
-    if (this._config.show_description !== undefined) cleaned.show_description = this._config.show_description;
-    if (this._config.show_due_in_days !== undefined) cleaned.show_due_in_days = this._config.show_due_in_days;
-    if (this._config.merge_tasks_same_day !== undefined) cleaned.merge_tasks_same_day = this._config.merge_tasks_same_day;
-    if (this._config.show_source !== undefined) cleaned.show_source = this._config.show_source;
-    if (this._config.separator_mode !== undefined) cleaned.separator_mode = this._config.separator_mode;
+    addIfDiff("show_no_due_date", true);
+    addIfDiff("show_completed", true);
+    addIfDiff("show_due_date", true);
+    addIfDiff("show_description", false);
+    addIfDiff("show_due_in_days", false);
+    addIfDiff("show_refresh_button", false);
+    addIfDiff("show_delete_completed_button", false);
+    addIfDiff("show_source", false);
+    addIfDiff("merge_tasks_same_day", false);
+    addIfDiff("separator_mode", "day");
+    addIfDiff("date_separator_color", "transparent");
+    addIfDiff("merged_tasks_separator_color", "var(--divider-color)");
+
+    if (this._config.block_future_toggles !== undefined) {
+      addIfDiff("block_future_toggles", true);
+    }
     if (this._config.default_due_date_color !== undefined) cleaned.default_due_date_color = this._config.default_due_date_color;
-    if (this._config.date_separator_color !== undefined) cleaned.date_separator_color = this._config.date_separator_color;
     if (this._config.day_separator_color !== undefined) cleaned.day_separator_color = this._config.day_separator_color;
     if (this._config.due_in_days_separator_color !== undefined) cleaned.due_in_days_separator_color = this._config.due_in_days_separator_color;
-    if (this._config.merged_tasks_separator_color !== undefined) cleaned.merged_tasks_separator_color = this._config.merged_tasks_separator_color;
     if (this._config.source_color !== undefined) cleaned.source_color = this._config.source_color;
     
     if (this._config.entities && Array.isArray(this._config.entities)) {

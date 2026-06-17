@@ -205,6 +205,12 @@ class VacuumSelectCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
     if (this._config.vacuum_entity !== undefined) cleaned.vacuum_entity = this._config.vacuum_entity;
     if (this._config.output_entity !== undefined) cleaned.output_entity = this._config.output_entity;
     if (this._config.currently_cleaning_entity !== undefined) cleaned.currently_cleaning_entity = this._config.currently_cleaning_entity;
@@ -213,8 +219,8 @@ class VacuumSelectCardEditor extends HAControlBase {
     if (this._config.mark_animation !== undefined) cleaned.mark_animation = this._config.mark_animation;
     if (this._config.mark_animation_background !== undefined) cleaned.mark_animation_background = this._config.mark_animation_background;
     if (this._config.mark_animation_foreground !== undefined) cleaned.mark_animation_foreground = this._config.mark_animation_foreground;
-    if (this._config.columns !== undefined) cleaned.columns = this._config.columns;
-    if (this._config.show_toggle !== undefined) cleaned.show_toggle = this._config.show_toggle;
+    addIfDiff("columns", 4);
+    addIfDiff("show_toggle", true);
     if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
     if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;
     

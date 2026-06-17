@@ -127,10 +127,16 @@ class UniversalSelectCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
     if (this._config.entity !== undefined) cleaned.entity = this._config.entity;
     if (this._config.lock_entity !== undefined) cleaned.lock_entity = this._config.lock_entity;
-    if (this._config.show_label !== undefined) cleaned.show_label = this._config.show_label;
-    if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
+    addIfDiff("show_label", true);
+    addIfDiff("layout", "row");
     if (this._config.options_order !== undefined) cleaned.options_order = this._config.options_order;
     
     if (this._config.options_config && typeof this._config.options_config === 'object') {

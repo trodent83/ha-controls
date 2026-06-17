@@ -322,9 +322,16 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
     const cleaned = {
       type: this._config.type
     };
-    if (this._config.show_label !== undefined) cleaned.show_label = this._config.show_label;
-    if (this._config.show_value !== undefined) cleaned.show_value = this._config.show_value;
-    if (this._config.show_unavailable !== undefined) cleaned.show_unavailable = this._config.show_unavailable;
+    const addIfDiff = (key, defaultVal) => {
+      const val = this._config[key];
+      if (val !== undefined && val !== null && String(val) !== String(defaultVal)) {
+        cleaned[key] = val;
+      }
+    };
+    addIfDiff("show_label", true);
+    addIfDiff("show_value", true);
+    addIfDiff("show_icon", true);
+    addIfDiff("show_unavailable", false);
     if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
     
     if (this._config.entities && Array.isArray(this._config.entities)) {

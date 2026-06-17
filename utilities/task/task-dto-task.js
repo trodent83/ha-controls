@@ -78,17 +78,37 @@ export class Task {
    * @type {boolean}
    */
   get isFuture() {
-    if (!this.due) return false;
+    const diff = Task.getDiffDays(this.due);
+    return diff !== null && diff > 0;
+  }
+
+  /**
+   * Calculates the difference in days between a due date string and the current local day in UTC.
+   * 
+   * @param {string|null} due - Due date string (e.g. '2026-06-14')
+   * @returns {number|null} Difference in days, or null if no-date / invalid
+   */
+  static getDiffDays(due) {
+    if (!due) return null;
+    
+    const dueStr = String(due).trim();
+    const taskDateStr = dueStr.length > 10 ? dueStr.substring(0, 10) : dueStr;
+    if (taskDateStr === 'no-date') return null;
+
     const now = new Date();
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    
     let taskDate;
-    if (this.due.length === 10) {
-      const [year, month, day] = this.due.split('-').map(Number);
+    if (taskDateStr.length === 10) {
+      const [year, month, day] = taskDateStr.split('-').map(Number);
       taskDate = new Date(Date.UTC(year, month - 1, day));
     } else {
-      const d = new Date(this.due);
+      const d = new Date(taskDateStr);
+      if (isNaN(d.getTime())) return null;
       taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     }
-    return taskDate > today;
+    
+    const diffTime = taskDate - today;
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
   }
 }
