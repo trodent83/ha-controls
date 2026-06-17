@@ -55,7 +55,7 @@ class CalendarGridCard extends HAControlBase {
    */
   static getStubConfig() {
     return {
-      entities: [],
+      entities: ["calendar.personal"],
       first_day_of_week: 1,
       default_view: 'month',
       orientation: 'horizontal'

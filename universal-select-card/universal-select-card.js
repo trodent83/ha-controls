@@ -349,6 +349,25 @@ class UniversalSelectCard extends HAControlBase {
   }
 
   /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
+  static getStubConfig() {
+    return {
+      entity: "input_select.house_mode",
+      show_label: true,
+      layout: "row",
+      options_config: {
+        Home: { icon: "mdi:home", label: "Home" },
+        Away: { icon: "mdi:exit-run", label: "Away" }
+      }
+    };
+  }
+
+  /**
    * Receives configuration from Home Assistant and parses it.
    * Merges default attributes and deep-copies nested options_config.
    * 

@@ -248,6 +248,23 @@ class VacuumSelectCard extends HAControlBase {
   }
 
   /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
+  static getStubConfig() {
+    return {
+      vacuum_entity: "vacuum.robot",
+      output_entity: "input_text.vacuum_rooms",
+      currently_cleaning_entity: "sensor.vacuum_active_room",
+      columns: 4,
+      show_toggle: true
+    };
+  }
+
+  /**
    * Sets the user configuration object for the card, validating required parameters.
    * Throws validation errors if essential fields like vacuum_entity or output_entity are omitted.
    * 

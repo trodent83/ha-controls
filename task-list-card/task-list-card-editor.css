@@ -67,16 +67,29 @@
 /* Operator selector width constraints inside color rows */
 .due-date-color-row .operator {
     width: 100px !important;
+    flex-shrink: 0 !important;
 }
 
 /* Number field width constraints inside color rows */
 .due-date-color-row .days {
     width: 80px !important;
+    flex-shrink: 0 !important;
 }
 
 /* Hex color input field size inside color rows */
 .due-date-color-row .color {
     flex-grow: 1 !important;
+    min-width: 80px !important;
+}
+
+/* Ensure textfields have block display and don't shrink */
+.due-date-color-row ha-textfield {
+    display: block !important;
+}
+
+/* Ensure action icons don't compress */
+.due-date-color-row ha-icon-button {
+    flex-shrink: 0 !important;
 }
 
 /* Due date thresholds list container */
