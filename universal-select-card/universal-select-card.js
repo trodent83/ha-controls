@@ -1,28 +1,65 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.4';
 
+/**
+ * UniversalSelectCard
+ * A versatile segmented control card for Home Assistant dashboard interface.
+ * Maps dropdown selection options (from input_select entities) into customizable inline option tiles.
+ * Supports action mappings (tap/hold), animations, custom labels/icons, and feature renderers.
+ * 
+ * @extends HAControlBase
+ */
 class UniversalSelectCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the dashboard configuration object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { 
       ...super.properties,
-      // Holds the parsed user configuration for this card
       config: {} 
     };
   }
 
-  // Path to the translations folder for this custom card
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
-  // Define the layout size of the card (used by Home Assistant's layout engine)
+  /**
+   * Returns layout size factor of this card inside dashboard grids.
+   * 
+   * @returns {number} The visual layout size rating
+   */
   getCardSize() {
     return 1;
   }
 
-  // Optimizes rendering by checking if we actually need to update the DOM
+  /**
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Re-renders on config updates or only when configured entities, labels, or feature items change state.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   * @returns {boolean} True if the card should re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
-    // Always update if the configuration changes
     if (changedProps.has('config')) {
       return true;
     }
@@ -47,7 +84,6 @@ class UniversalSelectCard extends HAControlBase {
         const option = stateObj.state;
         const optCfg = this.config.options_config?.[option];
         
-        
         // If the option's label depends on another entity's state, update when that entity changes
         if (optCfg?.active_label_entity && 
             oldHass.states[optCfg.active_label_entity] !== this.hass.states[optCfg.active_label_entity]) {
@@ -69,10 +105,19 @@ class UniversalSelectCard extends HAControlBase {
     return true;
   }
 
-  // Main render function for generating the card's HTML layout
+  /**
+   * Renders the custom card's HTML template.
+   * Maps out selectable option buttons, applies styling custom variables, and renders embedded features.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.config || !this.config.entity || !this.hass) return html``;
     const stateObj = this.hass.states[this.config.entity];
+    if (!stateObj) {
+      return this.renderError(this._localize('entity_not_found'));
+    }
     let options = stateObj?.attributes.options || [];
     
     // Sort options according to the user-defined order in the configuration, if provided
@@ -81,6 +126,7 @@ class UniversalSelectCard extends HAControlBase {
       options = [...options].sort((a, b) => {
         const idxA = order.indexOf(a);
         const idxB = order.indexOf(b);
+        const idxB_val = order.indexOf(b);
         if (idxA === -1 && idxB === -1) return 0;
         if (idxA === -1) return 1;
         if (idxB === -1) return -1;
@@ -95,7 +141,7 @@ class UniversalSelectCard extends HAControlBase {
     const lockedClass = isLocked ? 'locked' : '';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card.css?v=${VERSION}">
+      ${this.renderStyle('universal-select-card.css')}
       <ha-card class="${layoutClass} ${lockedClass}">
         ${options.map(option => {
           const optCfg = this.config.options_config?.[option] || {};
@@ -146,12 +192,23 @@ class UniversalSelectCard extends HAControlBase {
     `;
   }
 
-  // Provides the custom editor element used in the Home Assistant Lovelace UI editor
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The universal-select-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("universal-select-card-editor");
   }
 
-  // Calls the Home Assistant service to select an option for the input_select entity
+  /**
+   * Triggers the Home Assistant API service calls to set the dropdown selection.
+   * 
+   * @param {string} option - The select option value to set
+   * @private
+   */
   _selectOption(option) {
     this.hass.callService("input_select", "select_option", {
       entity_id: this.config.entity,
@@ -159,12 +216,23 @@ class UniversalSelectCard extends HAControlBase {
     });
   }
 
-  // Checks if the card is currently locked by the lock_entity
+  /**
+   * Helper utility checking if the card interaction state is locked.
+   * 
+   * @returns {boolean} True if card interactions are blocked
+   * @private
+   */
   _isLocked() {
     return this.config.lock_entity && this.hass.states[this.config.lock_entity]?.state === 'on';
   }
 
-  // Handles the start of a touch/mouse press
+  /**
+   * Listens to mouse/touch activation, configuring timers to detect holds.
+   * 
+   * @param {Event} e - Interaction event object
+   * @param {string} option - Option associated with the interaction
+   * @private
+   */
   _handleDown(e, option) {
     if (this._isLocked()) return;
     this._isHolding = false;
@@ -175,7 +243,12 @@ class UniversalSelectCard extends HAControlBase {
     }, 1000);
   }
 
-  // Clears the hold timer if the interaction ends prematurely
+  /**
+   * Cleans up timers upon interaction release.
+   * 
+   * @param {Event} e - Interaction end event object
+   * @private
+   */
   _handleUp(e) {
     if (this._longPressTimer) {
       clearTimeout(this._longPressTimer);
@@ -183,7 +256,12 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
-  // Clears the hold timer if the interaction is canceled (e.g., finger scrolls away)
+  /**
+   * Cleans up timers and state variables if touch drag offsets trigger cancels.
+   * 
+   * @param {Event} e - Cancel event object
+   * @private
+   */
   _handleCancel(e) {
     if (this._longPressTimer) {
       clearTimeout(this._longPressTimer);
@@ -192,7 +270,13 @@ class UniversalSelectCard extends HAControlBase {
     this._isHolding = false;
   }
 
-  // Handles click/tap to select the option
+  /**
+   * Invokes option changes or consumes events if a hold event was executed instead.
+   * 
+   * @param {Event} e - Click event object
+   * @param {string} option - Option clicked
+   * @private
+   */
   _handleClick(e, option) {
     if (this._isLocked()) return;
     // If the click is actually the end of a hold, don't execute the standard click action
@@ -205,7 +289,12 @@ class UniversalSelectCard extends HAControlBase {
     this._selectOption(option);
   }
 
-  // Triggers the customized hold action when an option is long-pressed
+  /**
+   * Evaluates active actions configured on holds.
+   * 
+   * @param {string} option - Option clicked
+   * @private
+   */
   _handleHold(option) {
     const stateObj = this.hass.states[this.config.entity];
     if (stateObj && stateObj.state === option) {
@@ -216,7 +305,13 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
-  // Routes custom actions (e.g., call-service, navigate, url, more-info)
+  /**
+   * Routes general Home Assistant UI Actions (e.g. call-service, navigate, url, more-info).
+   * Supports standard Lovelace action protocol schemas.
+   * 
+   * @param {Object} actionConfig - Configuration details for the hold action
+   * @private
+   */
   _handleAction(actionConfig) {
     if (!actionConfig) return;
     const action = actionConfig.action;
@@ -253,7 +348,32 @@ class UniversalSelectCard extends HAControlBase {
     }
   }
 
-  // Receives configuration from Home Assistant and parses it
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
+  static getStubConfig() {
+    return {
+      entity: "input_select.house_mode",
+      show_label: true,
+      layout: "row",
+      options_config: {
+        Home: { icon: "mdi:home", label: "Home" },
+        Away: { icon: "mdi:exit-run", label: "Away" }
+      }
+    };
+  }
+
+  /**
+   * Receives configuration from Home Assistant and parses it.
+   * Merges default attributes and deep-copies nested options_config.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   * @throws {Error} If entity parameter is missing in configuration schema
+   */
   setConfig(config) {
     if (!config.entity) {
       throw new Error("You need to define an entity");
@@ -264,7 +384,7 @@ class UniversalSelectCard extends HAControlBase {
       ...config 
     };
 
-    // Deep clone and compile custom JS scripts into executable functions
+    // Deep clone options_config to prevent shared reference mutations
     if (this.config.options_config) {
       this.config.options_config = { ...this.config.options_config };
       Object.keys(this.config.options_config).forEach(key => {

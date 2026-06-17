@@ -1,8 +1,27 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
+/**
+ * TaskListCardRow
+ * Renders a row container grouping tasks due on the same calendar day.
+ * Renders without shadow DOM to align layouts cleanly inside parent containers.
+ * Manages date label localization formatting, state threshold colors, and due descriptors.
+ * 
+ * @extends HAControlBase
+ */
 class TaskListCardRow extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks config configuration, active day data object, and readonly indicators.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -12,13 +31,37 @@ class TaskListCardRow extends HAControlBase {
     };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Returns this element directly as the render container, bypasses default Shadow DOM mounting.
+   * 
+   * @returns {HTMLElement} The root node to append rendered templates to
+   */
   createRenderRoot() {
     return this;
   }
 
+  /**
+   * Formats task group due dates into short weekday, numeric day, and short month names
+   * according to user regional language preferences in Home Assistant.
+   * 
+   * @param {string} dateStr - Date string (e.g. '2026-06-14')
+   * @private
+   * @returns {Object|null} Dictionary containing weekday, day, and month strings, or null if invalid
+   */
   _formatDate(dateStr) {
     if (!dateStr) return null;
     let date;
@@ -38,6 +81,13 @@ class TaskListCardRow extends HAControlBase {
     };
   }
 
+  /**
+   * Matches this row's due date relative distance (diffDays) against configured operator-value thresholds,
+   * returning matching hex/RGB custom colors.
+   * 
+   * @private
+   * @returns {string|undefined} Hex/RGB CSS color string, or undefined if no rule matches
+   */
   _getDueDateColor() {
     if (this.day.date === 'no-date' || this.day.allCompleted) return undefined;
 
@@ -70,6 +120,11 @@ class TaskListCardRow extends HAControlBase {
     return this.config.default_due_date_color;
   }
 
+  /**
+   * Triggers element updates and propagates redraw commands down to child task elements.
+   * 
+   * @param {Task} task - The specific task data transfer object modified
+   */
   updateTask(task) {
     this.requestUpdate();
     const items = this.querySelectorAll('task-list-card-item');
@@ -80,10 +135,22 @@ class TaskListCardRow extends HAControlBase {
     }
   }
 
+  /**
+   * Dispatches task status toggles up to the parent card element.
+   * 
+   * @param {Task} task - Task toggled
+   * @private
+   */
   _toggleTask(task) {
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task } }));
   }
 
+  /**
+   * Renders the custom card row HTML template.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.day || !this.config || !this.hass) return html``;
 

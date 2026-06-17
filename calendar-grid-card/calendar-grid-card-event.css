@@ -1,3 +1,9 @@
+/* ==========================================================================
+   CALENDAR GRID CARD EVENT COMPONENT STYLESHEET
+   Handles layouts, typography, and animations for individual event badges.
+   ========================================================================== */
+
+/* Individual event entry wrapper layout */
 .event-entry {
     font-size: 0.75rem;
     padding: 2px 6px;
@@ -11,6 +17,7 @@
     margin-bottom: 2px;
 }
 
+/* Event header block combining icon, title, and time */
 .event-header {
     display: flex;
     align-items: center;
@@ -20,58 +27,51 @@
     text-overflow: ellipsis;
 }
 
+/* Size override for custom material icon */
 .event-icon {
     --mdc-icon-size: 12px;
 }
 
+/* Prevent flexbox shrinking for the header leading pseudo-element */
 .event-header::before {
     flex-shrink: 0;
 }
 
-.event-entry.expanded {
-    white-space: normal;
-}
 
-.event-description {
-    font-size: 0.7rem;
-    opacity: 0.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-top: 4px;
-    margin-top: 4px;
-    padding-bottom: 4px;
-    border-top: 1px solid var(--divider-color);
-    border-bottom: 1px solid var(--divider-color);
-}
-
+/* Absolute or relative event time text */
 .event-time {
     font-size: 0.7rem;
     opacity: 0.9;
     flex-shrink: 0;
 }
 
+/* Typography settings for event title text */
 .event-title {
     overflow: hidden;
     text-overflow: ellipsis;
     flex-grow: 1;
 }
 
+/* Icon style indicating event description exist */
 .description-icon {
     --mdc-icon-size: 12px;
     opacity: 0.6;
     flex-shrink: 0;
 }
 
+/* Visual formatting for elapsed/past events */
 .event-entry.past .event-title, .event-entry.past .event-time {
     text-decoration: line-through;
     opacity: 0.7;
 }
 
+/* Spin animation utility class */
 .spinning {
     animation: spin 1s linear infinite;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
+/* Pulse animation utility class */
 .pulsing {
     animation: pulse 2s infinite;
 }

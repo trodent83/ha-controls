@@ -1,21 +1,63 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.20';
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
 
+/**
+ * RoomStatusCard
+ * A custom Home Assistant Lovelace dashboard card that presents room status at a glance.
+ * Displays room header title/icon and a row of status badges.
+ * Badge contents are completely dynamic and determined by nested custom features.
+ * 
+ * @extends HAControlBase
+ */
 class RoomStatusCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks the config object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/room-status-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
-  //Returns the editor for this control
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The room-status-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("room-status-card-editor");
   }
 
-  //Returns the default settings
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       name: "My Room",
@@ -27,35 +69,28 @@ class RoomStatusCard extends HAControlBase {
       badges: [
         {
           entity: "sensor.temperature",
-          icon: "mdi:thermometer",
-          thresholds: [
-            { value: 25, color: "var(--error-color)", animation: "blink" }
+          color: "var(--primary-text-color)",
+          features: [
+            {
+              type: "custom:icon-card-feature",
+              icon: "mdi:thermometer"
+            },
+            {
+              type: "custom:state-value-feature"
+            }
           ]
         }
       ]
     };
   }
 
-  _getMatchedProperty(stateValue, thresholds, propertyName) {
-    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
-    const stringState = String(stateValue).toLowerCase();
-
-    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
-
-    const numericValue = parseFloat(stateValue);
-    if (!isNaN(numericValue)) {
-      const numericThresholds = thresholds
-        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
-        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-      
-      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
-      if (match) return match[propertyName];
-    }
-    return null;
-  }
-
-  //Renders the control
+  /**
+   * Renders the custom card's HTML template.
+   * Generates header blocks and parses status badges list applying dynamic child features.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this.config) return html``;
 
@@ -66,7 +101,7 @@ class RoomStatusCard extends HAControlBase {
     const badges = this.config.badges || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/room-status-card/room-status-card.css?v=${VERSION}">
+      ${this.renderStyle('room-status-card.css')}
       <ha-card>
         <div class="card-content">
           <div class="header_container">
@@ -77,24 +112,35 @@ class RoomStatusCard extends HAControlBase {
           ${badges.map(badgeConfig => {
             const entityId = badgeConfig.entity;
             const stateObj = entityId ? this.hass.states[entityId] : null;
-            if (!stateObj) return '';
 
-            const state = stateObj.state;
-            const unit = stateObj.attributes.unit_of_measurement || '';
-            
-            const matchColor = this._getMatchedProperty(state, badgeConfig.thresholds, 'color');
-            const matchAnim = this._getMatchedProperty(state, badgeConfig.thresholds, 'animation');
-            
-            const finalColor = matchColor || badgeConfig.color || 'var(--primary-text-color)';
-            const finalAnim = matchAnim || badgeConfig.animation || '';
-            const icon = badgeConfig.icon || stateObj.attributes.icon;
-            const showIcon = badgeConfig.show_icon !== false;
-            const showState = badgeConfig.show_state !== false;
+            const finalColor = badgeConfig.color || 'var(--primary-text-color)';
 
             return html`
-              <div class="status_badge ${finalAnim}" style="--badge-color: ${finalColor}">
-                ${showIcon && icon ? html`<ha-icon .icon="${icon}"></ha-icon>` : ''}
-                ${showState ? html`${state}${unit}` : ''}
+              <div class="status_badge" style="--badge-color: ${finalColor}">
+                ${(badgeConfig.features && Array.isArray(badgeConfig.features)) ? html`
+                  ${badgeConfig.features.filter(featureConfig => {
+                    if (featureConfig.condition) {
+                      try {
+                        const hass = this.hass;
+                        const entity = stateObj;
+                        const state = stateObj?.state;
+                        const attributes = stateObj?.attributes;
+                        return eval(featureConfig.condition);
+                      } catch (e) {
+                        console.error("Error evaluating condition for feature", featureConfig, e);
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map(featureConfig => html`
+                    <feature-renderer-card
+                      .hass=${this.hass}
+                      .config=${featureConfig}
+                      .stateObj=${stateObj}
+                      .color=${finalColor}
+                    ></feature-renderer-card>
+                  `)}
+                ` : ''}
               </div>
             `;
           })}
@@ -104,8 +150,17 @@ class RoomStatusCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Sets the user configuration object for the card, updating fallback default settings.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   */
   setConfig(config) {
-    this.config = config;
+    this.config = {
+      name: "Room",
+      icon: "mdi:home",
+      ...config
+    };
   }
 }
 
@@ -115,6 +170,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "room-status-card",
   name: "Room Status Card",
-  description: "A 2026 styled room status badge card",
+  description: "A 2026 styled room status badge card with dynamic nested features",
   preview: true,
 });

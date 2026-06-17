@@ -1,23 +1,67 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
 import { Task } from "../utilities/task/task-dto-task.js";
 import { Day } from "../utilities/task/task-dto-day.js";
 import { TaskDataManager } from "../utilities/task/task-data-manager.js";
 
+/**
+ * TaskListCard
+ * A custom Home Assistant Lovelace dashboard card that fetches, aggregates, groups, and displays tasks
+ * from Home Assistant `todo` list entities. Supports multi-list sourcing, day/week/month grouping,
+ * dynamic due calculations, reload entry triggers, bulk deletions, and toggling overrides.
+ * 
+ * @extends HAControlBase
+ */
 class TaskListCard extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and tracks configuration, groups, and execution states.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {}, _groups: { state: true }, _processing: { state: true } };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The task-list-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("task-list-card-editor");
   }
 
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       entity: "todo.shopping_list",
@@ -25,6 +69,12 @@ class TaskListCard extends HAControlBase {
     };
   }
 
+  /**
+   * Sets the configuration object for the card, setting default configuration options.
+   * 
+   * @param {Object} config - Lovelace configuration schema
+   * @throws {Error} If entity/entities list is missing in configuration schema
+   */
   setConfig(config) {
     if (!config.entity && !config.entities) {
       throw new Error("Please define an entity");
@@ -46,6 +96,7 @@ class TaskListCard extends HAControlBase {
       merged_tasks_separator_color: 'var(--divider-color)',
       separator_mode: 'day',
       icon: 'mdi:calendar-check',
+      block_future_toggles: true,
       ...config
     };
     this._groups = [];
@@ -54,9 +105,28 @@ class TaskListCard extends HAControlBase {
     this._fetchItems();
   }
 
-  _debounceTimer;
+  /**
+   * Internal debounce timer identifier for tracking state changes.
+   * @type {number|null}
+   * @private
+   */
+  _debounceTimer = null;
+
+  /**
+   * Array storing local copies of tasks currently being toggled in the UI.
+   * Used to filter updates during state reconciliation.
+   * @type {Array<Object>}
+   * @private
+   */
   _toggledItems = [];
 
+  /**
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Only returns true if configured todo entities actually change state.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   * @returns {boolean} True if the card should re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
     if (!changedProps.has("hass")) {
       return true;
@@ -94,14 +164,43 @@ class TaskListCard extends HAControlBase {
     return true;
   }
 
+  /**
+   * LitElement lifecycle trigger. Captures todo list updates and triggers debounced item refetches.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   */
+  /**
+   * LitElement lifecycle hook. Destroys debounced fetch timers to prevent memory leaks.
+   */
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+    }
+  }
+
+  /**
+   * LitElement lifecycle trigger. Captures todo list updates and triggers debounced item refetches.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   */
   updated(changedProps) {
     super.updated(changedProps);
     if (!changedProps.has("hass")) { return; }
+    
+    const oldHass = changedProps.get("hass");
+    if (!oldHass) {
+      // First update cycle. Since setConfig is called before hass is set,
+      // the initial fetch in setConfig was skipped. We perform the fetch now.
+      this._fetchItems();
+      return;
+    }
+
     const entities = this._getEntities();
     let hasChanged = false;
 
     for (const entityId of entities) {
-      const oldState = changedProps.get("hass")?.states[entityId];
+      const oldState = oldHass.states[entityId];
       const newState = this.hass.states[entityId];
 
       if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
@@ -118,15 +217,27 @@ class TaskListCard extends HAControlBase {
 
     this._debounceTimer = setTimeout(() => {
       this._fetchItems();
-      console.groupEnd();
     }, 500);
   }
 
+  /**
+   * Helper parsing entities from configured target entity or custom entities array.
+   * 
+   * @private
+   * @returns {Array<string>} List of todo list entity IDs
+   */
   _getEntities() {
     return (this.config.entities || (this.config.entity ? [this.config.entity] : []))
       .map(e => (typeof e === 'object' ? e.entity : e));
   }
 
+  /**
+   * Asynchronously queries the Home Assistant todo list entities API, parses items into Task objects,
+   * sorts them chronologically, and groups them by day depending on dashboard configurations.
+   * 
+   * @private
+   * @returns {Promise<void>} Resolves when grouping lists are updated
+   */
   async _fetchItems() {
     if (!this.hass) return;
 
@@ -176,6 +287,13 @@ class TaskListCard extends HAControlBase {
     this._groups = groups;
   }
 
+  /**
+   * Helper utility calculating ISO year and calendar week number for week-separator grouping mode.
+   * 
+   * @param {Date} date - Input date object
+   * @private
+   * @returns {string} Date week sequence string (e.g. '2026-24')
+   */
   _getWeek(date) {
     const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -186,6 +304,14 @@ class TaskListCard extends HAControlBase {
     return `${year}-${week}`;
   }
 
+  /**
+   * Evaluates separator conditions between contiguous task group day nodes.
+   * 
+   * @param {string} lastDate - Date string of the previous task day group
+   * @param {string} taskDate - Date string of the current task day group
+   * @private
+   * @returns {boolean} True if a separator should be injected, false otherwise
+   */
   _shouldShowSeparator(lastDate, taskDate) {
     if (!this.config.day_separator_color || !lastDate || lastDate === taskDate) {
       return false;
@@ -205,6 +331,12 @@ class TaskListCard extends HAControlBase {
     return false;
   }
 
+  /**
+   * Renders the custom card's HTML template.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.config || !this.hass) return html``;
 
@@ -212,13 +344,7 @@ class TaskListCard extends HAControlBase {
     const groups = this._groups || [];
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card.css?v=${VERSION}">
-      <style>
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-      </style>
+      ${this.renderStyle('task-list-card.css')}
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -228,27 +354,34 @@ class TaskListCard extends HAControlBase {
             </div>
           </div>
         ` : ""}
-        <div class="task-list">
-          ${groups.map((group) => {
-      if (!group.isVisible) return html``;
-      const taskDate = group.date;
-      const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
-        ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
-        : html``;
-      lastDate = taskDate;
+        <div class="task-list-wrapper">
+          <div class="task-list">
+            ${groups.map((group) => {
+        if (!group.isVisible) return html``;
+        const taskDate = group.date;
+        const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
+          ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
+          : html``;
+        lastDate = taskDate;
 
-      return html`
-              ${daySeparator}
-              <task-list-card-row
-                .hass=${this.hass}
-                .config=${this.config}
-                .day=${group}
-                .readonly=${!!this._processing}
-                @toggle-task=${(e) => this._toggleTask(e.detail.task)}
-              ></task-list-card-row>
-            `;
-    })}
-          ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
+        return html`
+                ${daySeparator}
+                <task-list-card-row
+                  .hass=${this.hass}
+                  .config=${this.config}
+                  .day=${group}
+                  .readonly=${!!this._processing}
+                  @toggle-task=${(e) => this._toggleTask(e.detail.task)}
+                ></task-list-card-row>
+              `;
+      })}
+            ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
+          </div>
+          ${this._processing === 'refresh' ? html`
+            <div class="loading-overlay">
+              <ha-icon icon="mdi:loading" class="spinning"></ha-icon>
+            </div>
+          ` : ''}
         </div>
       </ha-card>
           ${this.config.show_delete_completed_button ? html`
@@ -280,6 +413,12 @@ class TaskListCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Reloads the config entry for todo helper integration, triggering fresh syncs.
+   * 
+   * @async
+   * @returns {Promise<void>} Resolves when reloading concludes
+   */
   async updateTodos() {
     if (!this.hass || this._processing) return;
     this._processing = 'refresh';
@@ -304,6 +443,13 @@ class TaskListCard extends HAControlBase {
     }
   }
 
+  /**
+   * Bulk-removes completed tasks from target lists, calling todo service APIs.
+   * 
+   * @async
+   * @returns {Promise<void>} Resolves when deletion sequence concludes
+   * @private
+   */
   async _deleteCompletedTasks() {
     if (!this.hass || this._processing) return;
     this._processing = 'delete';
@@ -331,8 +477,18 @@ class TaskListCard extends HAControlBase {
     }
   }
 
+  /**
+   * Asynchronously toggles a task completion status (between 'needs_action' and 'completed').
+   * Supports block_future_toggles checking to prevent ticking tasks scheduled ahead.
+   * Updates matching child visual rows and dispatches update_item service calls.
+   * 
+   * @param {Task} task - The task data transfer object being toggled
+   * @async
+   * @private
+   */
   async _toggleTask(task) {
     if (this._processing) return;
+    if (this.config.block_future_toggles !== false && task.isFuture) return;
     this._toggledItems.push({ uid: task.uid, entity_id: task.entity_id });
     const oldStatus = task.status;
     const newStatus = task.status === 'completed' ? 'needs_action' : 'completed';
@@ -342,7 +498,6 @@ class TaskListCard extends HAControlBase {
     const isVisible = task.isVisible;
 
     // Always update the specific row and item to ensure UI reflects state change
-    // (Lit might skip update if object reference 'day' hasn't changed)
     const rows = this.shadowRoot.querySelectorAll('task-list-card-row');
     for (const row of rows) {
       if (row.day && row.day.tasks.includes(task)) {

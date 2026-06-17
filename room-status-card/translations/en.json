@@ -7,15 +7,9 @@
   "badges": "Badges",
   "badge_num": "Badge {num}",
   "default_color": "Default Color",
-  "show_icon": "Show Icon",
-  "show_value": "Show Value",
-  "thresholds_rules": "Thresholds / Rules",
-  "value_ge": "Value >=",
-  "color": "Color",
-  "animation": "Animation",
-  "none": "None",
-  "blink": "Blink",
-  "pulse": "Pulse",
-  "add_rule": "Add Rule",
-  "add_badge": "Add Badge"
+  "add_badge": "Add Badge",
+  "features": "Features",
+  "add_feature": "Add Feature",
+  "unrecognized_settings": "Unrecognized configuration settings: {keys}",
+  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration."
 }

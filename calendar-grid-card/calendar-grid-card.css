@@ -1,3 +1,8 @@
+/* ==========================================================================
+   CALENDAR GRID CARD STYLESHEET
+   Styles calendar header controls, monthly grids cells, sidebars, and toggles.
+   ========================================================================== */
+
 :host {
     display: flex;
     flex-direction: column;
@@ -6,6 +11,7 @@
     overflow: hidden;
 }
 
+/* Base card layout styling */
 ha-card {
     padding: 16px;
     display: flex;
@@ -15,6 +21,7 @@ ha-card {
     overflow: hidden;
 }
 
+/* Header line wrapping title and month controls */
 .header {
     display: flex;
     justify-content: space-between;
@@ -23,17 +30,20 @@ ha-card {
     flex-shrink: 0;
 }
 
+/* Header title typography settings */
 .month-title {
     font-size: 1.5rem;
     font-weight: 500;
 }
 
+/* Suffix row holding action controls inside header blocks */
 .header-right {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
+/* Grouping outline border wrapper for buttons controls */
 .controls {
     display: flex;
     background-color: var(--secondary-background-color);
@@ -42,6 +52,7 @@ ha-card {
     overflow: hidden;
 }
 
+/* Month navigation buttons */
 .control-button {
     padding: 4px 8px;
     cursor: pointer;
@@ -54,19 +65,23 @@ ha-card {
     box-sizing: border-box;
 }
 
+/* Hover overlay states for control buttons */
 .control-button:hover {
     background-color: rgba(var(--rgb-primary-text-color), 0.05);
 }
 
+/* Active click states overlay for control buttons */
 .control-button:active {
     background-color: rgba(var(--rgb-primary-text-color), 0.1);
 }
 
+/* Selected state styling for control buttons */
 .control-button.active {
     color: var(--primary-color);
     background-color: rgba(var(--rgb-primary-text-color), 0.1);
 }
 
+/* Today centering button overrides */
 .control-button.today {
     padding: 0 16px;
     font-weight: 500;
@@ -75,10 +90,12 @@ ha-card {
     border-right: 1px solid var(--divider-color);
 }
 
+/* Control icon size */
 .control-button ha-icon {
     --mdc-icon-size: 20px;
 }
 
+/* Main body content block wrapping calendar grids and sidebars */
 .main-content {
     display: flex;
     flex-grow: 1;
@@ -86,20 +103,25 @@ ha-card {
     overflow: hidden;
     gap: 16px;
     flex-direction: row;
+    position: relative !important;
 }
 
+/* Left-positioned sidebar display mode */
 .main-content.pos-left {
     flex-direction: row-reverse;
 }
 
+/* Top-positioned sidebar display mode */
 .main-content.pos-top {
     flex-direction: column-reverse;
 }
 
+/* Bottom-positioned sidebar display mode */
 .main-content.pos-bottom {
     flex-direction: column;
 }
 
+/* Calendar month grid row/column display metrics */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -109,6 +131,7 @@ ha-card {
     width: 100%;
 }
 
+/* Week day name headers (e.g. 'MON', 'TUE') */
 .day-header {
     text-align: center;
     font-weight: bold;
@@ -117,6 +140,7 @@ ha-card {
     font-size: 0.9rem;
 }
 
+/* Individual calendar grid day cell */
 .day-cell {
     border: 1px solid var(--divider-color);
     padding: 4px;
@@ -125,20 +149,23 @@ ha-card {
     background: var(--card-background-color);
     border-radius: 4px;
     position: relative;
-    min-width: 0; /* Ensures equal width even with long content */
+    min-width: 0; /* Prevents overflow issues */
     min-height: 0;
     overflow: hidden;
 }
 
+/* Background overlay color for days outside active viewing month */
 .day-cell.other-month {
     background: var(--secondary-background-color);
     opacity: 0.6;
 }
 
+/* Colored outline representing current day cell */
 .day-cell.today {
     border: 2px solid var(--primary-color);
 }
 
+/* Date digit label text */
 .day-number {
     font-size: 0.8rem;
     font-weight: 500;
@@ -148,11 +175,13 @@ ha-card {
     flex-shrink: 0;
 }
 
+/* Today date digit label highlights */
 .day-cell.today .day-number {
     color: var(--primary-color);
     font-weight: bold;
 }
 
+/* Container hosting multiple event listings inside cells */
 .events-container {
     display: flex;
     flex-direction: column;
@@ -162,7 +191,7 @@ ha-card {
     min-height: 0;
 }
 
-/* Scrollbar styling for events container */
+/* Custom scrollbars inside day events container lists */
 .events-container::-webkit-scrollbar {
     width: 4px;
 }
@@ -171,6 +200,7 @@ ha-card {
     border-radius: 2px;
 }
 
+/* Sidebar listing calendar source names checks checkboxes */
 .sidebar {
     width: 200px;
     display: flex;
@@ -182,6 +212,7 @@ ha-card {
     padding-left: 16px;
 }
 
+/* Sidebar positioning: left mode */
 .main-content.pos-left .sidebar {
     border-left: none;
     border-right: 1px solid var(--divider-color);
@@ -189,6 +220,7 @@ ha-card {
     padding-right: 16px;
 }
 
+/* Sidebar positioning: top & bottom modes overrides */
 .main-content.pos-top .sidebar,
 .main-content.pos-bottom .sidebar {
     width: 100%;
@@ -202,6 +234,7 @@ ha-card {
     flex-wrap: wrap;
 }
 
+/* Sidebar positioning: bottom mode specifics */
 .main-content.pos-bottom .sidebar {
     border-bottom: none;
     border-top: 1px solid var(--divider-color);
@@ -209,6 +242,7 @@ ha-card {
     padding-top: 16px;
 }
 
+/* Interactive calendar toggle label checks badges */
 .calendar-toggle {
     display: flex;
     align-items: center;
@@ -225,20 +259,253 @@ ha-card {
     margin-bottom: 4px;
 }
 
+/* Hover states for calendar toggles */
 .calendar-toggle:hover {
     background-color: var(--divider-color);
 }
 
+/* Checked/Active state colors for calendar toggles */
 .calendar-toggle.active {
     background-color: var(--primary-color);
     color: var(--text-primary-color);
     border-color: var(--primary-color);
 }
 
+/* Calendar name text formatting */
 .calendar-name {
     font-size: 0.9rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     pointer-events: none;
+}
+
+/* Spinning keyframes class trigger (for API load updates) */
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+/* General rotation animation keyframes definition */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Glassmorphism loading overlay visible during updates */
+.loading-overlay {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(var(--rgb-card-background-color, 255, 255, 255), 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    border-radius: var(--ha-card-border-radius, 12px) !important;
+}
+
+/* Large spinner loading icon */
+.loading-overlay ha-icon {
+    --mdc-icon-size: 32px;
+    color: var(--primary-color) !important;
+}
+
+/* Dialog/Modal Glassmorphic Overlay */
+.dialog-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* Dialog Card container matching Lovelace themes */
+.dialog-card {
+    background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color))) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--divider-color) !important;
+    width: 90% !important;
+    max-width: 480px !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    box-sizing: border-box !important;
+}
+
+/* Dialog Header with calendar source color context */
+.dialog-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    padding: 20px 24px !important;
+    border-bottom: 1px solid var(--divider-color) !important;
+    gap: 16px !important;
+}
+
+.dialog-header-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+/* Badge for source calendar entity name */
+.dialog-calendar-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    width: fit-content !important;
+}
+
+.dialog-calendar-badge ha-icon {
+    --mdc-icon-size: 14px !important;
+}
+
+.dialog-title {
+    margin: 0 !important;
+    font-size: 1.35rem !important;
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+    color: var(--primary-text-color) !important;
+}
+
+/* Close action button in top corner */
+.dialog-close-button {
+    cursor: pointer !important;
+    padding: 6px !important;
+    border-radius: 50% !important;
+    color: var(--secondary-text-color) !important;
+    transition: background-color 0.2s ease, color 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.dialog-close-button:hover {
+    background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08) !important;
+    color: var(--primary-text-color) !important;
+}
+
+.dialog-close-button ha-icon {
+    --mdc-icon-size: 20px !important;
+}
+
+/* Dialog Body containing modular feature rows */
+.dialog-body {
+    padding: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    overflow-y: auto !important;
+}
+
+/* Individual feature rows */
+.dialog-feature-row {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+}
+
+.feature-icon {
+    --mdc-icon-size: 20px !important;
+    color: var(--secondary-text-color) !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+}
+
+.feature-content {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    color: var(--primary-text-color) !important;
+    flex-grow: 1 !important;
+    word-break: break-word !important;
+}
+
+/* Clickable locations links mapping */
+.feature-link {
+    color: var(--primary-color) !important;
+    text-decoration: none !important;
+}
+
+.feature-link:hover {
+    text-decoration: underline !important;
+}
+
+/* Attendees lists layouts */
+.attendees-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+.attendee-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background-color: var(--secondary-background-color) !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--divider-color) !important;
+}
+
+.attendee-name {
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+}
+
+.attendee-status {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.attendee-status ha-icon {
+    --mdc-icon-size: 16px !important;
+}
+
+.attendee-status.status-accepted {
+    color: var(--success-color, #4caf50) !important;
+}
+
+.attendee-status.status-declined {
+    color: var(--error-color, #f44336) !important;
+}
+
+.attendee-status.status-tentative {
+    color: var(--warning-color, #ff9800) !important;
+}
+
+.attendee-status.status-unknown {
+    color: var(--secondary-text-color) !important;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

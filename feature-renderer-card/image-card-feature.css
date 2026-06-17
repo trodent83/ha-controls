@@ -1,0 +1,24 @@
+/* ==========================================================================
+   IMAGE CARD FEATURE STYLESHEET
+   Sizing and overflow styling for rendering images/camera feeds.
+   ========================================================================== */
+
+.image-feature-container {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.image-feature-container img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.error {
+  color: var(--error-color);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}

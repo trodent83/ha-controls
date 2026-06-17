@@ -1,14 +1,26 @@
+/* ==========================================================================
+   MULTI STATE CARD EDITOR STYLESHEET
+   Styles the entity listings, layouts dropdown, and features integrations.
+   ========================================================================== */
+
+/* Padding inside editor settings panel sheets */
 .card-content {
     padding: 0 16px 16px;
 }
+
+/* Sizing of layout mode selection box controls */
 .layout-select {
     width: 100%;
     margin-top: 10px;
 }
+
+/* Header action icons layout row grouping */
 .header-actions {
     display: flex;
     align-items: center;
 }
+
+/* Row wrapping icon/checkbox parameters options */
 .icon-settings-row {
     display: flex;
     justify-content: space-between;
@@ -16,27 +28,81 @@
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+/* Horizontal border divider separating entity cards blocks */
 .entity-separator {
     border-bottom: 1px solid var(--divider-color);
     margin-top: 12px;
     margin-bottom: 12px;
 }
+
+/* Spacing before inline feature builder block sections */
 .features-section {
   margin-top: 16px;
 }
+
+/* Feature category headers typography settings */
 .features-header {
   font-weight: 500;
   margin-bottom: 8px;
 }
+
+/* Sub-card boundary containers grouping feature editors attributes */
 .feature-item {
   border: 1px solid var(--divider-color);
   border-radius: 4px;
   padding: 8px;
   margin-bottom: 8px;
 }
+
+/* Header line within feature boxes (contains title and deletion action) */
 .feature-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 500;
+}
+
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 16px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Editor utility actions */
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color);
 }

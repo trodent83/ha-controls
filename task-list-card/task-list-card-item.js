@@ -1,8 +1,26 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
+/**
+ * TaskListCardItem
+ * Renders an individual task item detail line, including description block,
+ * sources tracking badges, completion toggling checkboxes, and separator boundaries.
+ * 
+ * @extends HAControlBase
+ */
 class TaskListCardItem extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks task object, separators display toggles, and readonly states.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return {
       ...super.properties,
@@ -13,15 +31,44 @@ class TaskListCardItem extends HAControlBase {
     };
   }
 
+  /**
+   * Forces a render update on this individual task element.
+   */
   updateTask() {
     this.requestUpdate();
   }
 
+  /**
+   * Click event handler. Dispatches a custom 'toggle-task' event to the card row/container
+   * if interactions are not blocked due to read-only mode or future task configuration limits.
+   * 
+   * @private
+   */
   _toggle() {
-    if (this.readonly) return;
+    if (this.readonly || (this.config.block_future_toggles !== false && this.task.isFuture)) return;
     this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
+  get translationPath() { return "/local/ha-controls/task-list-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
+  get translationVersion() { return VERSION; }
+
+  /**
+   * Renders the custom card item HTML template.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.task || !this.config || !this.hass) return html``;
 
@@ -34,16 +81,12 @@ class TaskListCardItem extends HAControlBase {
     const separatorClass = this.hasSeparator ? 'task-item-separator' : '';
     const separatorStyle = (this.hasSeparator ? `border-bottom-color: ${separatorColor};` : '') + (hidden ? 'display: none;' : '');
 
+    const isFutureBlocked = this.config.block_future_toggles !== false && t.isFuture;
+    const isDisabled = this.readonly || isFutureBlocked;
+
     return html`
-      <style>
-        :host { display: block; }
-        .task-item.readonly {
-          opacity: 0.5;
-          cursor: default;
-        }
-      </style>
-      <link rel="stylesheet" href="/local/ha-controls/task-list-card/task-list-card-item.css?v=${VERSION}">
-      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${this.readonly ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
+      ${this.renderStyle('task-list-card-item.css')}
+      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
         ${this.config.show_source ? (() => {

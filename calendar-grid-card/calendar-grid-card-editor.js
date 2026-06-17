@@ -1,15 +1,48 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
 
+/**
+ * CalendarGridCardEditor
+ * Visual configuration editor UI for CalendarGridCard.
+ * Manages calendar entities picker list, styling color overrides, regex exclusion filters,
+ * first day of week selection, orientation layout grids, and sidebar positions.
+ * 
+ * @extends HAControlBase
+ */
 class CalendarGridCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Tracks local config instance copy, dayNames section toggle state, and active tab selection state.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
-    return { ...super.properties, _config: {}, _dayNamesExpanded: { state: true } };
+    return { 
+      ...super.properties, 
+      _config: { type: Object }, 
+      _dayNamesExpanded: { state: true },
+      _activeTab: { type: String }
+    };
   }
 
   /**
-   * Invoked when the element is added to the document's DOM.
-   * Ensures that the ha-entity-picker is available.
+   * Initializes the CalendarGridCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
+  }
+
+  /**
+   * LitElement lifecycle mounting callback.
+   * Leverages core Home Assistant entities pickers if not already loaded globally.
    */
   connectedCallback() {
     super.connectedCallback();
@@ -23,31 +56,52 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Returns the path to the translation files.
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
    */
   get translationPath() {
     return "/local/ha-controls/calendar-grid-card/translations";
   }
 
   /**
-   * Returns the version of the translation files.
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
    */
   get translationVersion() {
     return VERSION;
   }
 
   /**
-   * Sets the configuration for the card.
-   * @param {Object} config - The configuration object.
+   * Receives configuration details from Lovelace dashboard interface.
+   * 
+   * @param {Object} config - Config parameters
    */
   setConfig(config) {
-    // Set configuration
     this._config = config;
+
+    const knownKeys = [
+      "first_day_of_week",
+      "orientation",
+      "default_view",
+      "day_names",
+      "today_background",
+      "today_border",
+      "show_finished_events",
+      "show_refresh_button",
+      "sidebar_position",
+      "entities"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
   /**
-   * Handles changes to configuration values from the UI.
-   * @param {Event} ev - The event object.
+   * Handles configuration values change event inside editor textfields, updating properties and dispatching events.
+   * Cleans keys if they are emptied.
+   * 
+   * @param {Event} ev - Input event details
+   * @private
    */
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
@@ -79,8 +133,10 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to the view (week/month) toggle.
-   * @param {Event} ev - The event object.
+   * Handles changes to the week/month view switch.
+   * 
+   * @param {Event} ev - Switch change event
+   * @private
    */
   _viewChanged(ev) {
     if (!this._config || !this.hass) return;
@@ -93,10 +149,11 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Dispatches a config-changed event to notify the parent element.
+   * Dispatches the updated config dictionary back to dashboard engine.
+   * 
+   * @private
    */
   _fireConfigChanged() {
-    // Dispatch config changed event
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: this._config },
@@ -107,32 +164,32 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes from the ha-form element.
-   * @param {Event} ev - The event object.
+   * Receives form values changes from the top-level `<ha-form>` component.
+   * 
+   * @param {CustomEvent} ev - Form value changed details
+   * @private
    */
   _formValueChanged(ev) {
-    // Update config from form values
     this._config = { ...this._config, ...ev.detail.value };
     this._fireConfigChanged();
   }
 
   /**
-   * Retrieves the list of day names based on configuration or defaults.
-   * @returns {Array<string>} The list of day names.
+   * Gathers list of day names based on configured list overrides or default localization strings.
+   * 
+   * @private
+   * @returns {Array<string>} List of week day names
    */
   _getDayNames() {
     let dayNames = this._config.day_names;
-    // Handle string input for day names
     if (typeof dayNames === 'string') {
       dayNames = dayNames.split(',').map(v => v.trim());
     }
 
-    // Return configured day names if valid
     if (dayNames && Array.isArray(dayNames) && dayNames.length === 7) {
       return dayNames;
     }
 
-    // Default day names based on first day of week
     const firstDayOfWeek = this._config.first_day_of_week !== undefined ? parseInt(this._config.first_day_of_week) : 1;
     const defaultDayNames = [
       this._localize('cgc.days.short_sun'),
@@ -151,8 +208,72 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Renders the editor UI.
-   * @returns {TemplateResult} The rendered HTML.
+   * Renders the editor configuration interface layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
+  /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only calendar grid card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.first_day_of_week !== undefined) cleaned.first_day_of_week = this._config.first_day_of_week;
+    if (this._config.orientation !== undefined) cleaned.orientation = this._config.orientation;
+    if (this._config.default_view !== undefined) cleaned.default_view = this._config.default_view;
+    if (this._config.day_names !== undefined) cleaned.day_names = this._config.day_names;
+    if (this._config.today_background !== undefined) cleaned.today_background = this._config.today_background;
+    if (this._config.today_border !== undefined) cleaned.today_border = this._config.today_border;
+    if (this._config.show_finished_events !== undefined) cleaned.show_finished_events = this._config.show_finished_events;
+    if (this._config.show_refresh_button !== undefined) cleaned.show_refresh_button = this._config.show_refresh_button;
+    if (this._config.sidebar_position !== undefined) cleaned.sidebar_position = this._config.sidebar_position;
+    
+    if (this._config.entities && Array.isArray(this._config.entities)) {
+      cleaned.entities = this._config.entities.map(ent => {
+        if (typeof ent === 'object') {
+          const e = { entity: ent.entity };
+          if (ent.name !== undefined) e.name = ent.name;
+          if (ent.color !== undefined) e.color = ent.color;
+          if (ent.backgroundColor !== undefined) e.backgroundColor = ent.backgroundColor;
+          if (ent.iconColor !== undefined) e.iconColor = ent.iconColor;
+          if (ent.activeColor !== undefined) e.activeColor = ent.activeColor;
+          if (ent.activeBackgroundColor !== undefined) e.activeBackgroundColor = ent.activeBackgroundColor;
+          if (ent.activeIconAnimation !== undefined) e.activeIconAnimation = ent.activeIconAnimation;
+          if (ent.filters !== undefined) e.filters = ent.filters;
+          return e;
+        }
+        return ent;
+      });
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:calendar-grid-card",
+      entities: []
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Renders the editor configuration interface layout.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
    */
   render() {
     if (!this.hass || !this._config) return html``;
@@ -161,270 +282,305 @@ class CalendarGridCardEditor extends HAControlBase {
     const dayNames = this._getDayNames();
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/calendar-grid-card/calendar-grid-card-editor.css?v=${this.translationVersion}">
-      <div class="card-config">
-        <ha-form
-            .hass=${this.hass}
-            .data=${{ 
-                first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1",
-                orientation: this._config.orientation || "horizontal"
-            }}
-            .schema=${[
-                {
-                    name: "first_day_of_week",
-                    label: this._localize('cgc.editor.first_day_of_week'),
-                    selector: {
-                        select: {
-                            options: [
-                                { value: "0", label: this._localize('cgc.editor.sunday') },
-                                { value: "1", label: this._localize('cgc.editor.monday') },
-                                { value: "2", label: this._localize('cgc.editor.tuesday') },
-                                { value: "3", label: this._localize('cgc.editor.wednesday') },
-                                { value: "4", label: this._localize('cgc.editor.thursday') },
-                                { value: "5", label: this._localize('cgc.editor.friday') },
-                                { value: "6", label: this._localize('cgc.editor.saturday') }
-                            ],
-                            mode: "dropdown"
-                        }
-                    }
-                },
-                {
-                    name: "orientation",
-                    label: this._localize('cgc.editor.orientation'),
-                    selector: {
-                        select: {
-                            options: [
-                                { value: "horizontal", label: this._localize('cgc.editor.horizontal') },
-                                { value: "vertical", label: this._localize('cgc.editor.vertical') }
-                            ],
-                            mode: "dropdown"
-                        }
-                    }
-                }
-            ]}
-            .computeLabel=${(s) => s.label}
-            @value-changed=${(ev) => this._formValueChanged(ev)}
-        ></ha-form>
-        <ha-formfield label="${this._localize('cgc.editor.week_view')}">
-            <ha-switch
-                .checked=${this._config.default_view === 'week'}
-                @change=${(ev) => this._viewChanged(ev)}
-            ></ha-switch>
-        </ha-formfield>
-        <div class="day-names-container">
-            <div class="header" @click=${() => this._toggleDayNames()}>
-                <span>${this._localize('cgc.editor.day_names')}</span>
-                <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
-            </div>
-            ${this._dayNamesExpanded ? html`
-                <div class="day-names-list">
-                    ${dayNames.map((day, index) => html`
-                        <ha-textfield
-                            label="${this._localize('cgc.editor.day_n', { n: index + 1 })}"
-                            .value=${day}
-                            @input=${(ev) => this._dayNameChanged(ev, index)}
-                        ></ha-textfield>
-                    `)}
-                </div>
-            ` : ''}
+      ${this.renderStyle('calendar-grid-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
+      
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
         </div>
-        <ha-textfield
-            label="${this._localize('cgc.editor.today_background')}"
-            .value=${this._config.today_background || ''}
-            .configValue=${"today_background"}
-            @input=${(ev) => this._valueChanged(ev)}
-        ></ha-textfield>
-        <ha-textfield
-            label="${this._localize('cgc.editor.today_border')}"
-            .value=${this._config.today_border || ''}
-            .configValue=${"today_border"}
-            @input=${(ev) => this._valueChanged(ev)}
-        ></ha-textfield>
-        <ha-formfield label="${this._localize('cgc.editor.show_finished_events')}">
-            <ha-switch
-                .checked=${this._config.show_finished_events !== false}
-                .configValue=${"show_finished_events"}
-                .value=${"on"}
-                @change=${(ev) => this._valueChanged(ev)}
-            ></ha-switch>
-        </ha-formfield>
-        <ha-formfield label="${this._localize('cgc.editor.show_refresh_button')}">
-            <ha-switch
-                .checked=${this._config.show_refresh_button !== false}
-                .configValue=${"show_refresh_button"}
-                .value=${"on"}
-                @change=${(ev) => this._valueChanged(ev)}
-            ></ha-switch>
-        </ha-formfield>
-        <ha-form
-            .hass=${this.hass}
-            .data=${{ sidebar_position: this._config.sidebar_position || 'right' }}
-            .schema=${[
-                {
-                    name: "sidebar_position",
-                    label: this._localize('cgc.editor.sidebar_position'),
-                    selector: {
-                        select: {
-                            options: [
-                                { value: "right", label: this._localize('cgc.editor.pos_right') },
-                                { value: "left", label: this._localize('cgc.editor.pos_left') },
-                                { value: "top", label: this._localize('cgc.editor.pos_top') },
-                                { value: "bottom", label: this._localize('cgc.editor.pos_bottom') },
-                                { value: "hidden", label: this._localize('cgc.editor.pos_hidden') }
-                            ],
-                            mode: "dropdown"
-                        }
-                    }
-                }
-            ]}
-            .computeLabel=${(s) => s.label}
-            @value-changed=${(ev) => this._formValueChanged(ev)}
-        ></ha-form>
-        <div class="separator"></div>
-        <div class="option">
-            <div class="heading">${this._localize('cgc.editor.entities')}</div>
-            <div class="entities">
-                ${entities.map((entityConf, index) => {
-                    const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
-                    const name = typeof entityConf === "object" ? entityConf.name : "";
-                    const color = typeof entityConf === "object" ? entityConf.color : "";
-                    const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
-                    const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
-                    const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
-                    const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
-                    const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
-
-                    let filters = [];
-                    if (typeof entityConf === 'object') {
-                        if (entityConf.filters) {
-                            filters = entityConf.filters;
-                        } else if (entityConf.filter) {
-                            filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
-                        }
-                    }
-
-                    return html`
-                        <div class="entity-row-container">
-                            <div class="entity-row">
-                                <ha-entity-picker
-                                    .hass=${this.hass}
-                                    .value=${entityId}
-                                    .includeDomains=${["calendar"]}
-                                    @value-changed=${(ev) => this._entityChanged(ev, index)}
-                                    allow-custom-entity
-                                ></ha-entity-picker>
-                                <ha-icon-button
-                                    @click=${() => this._removeEntity(index)}
-                                ><ha-icon icon="mdi:delete"></ha-icon></ha-icon-button>
-                            </div>
-                            <div class="separator"></div>
-                            <div class="entity-options">
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.name')}"
-                                    .value=${name || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'name')}
-                                ></ha-textfield>
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.foreground')}"
-                                    .value=${color || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'color')}
-                                ></ha-textfield>
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.background')}"
-                                    .value=${backgroundColor || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'backgroundColor')}
-                                ></ha-textfield>
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.icon_color')}"
-                                    .value=${iconColor || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
-                                ></ha-textfield>
-                                <div class="separator"></div>
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.active_foreground')}"
-                                    .value=${activeColor || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'activeColor')}
-                                ></ha-textfield>
-                                <ha-textfield
-                                    label="${this._localize('cgc.editor.active_background')}"
-                                    .value=${activeBackgroundColor || ''}
-                                    @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
-                                ></ha-textfield>
-                                <ha-form
-                                    .hass=${this.hass}
-                                    .data=${{ activeIconAnimation: activeIconAnimation || '' }}
-                                    .schema=${[
-                                        {
-                                            name: "activeIconAnimation",
-                                            label: this._localize('cgc.editor.active_icon_animation'),
-                                            selector: {
-                                                select: {
-                                                    options: [
-                                                        { value: "", label: "" },
-                                                        { value: "spinning", label: this._localize('cgc.editor.anim_spinning') },
-                                                        { value: "pulsing", label: this._localize('cgc.editor.anim_pulsing') }
-                                                    ],
-                                                    mode: "dropdown"
-                                                }
-                                            }
-                                        }
-                                    ]}
-                                    .computeLabel=${(s) => s.label}
-                                    @value-changed=${(ev) => this._entityColorChanged({ target: { value: ev.detail.value.activeIconAnimation } }, index, 'activeIconAnimation')}
-                                ></ha-form>
-                            </div>
-                            <div class="filters-list">
-                                <div class="filters-header">${this._localize('cgc.editor.filters_header')}</div>
-                                ${filters.map((filter, filterIndex) => html`
-                                    <div class="filter-row">
-                                        <ha-textfield
-                                            class="filter-pattern"
-                                            label="${this._localize('cgc.editor.pattern')}"
-                                            .value=${filter.pattern || ''}
-                                            @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
-                                        ></ha-textfield>
-                                        <ha-formfield label="${this._localize('cgc.editor.case_sensitive')}">
-                                            <ha-switch
-                                                .checked=${filter.case_sensitive !== false}
-                                                @change=${(ev) => this._filterChanged(ev, index, filterIndex, 'case_sensitive')}
-                                            ></ha-switch>
-                                        </ha-formfield>
-                                        <ha-icon-button
-                                            @click=${() => this._removeFilter(index, filterIndex)}
-                                        ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
-                                    </div>
-                                `)}
-                                <ha-button @click=${() => this._addFilter(index)}>${this._localize('cgc.editor.add_filter')}</ha-button>
-                            </div>
-                        </div>
-                    `;
-                })}
-                <div class="separator"></div>
-                <div class="add-entity-header">${this._localize('cgc.editor.add_new_calendar')}</div>
-                <ha-entity-picker
-                    .hass=${this.hass}
-                    .includeDomains=${["calendar"]}
-                    @value-changed=${(ev) => this._addEntity(ev)}
-                    allow-custom-entity
-                ></ha-entity-picker>
-            </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'calendars' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'calendars'; }}
+        >
+          ${this._localize('cgc.editor.entities') || 'Calendars'}
         </div>
+      </div>
+
+      ${this._activeTab === 'general' ? html`
+        <div class="card-config" style="margin-top: 0;">
+          <ha-form
+              .hass=${this.hass}
+              .data=${{ 
+                  first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1",
+                  orientation: this._config.orientation || "horizontal"
+              }}
+              .schema=${[
+                  {
+                      name: "first_day_of_week",
+                      label: this._localize('cgc.editor.first_day_of_week'),
+                      selector: {
+                          select: {
+                              options: [
+                                  { value: "0", label: this._localize('cgc.editor.sunday') },
+                                  { value: "1", label: this._localize('cgc.editor.monday') },
+                                  { value: "2", label: this._localize('cgc.editor.tuesday') },
+                                  { value: "3", label: this._localize('cgc.editor.wednesday') },
+                                  { value: "4", label: this._localize('cgc.editor.thursday') },
+                                  { value: "5", label: this._localize('cgc.editor.friday') },
+                                  { value: "6", label: this._localize('cgc.editor.saturday') }
+                              ],
+                              mode: "dropdown"
+                          }
+                      }
+                  },
+                  {
+                      name: "orientation",
+                      label: this._localize('cgc.editor.orientation'),
+                      selector: {
+                          select: {
+                              options: [
+                                  { value: "horizontal", label: this._localize('cgc.editor.horizontal') },
+                                  { value: "vertical", label: this._localize('cgc.editor.vertical') }
+                              ],
+                              mode: "dropdown"
+                          }
+                      }
+                  }
+              ]}
+              .computeLabel=${(s) => s.label}
+              @value-changed=${(ev) => this._formValueChanged(ev)}
+          ></ha-form>
+          <ha-formfield label="${this._localize('cgc.editor.week_view')}">
+              <ha-switch
+                  .checked=${this._config.default_view === 'week'}
+                  @change=${(ev) => this._viewChanged(ev)}
+              ></ha-switch>
+          </ha-formfield>
+          <div class="day-names-container">
+              <div class="header" @click=${() => this._toggleDayNames()}>
+                  <span>${this._localize('cgc.editor.day_names')}</span>
+                  <ha-icon icon="${this._dayNamesExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>
+              </div>
+              ${this._dayNamesExpanded ? html`
+                  <div class="day-names-list">
+                      ${dayNames.map((day, index) => html`
+                          <ha-input
+                              label="${this._localize('cgc.editor.day_n', { n: index + 1 })}"
+                              .value=${day}
+                              @input=${(ev) => this._dayNameChanged(ev, index)}
+                          ></ha-input>
+                      `)}
+                  </div>
+              ` : ''}
+          </div>
+          <ha-input
+              label="${this._localize('cgc.editor.today_background')}"
+              .value=${this._config.today_background || ''}
+              .configValue=${"today_background"}
+              @input=${(ev) => this._valueChanged(ev)}
+          ></ha-input>
+          <ha-input
+              label="${this._localize('cgc.editor.today_border')}"
+              .value=${this._config.today_border || ''}
+              .configValue=${"today_border"}
+              @input=${(ev) => this._valueChanged(ev)}
+          ></ha-input>
+          <ha-formfield label="${this._localize('cgc.editor.show_finished_events')}">
+              <ha-switch
+                  .checked=${this._config.show_finished_events !== false}
+                  .configValue=${"show_finished_events"}
+                  .value=${"on"}
+                  @change=${(ev) => this._valueChanged(ev)}
+              ></ha-switch>
+          </ha-formfield>
+          <ha-formfield label="${this._localize('cgc.editor.show_refresh_button')}">
+              <ha-switch
+                  .checked=${this._config.show_refresh_button !== false}
+                  .configValue=${"show_refresh_button"}
+                  .value=${"on"}
+                  @change=${(ev) => this._valueChanged(ev)}
+              ></ha-switch>
+          </ha-formfield>
+          <ha-form
+              .hass=${this.hass}
+              .data=${{ sidebar_position: this._config.sidebar_position || 'right' }}
+              .schema=${[
+                  {
+                      name: "sidebar_position",
+                      label: this._localize('cgc.editor.sidebar_position'),
+                      selector: {
+                          select: {
+                              options: [
+                                  { value: "right", label: this._localize('cgc.editor.pos_right') },
+                                  { value: "left", label: this._localize('cgc.editor.pos_left') },
+                                  { value: "top", label: this._localize('cgc.editor.pos_top') },
+                                  { value: "bottom", label: this._localize('cgc.editor.pos_bottom') },
+                                  { value: "hidden", label: this._localize('cgc.editor.pos_hidden') }
+                              ],
+                              mode: "dropdown"
+                          }
+                      }
+                  }
+              ]}
+              .computeLabel=${(s) => s.label}
+              @value-changed=${(ev) => this._formValueChanged(ev)}
+          ></ha-form>
+        </div>
+      ` : html`
+        <div class="card-config" style="margin-top: 0;">
+          <div class="option">
+              <div class="heading">${this._localize('cgc.editor.entities')}</div>
+              <div class="entities">
+                  ${entities.map((entityConf, index) => {
+                      const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+                      const name = typeof entityConf === "object" ? entityConf.name : "";
+                      const color = typeof entityConf === "object" ? entityConf.color : "";
+                      const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
+                      const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
+                      const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
+                      const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
+                      const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
+
+                      let filters = [];
+                      if (typeof entityConf === 'object') {
+                          if (entityConf.filters) {
+                              filters = entityConf.filters;
+                          } else if (entityConf.filter) {
+                              filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+                          }
+                      }
+
+                      return html`
+                          <div class="entity-row-container">
+                              <div class="entity-row">
+                                  <ha-entity-picker
+                                      .hass=${this.hass}
+                                      .value=${entityId}
+                                      .includeDomains=${["calendar"]}
+                                      @value-changed=${(ev) => this._entityChanged(ev, index)}
+                                      allow-custom-entity
+                                  ></ha-entity-picker>
+                                  <ha-icon-button
+                                      @click=${() => this._removeEntity(index)}
+                                  ></ha-icon-button>
+                              </div>
+                              <div class="separator"></div>
+                              <div class="entity-options">
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.name')}"
+                                      .value=${name || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'name')}
+                                  ></ha-input>
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.foreground')}"
+                                      .value=${color || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'color')}
+                                  ></ha-input>
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.background')}"
+                                      .value=${backgroundColor || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'backgroundColor')}
+                                  ></ha-input>
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.icon_color')}"
+                                      .value=${iconColor || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
+                                  ></ha-input>
+                                  <div class="separator"></div>
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.active_foreground')}"
+                                      .value=${activeColor || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'activeColor')}
+                                  ></ha-input>
+                                  <ha-input
+                                      label="${this._localize('cgc.editor.active_background')}"
+                                      .value=${activeBackgroundColor || ''}
+                                      @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
+                                  ></ha-input>
+                                  <ha-form
+                                      .hass=${this.hass}
+                                      .data=${{ activeIconAnimation: activeIconAnimation || '' }}
+                                      .schema=${[
+                                          {
+                                              name: "activeIconAnimation",
+                                              label: this._localize('cgc.editor.active_icon_animation'),
+                                              selector: {
+                                                  select: {
+                                                      options: [
+                                                          { value: "", label: "" },
+                                                          { value: "spinning", label: this._localize('cgc.editor.anim_spinning') },
+                                                          { value: "pulsing", label: this._localize('cgc.editor.anim_pulsing') }
+                                                      ],
+                                                      mode: "dropdown"
+                                                  }
+                                              }
+                                          }
+                                      ]}
+                                      .computeLabel=${(s) => s.label}
+                                      @value-changed=${(ev) => this._entityColorChanged({ target: { value: ev.detail.value.activeIconAnimation } }, index, 'activeIconAnimation')}
+                                  ></ha-form>
+                              </div>
+                              <div class="filters-list">
+                                  <div class="filters-header">${this._localize('cgc.editor.filters_header')}</div>
+                                  ${filters.map((filter, filterIndex) => html`
+                                      <div class="filter-row">
+                                          <ha-input
+                                              class="filter-pattern"
+                                              label="${this._localize('cgc.editor.pattern')}"
+                                              .value=${filter.pattern || ''}
+                                              @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
+                                          ></ha-input>
+                                          <ha-formfield label="${this._localize('cgc.editor.case_sensitive')}">
+                                              <ha-switch
+                                                  .checked=${filter.case_sensitive !== false}
+                                                  @change=${(ev) => this._filterChanged(ev, index, filterIndex, 'case_sensitive')}
+                                              ></ha-switch>
+                                          </ha-formfield>
+                                          <ha-icon-button
+                                              @click=${() => this._removeFilter(index, filterIndex)}
+                                          ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
+                                      </div>
+                                  `)}
+                                  <ha-button @click=${() => this._addFilter(index)}>${this._localize('cgc.editor.add_filter')}</ha-button>
+                              </div>
+                          </div>
+                      `;
+                  })}
+                  <div class="separator"></div>
+                  <div class="add-entity-header">${this._localize('cgc.editor.add_new_calendar')}</div>
+                  <ha-entity-picker
+                      .hass=${this.hass}
+                      .includeDomains=${["calendar"]}
+                      @value-changed=${(ev) => this._addEntity(ev)}
+                      allow-custom-entity
+                  ></ha-entity-picker>
+              </div>
+          </div>
+        </div>
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
       </div>
     `;
   }
 
   /**
-   * Toggles the visibility of the day names editor.
+   * Toggles the day names list editor visibility.
+   * 
+   * @private
    */
   _toggleDayNames() {
-      // Toggle visibility of day names editor
       this._dayNamesExpanded = !this._dayNamesExpanded;
   }
 
   /**
-   * Handles changes to a specific day name.
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the day name being changed.
+   * Updates an individual day name in the configurations array.
+   * 
+   * @param {Event} ev - Input event details
+   * @param {number} index - Index sequence of day name edited
+   * @private
    */
   _dayNameChanged(ev, index) {
       const newValue = ev.target.value;
@@ -432,21 +588,22 @@ class CalendarGridCardEditor extends HAControlBase {
       const newDayNames = [...dayNames];
       newDayNames[index] = newValue;
       
-      // Update day names in config
       this._config = { ...this._config, day_names: newDayNames };
       this._fireConfigChanged();
   }
 
   /**
-   * Helper method to update a specific entity configuration.
-   * @param {number} index - The index of the entity to update.
-   * @param {Function} updateFn - A function that takes the current entity config and returns the updated one.
+   * General delegate utility updating target entity configuration blocks.
+   * Normalizes entity config definitions.
+   * 
+   * @param {number} index - Index of target entity configuration to update
+   * @param {Function} updateFn - Mutator delegate returning updated schema config
+   * @private
    */
   _updateEntity(index, updateFn) {
     const newEntities = [...(this._config.entities || [])];
     let entityConf = newEntities[index];
     
-    // Normalize entity config to object
     entityConf = typeof entityConf === 'string' 
       ? { entity: entityConf } 
       : { ...entityConf };
@@ -459,51 +616,56 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to an entity selection.
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the entity being changed.
+   * Updates calendar entity target source ID.
+   * 
+   * @param {CustomEvent} ev - Picker changed event details
+   * @param {number} index - Index of entity row
+   * @private
    */
   _entityChanged(ev, index) {
-    // Update entity ID
     this._updateEntity(index, (entityConf) => {
       return { ...entityConf, entity: ev.detail.value };
     });
   }
 
   /**
-   * Handles changes to entity properties (color, name, etc.).
-   * @param {Event} ev - The event object.
-   * @param {number} index - The index of the entity.
-   * @param {string} prop - The property being changed.
+   * General entity properties mutator (names, color fields).
+   * 
+   * @param {Event} ev - Input event details
+   * @param {number} index - Index of entity configuration block
+   * @param {string} prop - Property key targeted
+   * @private
    */
   _entityColorChanged(ev, index, prop) {
-    // Update entity property (color, name, etc)
     this._updateEntity(index, (entityConf) => {
       return { ...entityConf, [prop]: ev.target.value };
     });
   }
 
   /**
-   * Removes an entity from the configuration.
-   * @param {number} index - The index of the entity to remove.
+   * Deletes a calendar entity configuration block by index.
+   * 
+   * @param {number} index - Index sequence of entity item to delete
+   * @private
    */
   _removeEntity(index) {
       const newEntities = [...(this._config.entities || [])];
-      // Remove entity at index
       newEntities.splice(index, 1);
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
   }
 
   /**
-   * Adds a new filter to an entity configuration.
-   * @param {number} index - The index of the entity.
+   * Appends a blank default filter definition object to a calendar configuration block.
+   * Migrates legacy filter attributes if present.
+   * 
+   * @param {number} index - Index of target entity config block
+   * @private
    */
   _addFilter(index) {
     this._updateEntity(index, (entityConf) => {
       const filters = entityConf.filters ? [...entityConf.filters] : [];
       
-      // Migrate legacy filter to filters array
       if (entityConf.filter) {
         filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete entityConf.filter;
@@ -516,9 +678,11 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Removes a filter from an entity configuration.
-   * @param {number} entityIndex - The index of the entity.
-   * @param {number} filterIndex - The index of the filter to remove.
+   * Deletes a filter pattern rule block by index from a calendar entity.
+   * 
+   * @param {number} entityIndex - Index of target entity config block
+   * @param {number} filterIndex - Index sequence of filter to remove
+   * @private
    */
   _removeFilter(entityIndex, filterIndex) {
     this._updateEntity(entityIndex, (entityConf) => {
@@ -539,26 +703,26 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Handles changes to a filter property.
-   * @param {Event} ev - The event object.
-   * @param {number} entityIndex - The index of the entity.
-   * @param {number} filterIndex - The index of the filter.
-   * @param {string} prop - The property being changed.
+   * Updates regex properties inside an individual filter block.
+   * Migrates legacy filter definitions if present.
+   * 
+   * @param {Event} ev - Input/switch event details
+   * @param {number} entityIndex - Index of target entity config block
+   * @param {number} filterIndex - Index sequence of filter rule
+   * @param {string} prop - Property key updated ('pattern' or 'case_sensitive')
+   * @private
    */
   _filterChanged(ev, entityIndex, filterIndex, prop) {
     this._updateEntity(entityIndex, (entityConf) => {
-      // Ensure filters array exists
       let filters = entityConf.filters ? [...entityConf.filters] : [];
       const newConf = { ...entityConf };
 
-      // Migrate legacy filter if needed
       if (!entityConf.filters && entityConf.filter) {
         filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete newConf.filter;
         delete newConf.case_sensitive;
       }
 
-      // Update specific filter
       filters[filterIndex] = { ...filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
       newConf.filters = filters;
       return newConf;
@@ -566,20 +730,20 @@ class CalendarGridCardEditor extends HAControlBase {
   }
 
   /**
-   * Adds a new entity to the configuration.
-   * @param {Event} ev - The event object containing the new entity ID.
+   * Appends a new calendar source entity ID to target arrays.
+   * 
+   * @param {CustomEvent} ev - Picker changed event details
+   * @private
    */
   _addEntity(ev) {
       const newValue = ev.detail.value;
       if (!newValue) return;
       
       const newEntities = [...(this._config.entities || [])];
-      // Add new entity
       newEntities.push(newValue);
       this._config = { ...this._config, entities: newEntities };
       this._fireConfigChanged();
       
-      // Clear input
       ev.target.value = "";
   }
 }

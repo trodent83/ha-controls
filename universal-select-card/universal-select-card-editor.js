@@ -1,19 +1,82 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.4';
 
+/**
+ * UniversalSelectCardEditor
+ * Visual configuration editor for UniversalSelectCard.
+ * Generates dropdown field bindings, custom label mappings, and interactive card feature loaders.
+ * 
+ * @extends HAControlBase
+ */
 class UniversalSelectCardEditor extends HAControlBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase, tracks the editor config copy and active tab selection state.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
-    return { ...super.properties, _config: { type: Object } };
+    return { 
+      ...super.properties, 
+      _config: { type: Object },
+      _activeTab: { type: String }
+    };
   }
 
+  /**
+   * Initializes the UniversalSelectCardEditor component instance,
+   * setting default active tab to 'general'.
+   */
+  constructor() {
+    super();
+    this._activeTab = 'general';
+  }
+
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/universal-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Receives the configuration object from Home Assistant Lovelace dashboard.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   */
   setConfig(config) {
     this._config = config;
+
+    const knownKeys = [
+      "entity",
+      "lock_entity",
+      "show_label",
+      "layout",
+      "options_order",
+      "options_config"
+    ];
+    this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
 
+  /**
+   * Generates the schema definition for general card configurations (e.g. entities list, layout, labels).
+   * 
+   * @private
+   * @returns {Array<Object>} Base configuration form fields schema
+   */
   _baseSchema() {
     return [
       { name: "entity", label: this._localize('controlled_dropdown'), selector: { entity: { domain: "input_select" } } },
@@ -34,6 +97,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     ];
   }
 
+  /**
+   * Formats and returns a human-readable display name for custom Lovelace card features.
+   * 
+   * @param {string} type - Feature identifier tag name (e.g., 'custom:timer-card-feature')
+   * @private
+   * @returns {string} Human-readable feature name
+   */
   _getFeatureName(type) {
     if (!type) return "Unknown Feature";
     const customFeatures = window.customCardFeatures || [];
@@ -46,6 +116,62 @@ class UniversalSelectCardEditor extends HAControlBase {
     return cleanType.replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  /**
+   * Cleans the active configuration of any unrecognized properties.
+   * Keeps only universal select card schema fields.
+   * 
+   * @private
+   */
+  _cleanConfig() {
+    if (!this._config) return;
+    const cleaned = {
+      type: this._config.type
+    };
+    if (this._config.entity !== undefined) cleaned.entity = this._config.entity;
+    if (this._config.lock_entity !== undefined) cleaned.lock_entity = this._config.lock_entity;
+    if (this._config.show_label !== undefined) cleaned.show_label = this._config.show_label;
+    if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
+    if (this._config.options_order !== undefined) cleaned.options_order = this._config.options_order;
+    
+    if (this._config.options_config && typeof this._config.options_config === 'object') {
+      cleaned.options_config = {};
+      for (const [optName, optConf] of Object.entries(this._config.options_config)) {
+        const o = {};
+        if (optConf.label !== undefined) o.label = optConf.label;
+        if (optConf.icon !== undefined) o.icon = optConf.icon;
+        if (optConf.color !== undefined) o.color = optConf.color;
+        if (optConf.animation !== undefined) o.animation = optConf.animation;
+        if (optConf.hide_label_if_active !== undefined) o.hide_label_if_active = optConf.hide_label_if_active;
+        if (optConf.hold_action !== undefined) o.hold_action = optConf.hold_action;
+        if (optConf.features !== undefined) o.features = optConf.features;
+        cleaned.options_config[optName] = o;
+      }
+    }
+    
+    this._config = cleaned;
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Resets the active configuration back to standard stub values.
+   * 
+   * @private
+   */
+  _resetConfig() {
+    this._config = {
+      type: this._config?.type || "custom:universal-select-card",
+      entity: ""
+    };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Renders the editor configuration page layout.
+   * Generates forms for base variables and iterates over select options to generate panels.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     if (!this.hass || !this._config) return html``;
     const data = { layout: 'row', ...this._config };
@@ -54,6 +180,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     const stateObj = entityId ? this.hass.states[entityId] : null;
     let options = stateObj?.attributes?.options || [];
 
+    // Sort options according to the user-defined order in the configuration, if provided
     if (this._config.options_order) {
         const order = this._config.options_order;
         options = [...options].sort((a, b) => {
@@ -67,21 +194,64 @@ class UniversalSelectCardEditor extends HAControlBase {
     }
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/universal-select-card/universal-select-card-editor.css?v=${VERSION}">
-      <ha-form
-        .hass=${this.hass}
-        .data=${data}
-        .schema=${this._baseSchema()}
-        .computeLabel=${(s) => s.label || s.name}
-        @value-changed=${this._valueChanged}
-      ></ha-form>
+      ${this.renderStyle('universal-select-card-editor.css')}
+      ${this.renderConfigValidationWarning()}
       
-      <div class="options-list">
-        ${options.map((option, idx) => this._renderOption(option, idx, options.length))}
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          ${this._localize('general') || 'General'}
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'options' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'options'; }}
+        >
+          ${this._localize('options') || 'Options'}
+        </div>
+      </div>
+
+      ${this._activeTab === 'general' ? html`
+        <ha-form
+          .hass=${this.hass}
+          .data=${data}
+          .schema=${this._baseSchema()}
+          .computeLabel=${(s) => s.label || s.name}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      ` : html`
+        <div class="options-list" style="margin-top: 0;">
+          ${options.length === 0 ? html`
+            <div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">
+              ${this._localize('no_options_found') || 'No options found for the selected entity.'}
+            </div>
+          ` : options.map((option, idx) => this._renderOption(option, idx, options.length))}
+        </div>
+      `}
+
+      <div class="editor-actions">
+        <ha-button @click=${this._cleanConfig} outlined>
+          <ha-icon icon="mdi:broom" slot="icon"></ha-icon>
+          ${this._localize('clean') || 'Clean'}
+        </ha-button>
+        <ha-button @click=${this._resetConfig} outlined class="warning">
+          <ha-icon icon="mdi:restore" slot="icon"></ha-icon>
+          ${this._localize('reset') || 'Reset'}
+        </ha-button>
       </div>
     `;
   }
 
+  /**
+   * Renders details form panel for an individual dropdown option.
+   * 
+   * @param {string} option - Option name being rendered
+   * @param {number} idx - Index sequence of option button
+   * @param {number} total - Total count of options
+   * @private
+   * @returns {import('lit-html').TemplateResult} Rendered options settings pane HTML
+   */
   _renderOption(option, idx, total) {
       const optionData = this._config.options_config?.[option] || {};
       const mainSchema = [
@@ -172,12 +342,12 @@ class UniversalSelectCardEditor extends HAControlBase {
                                     @config-changed=${(e) => { e.stopPropagation(); this._updateFeature(option, fIdx, e.detail.config); }}
                                 ></feature-renderer-editor-card>
                             </div>
-                        `)}
+                         `)}
                     </div>
                     <div class="feature-add">
                         <feature-selector-card
                           .hass=${this.hass}
-                          label="Add Feature"
+                          label="${this._localize('add_feature')}"
                           @feature-selected=${(e) => this._addFeature(option, e)}
                         ></feature-selector-card>
                     </div>
@@ -186,6 +356,14 @@ class UniversalSelectCardEditor extends HAControlBase {
         </ha-expansion-panel>
       `;
   }
+
+  /**
+   * Appends a new layout feature block to an option configuration, applying stub configs if present.
+   * 
+   * @param {string} option - Option name where feature is added
+   * @param {CustomEvent} ev - Selection details containing feature type selector
+   * @private
+   */
   _addFeature(option, ev) {
     const type = ev.detail.type;
     if (!type) return;
@@ -206,6 +384,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Modifies display index sequence of options inside card dashboard configurations.
+   * 
+   * @param {string} option - Option targeted to move
+   * @param {number} direction - Offset distance (-1 to slide left/up, 1 to slide right/down)
+   * @private
+   */
   _moveOption(option, direction) {
     const entityId = this._config?.entity;
     const stateObj = entityId ? this.hass.states[entityId] : null;
@@ -230,6 +415,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Removes a feature configuration from an option's list.
+   * 
+   * @param {string} option - Target option
+   * @param {number} fIdx - Feature index to remove
+   * @private
+   */
   _removeFeature(option, fIdx) {
     const optionsConfig = this._config.options_config || {};
     const optionConfig = optionsConfig[option] || {};
@@ -240,6 +432,14 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Updates feature configurations by index.
+   * 
+   * @param {string} option - Target option
+   * @param {number} fIdx - Feature index to replace
+   * @param {Object} newFeatureConfig - Replacement feature layout schema
+   * @private
+   */
   _updateFeature(option, fIdx, newFeatureConfig) {
     const optionsConfig = this._config.options_config || {};
     const optionConfig = optionsConfig[option] || {};
@@ -250,6 +450,13 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when nested option attributes change within expansion panel configurations.
+   * 
+   * @param {string} option - Name of the option modified
+   * @param {CustomEvent} ev - Form value-changed event
+   * @private
+   */
   _optionValueChanged(option, ev) {
       const newOptionConfig = { ...this._config.options_config?.[option], ...ev.detail.value };
       const optionsConfig = { ...this._config.options_config, [option]: newOptionConfig };
@@ -257,6 +464,13 @@ class UniversalSelectCardEditor extends HAControlBase {
       this._fireConfigChanged();
   }
 
+  /**
+   * Invoked when top-level card configuration parameters are changed.
+   * Cleans options details if entity source target is changed.
+   * 
+   * @param {CustomEvent} ev - Form value-changed event
+   * @private
+   */
   _valueChanged(ev) {
     const newConfig = ev.detail.value;
 
@@ -269,6 +483,11 @@ class UniversalSelectCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  /**
+   * Dispatches the updated configuration dictionary back to dashboard engine.
+   * 
+   * @private
+   */
   _fireConfigChanged() {
     const event = new CustomEvent("config-changed", {
       detail: { config: this._config },

@@ -1,19 +1,63 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.0";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.12';
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.25';
 
-class MultiPropertyCard extends HAControlBase {
+/**
+ * MultiPropertyCard
+ * A custom Home Assistant Lovelace dashboard card that renders a layout row/column grid of entity states.
+ * Supports threshold-based coloring, fallback icon mapping, Javasript condition logic filters,
+ * custom units override, interactive tap/hold action execution, and dynamic child features.
+ * 
+ * @extends HAControlThresholdBase
+ */
+class MultiPropertyCard extends HAControlThresholdBase {
+  /**
+   * Defines reactive properties tracked by LitElement.
+   * Inherits properties from HAControlThresholdBase and tracks the config object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/multi-property-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The multi-property-card-editor configuration element
+   */
   static getConfigElement() {
     return document.createElement("multi-property-card-editor");
   }
 
+  /**
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Evaluates javascript conditional expressions on state changes to update element presentation conditionally.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   * @returns {boolean} True if the card should re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
     if (changedProps.has('config')) {
       this._conditionCache = {};
@@ -32,9 +76,9 @@ class MultiPropertyCard extends HAControlBase {
         const entityId = typeof ent === 'string' ? ent : ent.entity;
         const stateObj = entityId ? this.hass.states[entityId] : undefined;
         const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
-        
+
         const stateChanged = oldStateObj !== stateObj;
-        
+
         let conditionResult = true;
         let conditionChanged = false;
 
@@ -64,6 +108,13 @@ class MultiPropertyCard extends HAControlBase {
     return true;
   }
 
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
   static getStubConfig() {
     return {
       show_label: true,
@@ -82,46 +133,26 @@ class MultiPropertyCard extends HAControlBase {
     };
   }
 
-  _getMatchedProperty(stateValue, thresholds, propertyName) {
-    if (!thresholds || !Array.isArray(thresholds) || stateValue === undefined || stateValue === null) return null;
-    const stringState = String(stateValue).toLowerCase();
-
-    const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
-
-    const numericValue = parseFloat(stateValue);
-    if (!isNaN(numericValue)) {
-      const numericThresholds = thresholds
-        .filter(t => !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
-        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-      
-      const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
-      if (match) return match[propertyName];
-    }
-    return null;
-  }
-
-  _getFallbackIcon(domain, deviceClass) {
-    const defaults = {
-      battery: 'mdi:battery', temperature: 'mdi:thermometer', humidity: 'mdi:water-percent',
-      light: 'mdi:lightbulb', switch: 'mdi:flash', binary_sensor: 'mdi:checkbox-marked-circle-outline'
-    };
-    return defaults[deviceClass] || defaults[domain] || 'mdi:circle-outline';
-  }
-
+  /**
+   * Renders the custom card's HTML template.
+   * Filters entities list by JavaScript conditions and availability, drawing status icons and parameters values.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
-    if (!this.config?.entities || !this.hass) return html`<ha-alert alert-type="error">${this._localize('no_entities')}</ha-alert>`;
+    if (!this.config?.entities || !this.hass) return this.renderError(this._localize('no_entities'));
 
     const layoutClass = this.config.layout === 'column' ? 'layout-column' : 'layout-row';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/multi-property-card/multi-property-card.css?v=${VERSION}">
+      ${this.renderStyle('multi-property-card.css')}
       <ha-card>
         <div class="content-container ${layoutClass}">
       ${this.config.entities
         .filter(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf?.entity;
-          
+
           if (!entityId) {
             if (typeof entConf === 'object' && entConf.condition) {
               try {
@@ -153,15 +184,13 @@ class MultiPropertyCard extends HAControlBase {
           const attr = typeof entConf === 'object' ? entConf.attribute : null;
           const val = attr ? stateObj.attributes[attr] : stateObj.state;
 
-          // Diese Prüfung ist extrem gründlich:
-          const isUnavailable = 
-            val === undefined || 
-            val === null || 
-            String(val).toLowerCase() === 'unavailable' || 
+          const isUnavailable =
+            val === undefined ||
+            val === null ||
+            String(val).toLowerCase() === 'unavailable' ||
             String(val).toLowerCase() === 'unknown' ||
-            String(val).toLowerCase() === 'none'; // Manche Attribute geben 'none' zurück
+            String(val).toLowerCase() === 'none';
 
-          // Falls du show_unavailable in der Config auf true hast, wird der Filter ignoriert
           if (this.config.show_unavailable === true) return true;
 
           return !isUnavailable;
@@ -169,10 +198,9 @@ class MultiPropertyCard extends HAControlBase {
         .map(entConf => {
           const entityId = typeof entConf === 'string' ? entConf : entConf.entity;
           const stateObj = entityId ? this.hass.states[entityId] : null;
-          
-          // 3. SECURE SPLIT: Ensure entityId is valid before splitting
+
           const domain = (entityId && entityId.includes('.')) ? entityId.split('.')[0] : 'unknown';
-          
+
           let state;
           if (stateObj) {
             state = entConf.attribute ? stateObj?.attributes[entConf.attribute] : stateObj?.state;
@@ -222,6 +250,33 @@ class MultiPropertyCard extends HAControlBase {
                   </div>
                 ` : ''}
               </div>
+
+              ${(entConf.features && Array.isArray(entConf.features)) ? html`
+                <div class="features-container">
+                  ${entConf.features.filter(featureConfig => {
+                    if (featureConfig.condition) {
+                      try {
+                        const hass = this.hass;
+                        const entity = stateObj;
+                        const state = stateObj?.state;
+                        const attributes = stateObj?.attributes;
+                        return eval(featureConfig.condition);
+                      } catch (e) {
+                        console.error("Error evaluating condition for feature", featureConfig, e);
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map(featureConfig => html`
+                    <feature-renderer-card
+                      .hass=${this.hass}
+                      .config=${featureConfig}
+                      .stateObj=${stateObj}
+                      .color=${finalColor}
+                    ></feature-renderer-card>
+                  `)}
+                </div>
+              ` : ''}
             </div>
           `;
         })}
@@ -230,6 +285,13 @@ class MultiPropertyCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Dispatches Lovelace custom actions (tap/hold) matching user dashboard specifications.
+   * 
+   * @param {Object} item - Entity card item configuration schema
+   * @param {string} actionType - Trigger mode ('tap' or 'hold')
+   * @private
+   */
   _runAction(item, actionType) {
     const actionConfig = actionType === 'hold' ? item.hold_action : item.tap_action;
     if (!actionConfig || actionConfig.action === "none") return;
@@ -239,14 +301,24 @@ class MultiPropertyCard extends HAControlBase {
     }));
   }
 
-  setConfig(config) { 
-    this.config = 
-    { 
-      show_label: true, 
-      show_value: true, 
+  /**
+   * Sets the user configuration object for the card, validating required parameters.
+   * Throws configuration errors if essential parameters (e.g. entities list) are missing.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   * @throws {Error} If entities list is missing in dashboard config
+   */
+  setConfig(config) {
+    if (!config.entities) {
+      throw new Error("Please define entities");
+    }
+    this.config = {
+      show_label: true,
+      show_value: true,
       show_icon: true,
-      show_unavailable: false, // Hier auf false setzen
-      ...config }; 
+      show_unavailable: false,
+      ...config
+    };
   }
 }
 

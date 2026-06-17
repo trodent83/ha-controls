@@ -1,20 +1,62 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.5.3";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 
+/**
+ * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
+ * @type {string}
+ */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
 
+/**
+ * VacuumSelectCard
+ * A custom Home Assistant Lovelace card that displays a grid of selectable rooms for vacuuming.
+ * Integrates with Home Assistant vacuum and input select/text helpers to sequence cleaning zones.
+ * 
+ * @extends HAControlBase
+ */
 class VacuumSelectCard extends HAControlBase {
+  /**
+   * Defines the reactive properties tracked by LitElement.
+   * Inherits properties from HAControlBase and adds the local configuration object.
+   * 
+   * @static
+   * @returns {Object} LitElement properties definition
+   */
   static get properties() {
     return { ...super.properties, config: {} };
   }
 
+  /**
+   * Resolves the directory path hosting the translation localizations.
+   * 
+   * @type {string}
+   */
   get translationPath() { return "/local/ha-controls/vacuum-select-card/translations"; }
+
+  /**
+   * Version parameter for translation cache-busting.
+   * 
+   * @type {string}
+   */
   get translationVersion() { return VERSION; }
 
-  // Link to the visual editor
+  /**
+   * Creates and returns the configuration editor element for this card.
+   * Home Assistant Lovelace visual editor links to this method.
+   * 
+   * @static
+   * @returns {HTMLElement} The vacuum-select-card-editor configuration element
+   */
   static getConfigElement() { 
     return document.createElement("vacuum-select-card-editor"); 
   }
 
+  /**
+   * Controls when the element should re-render to optimize dashboard performance.
+   * Re-renders on config updates or only when entities listed in the config state object change.
+   * 
+   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
+   * @returns {boolean} True if the card should re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
     if (changedProps.has('config')) {
       return true;
@@ -41,6 +83,13 @@ class VacuumSelectCard extends HAControlBase {
     return true;
   }
 
+  /**
+   * Renders the custom card's HTML template.
+   * Displays room grids with animation effects and selection highlights based on state values.
+   * 
+   * @protected
+   * @returns {import('lit-html').TemplateResult} The rendered template output
+   */
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
     const output = this.hass.states[this.config.output_entity];
@@ -53,7 +102,7 @@ class VacuumSelectCard extends HAControlBase {
       ? Math.floor(parseFloat(cleaningStatusEntity.state))
       : null;
 
-    if (!vacuum || !output) return html`<ha-alert alert-type="error">${this._localize('missing_entities')}</ha-alert>`;
+    if (!vacuum || !output) return this.renderError(this._localize('missing_entities'));
 
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
@@ -71,7 +120,7 @@ class VacuumSelectCard extends HAControlBase {
     const isMarkingEnabled = this.config.mark_active_room && this.hass.states[this.config.mark_active_room]?.state === 'on';
 
     return html`
-      <link rel="stylesheet" href="/local/ha-controls/vacuum-select-card/vacuum-select-card.css?v=${VERSION}">
+      ${this.renderStyle('vacuum-select-card.css')}
       <div class="container ${isReadonly ? 'readonly' : ''}" 
           style="--grid-columns: ${this.config.columns || 4}; 
                   --selection-color: ${this.config.selection_color || 'var(--primary-color)'}; 
@@ -128,6 +177,16 @@ class VacuumSelectCard extends HAControlBase {
     `;
   }
 
+  /**
+   * Toggles the selection state of all visible rooms.
+   * If not all are selected, it selects all of them and sorts the selection matching the vacuum's cleaning sequence attributes.
+   * If all are selected, it deselects them completely.
+   * 
+   * @param {Array<Object>} rooms - List of visible room configurations from attributes
+   * @param {Array<string|number>} selectedRooms - List of currently selected room IDs
+   * @param {Array<string>} cleanSequence - Vacuum's pre-configured cleaning sequence priority list
+   * @protected
+   */
   _toggleAll(rooms, selectedRooms, cleanSequence) {
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
     
@@ -154,8 +213,13 @@ class VacuumSelectCard extends HAControlBase {
   }
 
   /**
-   * Toggles room selection and updates the output entity
-   * Sorts the selection according to the vacuum's active_segments order
+   * Toggles a single room selection and updates the output entity.
+   * Sorts the selection according to the vacuum's active_segments order.
+   * 
+   * @param {string|number} roomId - Identifier of the clicked room to toggle
+   * @param {Array<string|number>} selectedRooms - List of currently selected room IDs
+   * @param {Array<string>} cleanSequence - Vacuum's pre-configured cleaning sequence priority list
+   * @protected
    */
   _toggleRoom(roomId, selectedRooms, cleanSequence) {
     let newSelection = selectedRooms.includes(roomId)
@@ -183,8 +247,42 @@ class VacuumSelectCard extends HAControlBase {
     });
   }
 
-  setConfig(config) { 
-    this.config = config; 
+  /**
+   * Returns default stub configuration details for this custom card.
+   * Used when users click to add this card to their dashboards.
+   * 
+   * @static
+   * @returns {Object} Stub configuration details
+   */
+  static getStubConfig() {
+    return {
+      vacuum_entity: "vacuum.robot",
+      output_entity: "input_text.vacuum_rooms",
+      currently_cleaning_entity: "sensor.vacuum_active_room",
+      columns: 4,
+      show_toggle: true
+    };
+  }
+
+  /**
+   * Sets the user configuration object for the card, validating required parameters.
+   * Throws validation errors if essential fields like vacuum_entity or output_entity are omitted.
+   * 
+   * @param {Object} config - The raw configuration schema from Lovelace dashboard
+   * @throws {Error} If vacuum_entity or output_entity is missing in dashboard config
+   */
+  setConfig(config) {
+    if (!config.vacuum_entity) {
+      throw new Error("You must configure vacuum_entity");
+    }
+    if (!config.output_entity) {
+      throw new Error("You must configure output_entity");
+    }
+    this.config = {
+      columns: 4,
+      show_toggle: true,
+      ...config
+    };
   }
 }
 

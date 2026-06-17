@@ -1,15 +1,23 @@
+/* ==========================================================================
+   TASK LIST CARD ITEM STYLESHEET
+   Styles the individual task summaries, descriptions, source labels, and line cuts.
+   ========================================================================== */
+
 :host {
   display: block;
 }
 
+/* Base item line wrapper */
 .task-item {
   cursor: pointer;
 }
 
+/* Reduced opacity for finished tasks titles */
 .task-item.done .task-name {
   opacity: 0.6;
 }
 
+/* Bottom separator line separating merged tasks */
 .task-item-separator {
   border-bottom-width: 1px;
   border-bottom-style: solid;
@@ -17,12 +25,14 @@
   margin-bottom: 4px;
 }
 
+/* Task description title text */
 .task-name {
   font-weight: bold;
   position: relative;
   transition: opacity 0.3s ease-in-out;
 }
 
+/* Line-through strike overlay for completed tasks */
 .task-name::after {
   content: "";
   position: absolute;
@@ -37,14 +47,17 @@
   width: 100%;
 }
 
+/* Optional detailed description text block */
 .task-description {
   font-size: 0.85em;
   color: var(--secondary-text-color);
   display: block;
 }
 
+/* Task list sources badge (displays friendly name / source icon) */
 .task-source {
   font-size: 0.85em;
+  /* Uses dynamic custom --source-color set via visual editor settings */
   color: var(--source-color, var(--secondary-text-color));
   display: flex;
   align-items: center;
@@ -52,6 +65,13 @@
   margin-top: 2px;
 }
 
+/* Sourcing badge icon size */
 .task-source ha-icon {
   --mdc-icon-size: 14px;
+}
+
+/* Locked read-only state formatting overrides */
+.task-item.readonly {
+  opacity: 0.5;
+  cursor: default;
 }

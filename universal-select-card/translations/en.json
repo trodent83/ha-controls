@@ -21,5 +21,11 @@
   "active_label_script": "Active Label Script (JS)",
   "hold_action": "Hold Action (Selected)",
   "button_option": "Button: {option}",
-  "hide_label_if_active": "Hide Label if Active"
+  "hide_label_if_active": "Hide Label if Active",
+  "invalid_timer": "Invalid timer entity",
+  "entity_not_found": "Entity not found",
+  "override_entity": "Override Entity (Optional)",
+  "add_feature": "Add Feature",
+  "unrecognized_settings": "Unrecognized configuration settings: {keys}",
+  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration."
 }

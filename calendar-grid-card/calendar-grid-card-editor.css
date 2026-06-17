@@ -1,72 +1,152 @@
+/* ==========================================================================
+   CALENDAR GRID CARD CONFIGURATION EDITOR STYLESHEET
+   Handles layouts and styling for card customization form fields in Lovelace.
+   ========================================================================== */
+
+/* Single filter configuration row container layout */
 .filter-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
+
+/* List container displaying active calendar filters */
 .filters-list {
   margin-top: 8px;
   border-top: 1px solid var(--divider-color);
   padding-top: 8px;
 }
+
+/* Section container wrapping the day names customization options */
 .day-names-container {
   margin-top: 8px;
   margin-bottom: 8px;
 }
+
+/* Collapsible section headers toggle layouts */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
 }
+
+/* Bold typography settings for collapsible header text labels */
 .header span {
   font-weight: bold;
 }
+
+/* Two-column layout grid for custom day name fields */
 .day-names-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 8px;
 }
+
+/* Category header text for filters configuration */
 .filters-header {
   font-weight: 500;
   margin-bottom: 8px;
 }
+
+/* Let the filter input pattern text box expand dynamically */
 .filter-pattern {
   flex-grow: 1;
 }
+
+/* Margins and display properties for standard Lovelace editor form components */
 .card-config > ha-select,
-.card-config > ha-textfield,
+.card-config > ha-input,
 .card-config > ha-formfield {
   display: block;
   margin-bottom: 16px;
 }
-.day-names-list ha-textfield {
+
+/* Full width text field styling inside day name grids */
+.day-names-list ha-input {
   width: 100%;
 }
-.entity-options ha-textfield,
+
+/* Vertical stacking layout for calendar entity configuration options */
+.entity-options ha-input,
 .entity-options ha-select {
   display: block;
   margin-bottom: 8px;
   width: 100%;
 }
+
+/* Individual entity selection container layout */
 .entity-row {
   display: flex;
   align-items: center;
 }
+
+/* Let the Home Assistant entity picker expand to fill row space */
 .entity-row ha-entity-picker {
   flex-grow: 1;
 }
+
+/* Horizontal rule divider separating configuration blocks */
 .separator {
   border-bottom: 1px solid var(--divider-color);
   margin: 16px 0;
 }
+
+/* Full-width spacing adjustments for secondary buttons in filters */
 .filters-list ha-button {
   width: 100%;
   margin-top: 8px;
   margin-bottom: 8px;
 }
+
+/* Category header text for adding new entities */
 .add-entity-header {
   font-weight: 500;
   margin-bottom: 8px;
+}
+
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 16px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Editor utility actions */
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color);
 }
