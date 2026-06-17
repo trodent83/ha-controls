@@ -78,31 +78,37 @@ export class Task {
    * @type {boolean}
    */
   get isFuture() {
-    if (!this.due) return false;
+    const diff = Task.getDiffDays(this.due);
+    return diff !== null && diff > 0;
+  }
+
+  /**
+   * Calculates the difference in days between a due date string and the current local day in UTC.
+   * 
+   * @param {string|null} due - Due date string (e.g. '2026-06-14')
+   * @returns {number|null} Difference in days, or null if no-date / invalid
+   */
+  static getDiffDays(due) {
+    if (!due) return null;
     
-    // Get current local date at midnight (start of today)
+    const dueStr = String(due).trim();
+    const taskDateStr = dueStr.length > 10 ? dueStr.substring(0, 10) : dueStr;
+    if (taskDateStr === 'no-date') return null;
+
     const now = new Date();
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     
     let taskDate;
-    const dueStr = String(this.due).trim();
-    
-    // Check if it's a date-only YYYY-MM-DD string
-    const match = dueStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (match) {
-      const year = parseInt(match[1]);
-      const month = parseInt(match[2]);
-      const day = parseInt(match[3]);
-      // Parse as local date at midnight
-      taskDate = new Date(year, month - 1, day);
+    if (taskDateStr.length === 10) {
+      const [year, month, day] = taskDateStr.split('-').map(Number);
+      taskDate = new Date(Date.UTC(year, month - 1, day));
     } else {
-      // Parse as full date-time or other string
-      const d = new Date(dueStr);
-      if (isNaN(d.getTime())) return false;
-      // Get the local date components of the task date
-      taskDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const d = new Date(taskDateStr);
+      if (isNaN(d.getTime())) return null;
+      taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     }
     
-    return taskDate > todayLocal;
+    const diffTime = taskDate - today;
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
   }
 }

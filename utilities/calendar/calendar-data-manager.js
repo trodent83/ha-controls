@@ -1,4 +1,4 @@
-import { CalendarEventModel } from "./calendar-event-model.js";
+import { CalendarEventModel } from "./calendar-event-model.js?v=0.4.36";
 
 /**
  * CalendarDataManager

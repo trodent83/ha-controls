@@ -6,9 +6,9 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
  */
 const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
-import { Task } from "../utilities/task/task-dto-task.js";
-import { Day } from "../utilities/task/task-dto-day.js";
-import { TaskDataManager } from "../utilities/task/task-data-manager.js";
+import { Task } from "../utilities/task/task-dto-task.js?v=1.0.22";
+import { Day } from "../utilities/task/task-dto-day.js?v=1.0.22";
+import { TaskDataManager } from "../utilities/task/task-data-manager.js?v=1.0.22";
 
 /**
  * TaskListCard

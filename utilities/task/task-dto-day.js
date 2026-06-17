@@ -1,3 +1,5 @@
+import { Task } from "./task-dto-task.js?v=1.0.22";
+
 /**
  * Day
  * Data transfer object representing a grouped calendar day of tasks.
@@ -30,19 +32,7 @@ export class Day {
    * @type {number|null}
    */
   get diffDays() {
-    if (this.date === 'no-date') return null;
-    const now = new Date();
-    const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    let taskDate;
-    if (this.date.length === 10) {
-      const [year, month, day] = this.date.split('-').map(Number);
-      taskDate = new Date(Date.UTC(year, month - 1, day));
-    } else {
-      const d = new Date(this.date);
-      taskDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    }
-    const diffTime = taskDate - today;
-    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return Task.getDiffDays(this.date);
   }
 
   /**

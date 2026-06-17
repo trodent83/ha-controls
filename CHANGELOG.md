@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Implemented dynamic default-value pruning in visual editor `_cleanConfig()` methods across all 7 custom cards (`calendar-grid-card`, `task-list-card`, `vacuum-select-card`, `universal-select-card`, `room-status-card`, `multi-state-card`, `multi-property-card`).
   - Added an `addIfDiff` helper logic to sanitize and prune configurations containing properties matching their explicit default values, keeping Lovelace dashboard YAML configs minimal and clean.
   - Bumped version numbers on all 7 custom loader files to force browser caching updates.
+- **Future Task Completion Blocking**:
+  - Fixed timezone and layout mismatch bug in `isFuture` parsing of `Task` objects. Replaced timezone-offset translation calculations with direct UTC-midnight comparison matching the card's row grouping date string (`substring(0, 10)`).
+  - Bumped task-list-card loader version to `1.0.22` to reload changes immediately.
+- **Universal Import Versioning**:
+  - Versioned all remaining unversioned utility/DTO imports to conform with caching guidelines. Added version query strings to `CalendarDataManager` inside `calendar-grid-card.js` and `CalendarEventModel` inside `calendar-data-manager.js`.
 
 ## [1.0.3] - 2026-06-17
 
