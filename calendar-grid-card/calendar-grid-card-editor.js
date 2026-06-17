@@ -358,27 +358,27 @@ class CalendarGridCardEditor extends HAControlBase {
               ${this._dayNamesExpanded ? html`
                   <div class="day-names-list">
                       ${dayNames.map((day, index) => html`
-                          <ha-textfield
+                          <ha-input
                               label="${this._localize('cgc.editor.day_n', { n: index + 1 })}"
                               .value=${day}
                               @input=${(ev) => this._dayNameChanged(ev, index)}
-                          ></ha-textfield>
+                          ></ha-input>
                       `)}
                   </div>
               ` : ''}
           </div>
-          <ha-textfield
+          <ha-input
               label="${this._localize('cgc.editor.today_background')}"
               .value=${this._config.today_background || ''}
               .configValue=${"today_background"}
               @input=${(ev) => this._valueChanged(ev)}
-          ></ha-textfield>
-          <ha-textfield
+          ></ha-input>
+          <ha-input
               label="${this._localize('cgc.editor.today_border')}"
               .value=${this._config.today_border || ''}
               .configValue=${"today_border"}
               @input=${(ev) => this._valueChanged(ev)}
-          ></ha-textfield>
+          ></ha-input>
           <ha-formfield label="${this._localize('cgc.editor.show_finished_events')}">
               <ha-switch
                   .checked=${this._config.show_finished_events !== false}
@@ -460,37 +460,37 @@ class CalendarGridCardEditor extends HAControlBase {
                               </div>
                               <div class="separator"></div>
                               <div class="entity-options">
-                                  <ha-textfield
+                                  <ha-input
                                       label="${this._localize('cgc.editor.name')}"
                                       .value=${name || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'name')}
-                                  ></ha-textfield>
-                                  <ha-textfield
+                                  ></ha-input>
+                                  <ha-input
                                       label="${this._localize('cgc.editor.foreground')}"
                                       .value=${color || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'color')}
-                                  ></ha-textfield>
-                                  <ha-textfield
+                                  ></ha-input>
+                                  <ha-input
                                       label="${this._localize('cgc.editor.background')}"
                                       .value=${backgroundColor || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'backgroundColor')}
-                                  ></ha-textfield>
-                                  <ha-textfield
+                                  ></ha-input>
+                                  <ha-input
                                       label="${this._localize('cgc.editor.icon_color')}"
                                       .value=${iconColor || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'iconColor')}
-                                  ></ha-textfield>
+                                  ></ha-input>
                                   <div class="separator"></div>
-                                  <ha-textfield
+                                  <ha-input
                                       label="${this._localize('cgc.editor.active_foreground')}"
                                       .value=${activeColor || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'activeColor')}
-                                  ></ha-textfield>
-                                  <ha-textfield
+                                  ></ha-input>
+                                  <ha-input
                                       label="${this._localize('cgc.editor.active_background')}"
                                       .value=${activeBackgroundColor || ''}
                                       @input=${(ev) => this._entityColorChanged(ev, index, 'activeBackgroundColor')}
-                                  ></ha-textfield>
+                                  ></ha-input>
                                   <ha-form
                                       .hass=${this.hass}
                                       .data=${{ activeIconAnimation: activeIconAnimation || '' }}
@@ -518,12 +518,12 @@ class CalendarGridCardEditor extends HAControlBase {
                                   <div class="filters-header">${this._localize('cgc.editor.filters_header')}</div>
                                   ${filters.map((filter, filterIndex) => html`
                                       <div class="filter-row">
-                                          <ha-textfield
+                                          <ha-input
                                               class="filter-pattern"
                                               label="${this._localize('cgc.editor.pattern')}"
                                               .value=${filter.pattern || ''}
                                               @input=${(ev) => this._filterChanged(ev, index, filterIndex, 'pattern')}
-                                          ></ha-textfield>
+                                          ></ha-input>
                                           <ha-formfield label="${this._localize('cgc.editor.case_sensitive')}">
                                               <ha-switch
                                                   .checked=${filter.case_sensitive !== false}

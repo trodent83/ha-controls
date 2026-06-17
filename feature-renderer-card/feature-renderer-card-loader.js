@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
-const VERSION = "0.1.7";
+const VERSION = "0.1.8";
 
 const SCRIPT_NAME = "feature-renderer-card-loader.js";
 

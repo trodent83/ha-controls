@@ -245,19 +245,19 @@ class IconCardFeatureEditor extends HAControlBase {
         ${mappings.map((mapRow) => html`
           <div style="display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--divider-color); padding: 12px; margin-bottom: 12px; border-radius: 4px; background: var(--card-background-color);">
             <div style="display: flex; gap: 8px; align-items: center;">
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('value')}"
                 .value=${mapRow.key}
                 @change=${(e) => this._updateMapping(mapRow.key, e.target.value, 'key', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
               
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('icon')}"
                 .value=${mapRow.icon}
                 @input=${(e) => this._updateMapping(mapRow.key, mapRow.key, 'icon', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
 
               <ha-icon-button
                 @click=${() => this._removeMapping(mapRow.key)}
@@ -265,12 +265,12 @@ class IconCardFeatureEditor extends HAControlBase {
             </div>
             
             <div style="display: flex; gap: 8px; align-items: center;">
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('color')}"
                 .value=${mapRow.color}
                 @input=${(e) => this._updateMapping(mapRow.key, mapRow.key, 'color', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
 
               <ha-select
                 style="flex: 1;"
@@ -286,14 +286,14 @@ class IconCardFeatureEditor extends HAControlBase {
                 fixedMenuPosition
                 naturalMenuWidth
               >
-                <mwc-list-item value="">${this._localize('none')}</mwc-list-item>
-                <mwc-list-item value="blink">${this._localize('blink')}</mwc-list-item>
-                <mwc-list-item value="pulse">${this._localize('pulse')}</mwc-list-item>
-                <mwc-list-item value="shake">${this._localize('shake')}</mwc-list-item>
-                <mwc-list-item value="bounce">${this._localize('bounce')}</mwc-list-item>
-                <mwc-list-item value="flash">${this._localize('flash')}</mwc-list-item>
-                <mwc-list-item value="float">${this._localize('float')}</mwc-list-item>
-                <mwc-list-item value="spin-slow">${this._localize('spinning')}</mwc-list-item>
+                <ha-list-item value="">${this._localize('none')}</ha-list-item>
+                <ha-list-item value="blink">${this._localize('blink')}</ha-list-item>
+                <ha-list-item value="pulse">${this._localize('pulse')}</ha-list-item>
+                <ha-list-item value="shake">${this._localize('shake')}</ha-list-item>
+                <ha-list-item value="bounce">${this._localize('bounce')}</ha-list-item>
+                <ha-list-item value="flash">${this._localize('flash')}</ha-list-item>
+                <ha-list-item value="float">${this._localize('float')}</ha-list-item>
+                <ha-list-item value="spin-slow">${this._localize('spinning')}</ha-list-item>
               </ha-select>
             </div>
           </div>
@@ -310,19 +310,19 @@ class IconCardFeatureEditor extends HAControlBase {
         ${thresholds.map((thresh, idx) => html`
           <div style="display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--divider-color); padding: 12px; margin-bottom: 12px; border-radius: 4px; background: var(--card-background-color);">
             <div style="display: flex; gap: 8px; align-items: center;">
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('value')}"
                 .value=${thresh.value || ""}
                 @input=${(e) => this._updateThreshold(idx, 'value', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
               
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('icon')}"
                 .value=${thresh.icon || ""}
                 @input=${(e) => this._updateThreshold(idx, 'icon', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
 
               <ha-icon-button
                 @click=${() => this._removeThreshold(idx)}
@@ -330,12 +330,12 @@ class IconCardFeatureEditor extends HAControlBase {
             </div>
             
             <div style="display: flex; gap: 8px; align-items: center;">
-              <ha-textfield
+              <ha-input
                 style="flex: 1;"
                 label="${this._localize('color')}"
                 .value=${thresh.color || ""}
                 @input=${(e) => this._updateThreshold(idx, 'color', e.target.value)}
-              ></ha-textfield>
+              ></ha-input>
 
               <ha-select
                 style="flex: 1;"
@@ -351,14 +351,14 @@ class IconCardFeatureEditor extends HAControlBase {
                 fixedMenuPosition
                 naturalMenuWidth
               >
-                <mwc-list-item value="">${this._localize('none')}</mwc-list-item>
-                <mwc-list-item value="blink">${this._localize('blink')}</mwc-list-item>
-                <mwc-list-item value="pulse">${this._localize('pulse')}</mwc-list-item>
-                <mwc-list-item value="shake">${this._localize('shake')}</mwc-list-item>
-                <mwc-list-item value="bounce">${this._localize('bounce')}</mwc-list-item>
-                <mwc-list-item value="flash">${this._localize('flash')}</mwc-list-item>
-                <mwc-list-item value="float">${this._localize('float')}</mwc-list-item>
-                <mwc-list-item value="spin-slow">${this._localize('spinning')}</mwc-list-item>
+                <ha-list-item value="">${this._localize('none')}</ha-list-item>
+                <ha-list-item value="blink">${this._localize('blink')}</ha-list-item>
+                <ha-list-item value="pulse">${this._localize('pulse')}</ha-list-item>
+                <ha-list-item value="shake">${this._localize('shake')}</ha-list-item>
+                <ha-list-item value="bounce">${this._localize('bounce')}</ha-list-item>
+                <ha-list-item value="flash">${this._localize('flash')}</ha-list-item>
+                <ha-list-item value="float">${this._localize('float')}</ha-list-item>
+                <ha-list-item value="spin-slow">${this._localize('spinning')}</ha-list-item>
               </ha-select>
             </div>
           </div>

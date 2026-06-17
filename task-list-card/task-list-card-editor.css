@@ -23,7 +23,7 @@
 }
 
 /* Sizing rules for options selectors and textfields */
-.options ha-textfield,
+.options ha-input,
 .options ha-select {
     display: block !important;
     width: 100% !important;
@@ -83,7 +83,7 @@
 }
 
 /* Ensure textfields have block display and don't shrink */
-.due-date-color-row ha-textfield {
+.due-date-color-row ha-input {
     display: block !important;
 }
 
@@ -128,7 +128,7 @@
 }
 
 /* Grow regular expression text field */
-.filter-row ha-textfield {
+.filter-row ha-input {
     flex-grow: 1 !important;
 }
 

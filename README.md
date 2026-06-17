@@ -131,6 +131,26 @@ options_config:
     color: "var(--primary-color)"
 ```
 
+## 🧱 Home Assistant UI Components Dependency List
+
+To build the rich visual configuration editors and card controls, this project relies on the following standard Home Assistant frontend custom elements:
+
+- **`ha-card`**: Unified background wrapper card styling.
+- **`ha-button`**: Standard interactive configuration actions/buttons.
+- **`ha-icon-button`**: Icon-based visual action buttons.
+- **`ha-icon`**: Component for displaying standard Material Design Icons (`mdi:*`).
+- **`ha-input`**: Core input element used for textual and numeric configurations.
+- **`ha-select`**: Dropdown select container.
+- **`ha-list-item`**: Selectable options inside dropdown menus.
+- **`ha-switch`**: Standard toggle switches.
+- **`ha-formfield`**: Form wrappers supplying interactive label rows.
+- **`ha-form`**: Dynamic schema-based configuration selector layout engine.
+- **`ha-expansion-panel`**: Collapsible container for grouping editor settings categories.
+- **`ha-entity-picker`**: Entity search and selection input.
+- **`ha-icon-picker`**: Material Design Icon search and picker.
+
+Whenever updates to the Home Assistant frontend occur, developers must ensure these components remain active and supported by the active core frontend release.
+
 ---
 
 ## 🛠️ Development & Extending

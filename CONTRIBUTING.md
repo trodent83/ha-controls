@@ -100,6 +100,13 @@ All user-facing text strings must support localization using the dynamic transla
 * Implement `get translationVersion()` to ensure translation cache-busting.
 * Never hardcode strings in the template. Use `this._localize('key')` with optional interpolations.
 
+### 6. Home Assistant Core UI Elements Support
+
+All card editor templates rely on standard, internal Home Assistant frontend components (such as `ha-input`, `ha-select`, `ha-list-item`, etc.). These elements are not part of an officially stable public API and can be modified or deprecated in core Home Assistant updates.
+
+* **Check Element Support**: When introducing new cards or updating existing configuration editor forms, developers **must** verify that all referenced custom elements are still supported by the current Home Assistant frontend.
+* **Maintain the Dependency List**: If an element is deprecated or replaced by Home Assistant (e.g. the transition of `ha-textfield` to `ha-input`), all occurrences must be updated repository-wide, and the "Home Assistant UI Components Dependency List" in the `README.md` must be kept up-to-date.
+
 ---
 
 ## 🏗️ Architectural Guidelines

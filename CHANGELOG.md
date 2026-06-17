@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.2] - 2026-06-17
+
+### Fixed
+- **Migration of Deprecated UI Components**:
+  - Replaced the deprecated `<ha-textfield>` element with `<ha-input>` in HTML templates and CSS stylesheet selectors repository-wide.
+  - Replaced the deprecated `<mwc-list-item>` element with `<ha-list-item>` in HTML templates inside select dropdowns to support Web Awesome standards.
+- **Documentation**:
+  - Added a list of standard Home Assistant UI component dependencies to `README.md`.
+  - Added a verification guideline to `CONTRIBUTING.md` instructing contributors to verify UI elements support on Home Assistant updates.
+
 ## [1.0.1] - 2026-06-17
 
 ### Fixed

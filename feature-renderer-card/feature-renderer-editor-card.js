@@ -58,12 +58,12 @@ export class FeatureRendererEditorCard extends HAControlBase {
 
     return html`
       ${this._el || html`<div>No editor for ${this.config.type}</div>`}
-      <ha-textfield
+      <ha-input
         label="Visibility Condition (JS)"
         .value=${this.config.condition || ''}
         @input=${this._conditionChanged}
         style="display: block; margin-top: 12px; width: 100%;"
-      ></ha-textfield>
+      ></ha-input>
     `;
   }
 

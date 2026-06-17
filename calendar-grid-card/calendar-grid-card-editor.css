@@ -58,19 +58,19 @@
 
 /* Margins and display properties for standard Lovelace editor form components */
 .card-config > ha-select,
-.card-config > ha-textfield,
+.card-config > ha-input,
 .card-config > ha-formfield {
   display: block;
   margin-bottom: 16px;
 }
 
 /* Full width text field styling inside day name grids */
-.day-names-list ha-textfield {
+.day-names-list ha-input {
   width: 100%;
 }
 
 /* Vertical stacking layout for calendar entity configuration options */
-.entity-options ha-textfield,
+.entity-options ha-input,
 .entity-options ha-select {
   display: block;
   margin-bottom: 8px;
