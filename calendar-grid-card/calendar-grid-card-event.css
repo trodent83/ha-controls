@@ -37,23 +37,6 @@
     flex-shrink: 0;
 }
 
-/* Style override when an event is expanded to display multiline description */
-.event-entry.expanded {
-    white-space: normal;
-}
-
-/* Event description details block, shown on expanded details dialogs/cards */
-.event-description {
-    font-size: 0.7rem;
-    opacity: 0.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-top: 4px;
-    margin-top: 4px;
-    padding-bottom: 4px;
-    border-top: 1px solid var(--divider-color);
-    border-bottom: 1px solid var(--divider-color);
-}
 
 /* Absolute or relative event time text */
 .event-time {

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.3] - 2026-06-17
+
+### Added
+- **Calendar Event Detail Dialog & Modular Features**:
+  - Replaced inline calendar cell event description expansions with a premium viewport-level glassmorphic modal dialog.
+  - Implemented modular, configurable event feature extensions (`time`, `location`, `description`, `attendees`) inside the detail dialog.
+  - Enabled clickable location mapping using Google Maps external search queries.
+  - Added support for attendee response status indicators (Accepted, Declined, Tentative, Unknown).
+
 ## [1.0.2] - 2026-06-17
 
 ### Added

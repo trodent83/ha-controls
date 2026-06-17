@@ -33,8 +33,7 @@ class CalendarGridCardEvent extends HAControlBase {
             iconColor: { attribute: false },
             activeColor: { attribute: false },
             activeBackgroundColor: { attribute: false },
-            activeIconAnimation: { attribute: false },
-            _expanded: { state: true }
+            activeIconAnimation: { attribute: false }
         };
     }
 
@@ -43,12 +42,6 @@ class CalendarGridCardEvent extends HAControlBase {
      */
     constructor() {
         super();
-        /**
-         * Tracks whether the description text details block is expanded.
-         * @type {boolean}
-         * @private
-         */
-        this._expanded = false;
     }
 
     /**
@@ -107,28 +100,26 @@ class CalendarGridCardEvent extends HAControlBase {
 
         return html`
             ${this.renderStyle('calendar-grid-card-event.css')}
-            <div class="event-entry ${this._expanded ? 'expanded' : ''} ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
+            <div class="event-entry ${isPast ? 'past' : ''}" style="${style.join(';')}" @click=${this._handleClick}>
                 <div class="event-header">
                     <ha-icon class="event-icon ${animationClass}" icon="${icon}" style="${iconStyle}"></ha-icon>
                     ${timeStr ? html`<span class="event-time">${timeStr}</span>` : ''}
                     <span class="event-title">${this.event.summary}</span>
                     ${hasDescription ? html`<ha-icon class="description-icon" icon="mdi:text-short"></ha-icon>` : ''}
                 </div>
-                ${this._expanded && this.event.originEvent.description ? html`<div class="event-description">${this.event.originEvent.description}</div>` : ''}
             </div>
         `;
     }
 
     /**
-     * Handles clicks on the event entry, toggles expanded states, and fires custom events.
+     * Handles clicks on the event entry and dispatches custom event-click event.
      * 
      * @param {Event} e - Click event details
      * @private
      */
     _handleClick(e) {
         e.stopPropagation();
-        this._expanded = !this._expanded;
-        this.dispatchEvent(new CustomEvent('event-click', { detail: { event: this.event.originEvent } }));
+        this.dispatchEvent(new CustomEvent('event-click', { detail: { event: this.event } }));
     }
 }
 customElements.define("calendar-grid-card-event", CalendarGridCardEvent);

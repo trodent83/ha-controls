@@ -32,7 +32,8 @@ class CalendarGridCard extends HAControlBase {
       _currentDate: { state: true },
       _sidebarOpen: { state: true },
       _disabledCalendars: { state: true },
-      _fetching: { state: true }
+      _fetching: { state: true },
+      _selectedEvent: { state: true }
     };
   }
 
@@ -111,6 +112,12 @@ class CalendarGridCard extends HAControlBase {
      * @private
      */
     this._fetching = false;
+    /**
+     * Sourced event model currently selected and rendered in details dialog.
+     * @type {import('../utilities/calendar/calendar-event-model.js').CalendarEventModel|null}
+     * @private
+     */
+    this._selectedEvent = null;
   }
 
   /**
@@ -176,6 +183,7 @@ class CalendarGridCard extends HAControlBase {
         changedProps.has('_currentDate') || 
         changedProps.has('_sidebarOpen') || 
         changedProps.has('_disabledCalendars') ||
+        changedProps.has('_selectedEvent') ||
         changedProps.has('config') ||
         changedProps.has('_strings')) {
       return true;
@@ -605,6 +613,7 @@ class CalendarGridCard extends HAControlBase {
           ` : ''}
         </div>
       </ha-card>
+      ${this._renderEventDialog()}
     `;
   }
 
@@ -687,7 +696,199 @@ class CalendarGridCard extends HAControlBase {
    * @private
    */
   _onEventClick(e) {
-      console.log("Event clicked", e.detail.event);
+      this._selectedEvent = e.detail.event;
+  }
+
+  /**
+   * Closes the active event details dialog.
+   * 
+   * @private
+   */
+  _closeDialog() {
+      this._selectedEvent = null;
+  }
+
+  /**
+   * Renders the modular event detail dialog when an event is selected.
+   * 
+   * @private
+   * @returns {import('lit-html').TemplateResult|string} Rendered dialog template or empty string
+   */
+  _renderEventDialog() {
+    if (!this._selectedEvent) return "";
+
+    const event = this._selectedEvent;
+    
+    // Find calendar entity configuration to get matching color context
+    const entityConf = this.config.entities.find(e => 
+      (typeof e === 'object' ? e.entity : e) === event.entity_id
+    );
+    const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : 'var(--primary-color)';
+    const calendarName = (typeof entityConf === 'object' && entityConf.name) 
+      ? entityConf.name 
+      : (this.hass.states[event.entity_id]?.attributes?.friendly_name || event.entity_id);
+
+    // Get active user language / locale
+    const lang = this.hass.language || 'en';
+
+    // Renders the configured features or default fallback list
+    const features = this.config.event_features || [
+      { type: "time" },
+      { type: "location" },
+      { type: "description" },
+      { type: "attendees" }
+    ];
+
+    return html`
+      <div class="dialog-overlay" @click=${this._closeDialog}>
+        <div class="dialog-card" @click=${(e) => e.stopPropagation()}>
+          <div class="dialog-header" style="border-left: 6px solid ${color}">
+            <div class="dialog-header-text">
+              <div class="dialog-calendar-badge" style="background-color: ${color}22; color: ${color};">
+                <ha-icon icon="mdi:calendar"></ha-icon>
+                <span>${calendarName}</span>
+              </div>
+              <h2 class="dialog-title">${event.summary}</h2>
+            </div>
+            <div class="dialog-close-button" @click=${this._closeDialog}>
+              <ha-icon icon="mdi:close"></ha-icon>
+            </div>
+          </div>
+          <div class="dialog-body">
+            ${features.map(f => this._renderFeature(f, event, lang))}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Renders a single event feature extension in the dialog.
+   * 
+   * @param {Object} feature - Feature config (e.g. { type: 'location' })
+   * @param {import('../utilities/calendar/calendar-event-model.js').CalendarEventModel} event - Sourced event model
+   * @param {string} lang - Active locale/language code
+   * @private
+   * @returns {import('lit-html').TemplateResult|string} Feature rendering or empty string
+   */
+  _renderFeature(feature, event, lang) {
+    const origin = event.originEvent;
+    
+    switch (feature.type) {
+      case "time": {
+        // Format start/end time and date nicely
+        const isAllDay = event.isAllDay;
+        const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const optionsTime = { hour: '2-digit', minute: '2-digit' };
+        
+        let timeDisplay = "";
+        if (isAllDay) {
+          const startStr = event.start.toLocaleDateString(lang, optionsDate);
+          // For all-day events, check if it spans multiple days
+          // Note: all-day end date is exclusive, so we subtract 1 day to show inclusive dates to users
+          const endAdjusted = new Date(event.end);
+          endAdjusted.setDate(endAdjusted.getDate() - 1);
+          
+          if (event.start.toDateString() === endAdjusted.toDateString()) {
+            timeDisplay = startStr;
+          } else {
+            const endStr = endAdjusted.toLocaleDateString(lang, optionsDate);
+            timeDisplay = `${startStr} - ${endStr}`;
+          }
+          timeDisplay += ` (${this._localize('cgc.event.all_day') || 'All day'})`;
+        } else {
+          const startStr = event.start.toLocaleDateString(lang, optionsDate);
+          const startTimeStr = event.start.toLocaleTimeString(lang, optionsTime);
+          const endTimeStr = event.end.toLocaleTimeString(lang, optionsTime);
+          
+          if (event.start.toDateString() === event.end.toDateString()) {
+            timeDisplay = `${startStr}, ${startTimeStr} - ${endTimeStr}`;
+          } else {
+            const endStr = event.end.toLocaleDateString(lang, optionsDate);
+            timeDisplay = `${startStr}, ${startTimeStr} - ${endStr}, ${endTimeStr}`;
+          }
+        }
+
+        return html`
+          <div class="dialog-feature-row feature-time">
+            <ha-icon icon="mdi:clock-outline" class="feature-icon"></ha-icon>
+            <div class="feature-content">${timeDisplay}</div>
+          </div>
+        `;
+      }
+      
+      case "location": {
+        const location = origin.location;
+        if (!location) return "";
+        
+        const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(location)}`;
+        return html`
+          <div class="dialog-feature-row feature-location">
+            <ha-icon icon="mdi:map-marker-outline" class="feature-icon"></ha-icon>
+            <div class="feature-content">
+              <a class="feature-link" href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${location}</a>
+            </div>
+          </div>
+        `;
+      }
+
+      case "description": {
+        const description = origin.description;
+        if (!description) return "";
+
+        return html`
+          <div class="dialog-feature-row feature-description">
+            <ha-icon icon="mdi:text-long" class="feature-icon"></ha-icon>
+            <div class="feature-content markdown-body">${description}</div>
+          </div>
+        `;
+      }
+
+      case "attendees": {
+        const attendees = origin.attendees;
+        if (!attendees || !Array.isArray(attendees) || attendees.length === 0) return "";
+
+        return html`
+          <div class="dialog-feature-row feature-attendees">
+            <ha-icon icon="mdi:account-group-outline" class="feature-icon"></ha-icon>
+            <div class="feature-content">
+              <div class="attendees-list">
+                ${attendees.map(a => {
+                  const name = a.displayName || a.name || a.email;
+                  const role = a.responseStatus || a.status || "";
+                  let statusClass = "status-unknown";
+                  let statusIcon = "mdi:help-circle-outline";
+                  if (role === "accepted") {
+                    statusClass = "status-accepted";
+                    statusIcon = "mdi:check-circle-outline";
+                  } else if (role === "declined") {
+                    statusClass = "status-declined";
+                    statusIcon = "mdi:close-circle-outline";
+                  } else if (role === "tentative") {
+                    statusClass = "status-tentative";
+                    statusIcon = "mdi:minus-circle-outline";
+                  }
+                  
+                  return html`
+                    <div class="attendee-item">
+                      <span class="attendee-name">${name}</span>
+                      ${role ? html`
+                        <span class="attendee-status ${statusClass}" title="${role}">
+                          <ha-icon icon="${statusIcon}"></ha-icon>
+                        </span>
+                      ` : ''}
+                    </div>
+                  `;
+                })}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      default:
+        return "";
+    }
   }
 }
 
