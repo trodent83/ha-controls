@@ -106,11 +106,20 @@ class VacuumSelectCard extends HAControlBase {
 
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
-    const rooms = allRooms.filter(room => !this.config.rooms?.[room.id]?.disabled);
+    let rooms = allRooms.filter(room => !this.config.rooms?.[room.id]?.disabled);
 
     const isReadonly = this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on';
     
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
+
+    const sortBySequence = this.config.sort_by_sequence !== false;
+    if (sortBySequence && cleanSequence.length > 0 && cleanSequence[0] !== "") {
+      rooms = [...rooms].sort((a, b) => {
+        const idxA = cleanSequence.indexOf(a.id.toString());
+        const idxB = cleanSequence.indexOf(b.id.toString());
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+      });
+    }
 
     let selectedRooms = [];
     try { selectedRooms = JSON.parse(output.state || "[]"); } catch (e) { selectedRooms = []; }
@@ -260,7 +269,8 @@ class VacuumSelectCard extends HAControlBase {
       output_entity: "input_text.vacuum_rooms",
       currently_cleaning_entity: "sensor.vacuum_active_room",
       columns: 4,
-      show_toggle: true
+      show_toggle: true,
+      sort_by_sequence: true
     };
   }
 
@@ -281,6 +291,7 @@ class VacuumSelectCard extends HAControlBase {
     this.config = {
       columns: 4,
       show_toggle: true,
+      sort_by_sequence: true,
       ...config
     };
   }
