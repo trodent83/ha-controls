@@ -1,0 +1,218 @@
+/* ==========================================================================
+   CALENDAR LIST CARD EDITOR STYLESHEET
+   Styles configuration options, entities lists, filters, features and color rows.
+   ========================================================================== */
+
+/* Expansion panel spacing */
+.panel {
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    display: block !important;
+}
+
+/* Card options flex container */
+.options {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* Sizing rules for options selectors and textfields */
+.options ha-input,
+.options ha-select {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+/* Horizontal line grouping fields inside due date rules */
+.due-date-color-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Horizontal entity row list container */
+.entity-row {
+    display: flex !important;
+    align-items: center !important; 
+    margin-bottom: 0 !important;
+}
+
+/* Entity selector width distribution */
+.entity-row ha-entity-picker {
+    flex-grow: 1 !important; 
+    margin-right: 8px !important;
+}
+
+/* Dual-column switch grid layout */
+.switches-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+}
+
+/* Centered add item button wrapper */
+.add-button {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+/* Operator selector width constraints inside color rows */
+.due-date-color-row .operator {
+    width: 100px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Number field width constraints inside color rows */
+.due-date-color-row .days {
+    width: 80px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Hex color input field size inside color rows */
+.due-date-color-row .color {
+    flex-grow: 1 !important;
+    min-width: 80px !important;
+}
+
+/* Ensure textfields have block display and don't shrink */
+.due-date-color-row ha-input {
+    display: block !important;
+}
+
+/* Ensure action icons don't compress */
+.due-date-color-row ha-icon-button {
+    flex-shrink: 0 !important;
+}
+
+/* Due date thresholds list container */
+.due-date-colors {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* Entities picker rows list container */
+.entities-list {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* Outer boundary box enclosing entity list settings and filters */
+.entity-row-container {
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+/* Horizontal filter row wrapping input fields and delete icons */
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Grow regular expression text field */
+.filter-row ha-input {
+    flex-grow: 1 !important;
+}
+
+/* Sub-list container grouping regular expression string filters */
+.filters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--divider-color);
+}
+
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 16px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Editor utility actions */
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color);
+}
+
+/* Card features list configuration editor styles */
+.features-list-editor {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+
+.feature-item {
+    border: 1px solid var(--divider-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: var(--card-background-color);
+}
+
+.feature-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--divider-color);
+    padding-bottom: 8px;
+}
+
+.feature-add {
+    margin-top: 12px;
+}

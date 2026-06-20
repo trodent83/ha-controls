@@ -6,7 +6,8 @@ export class FeatureRendererCard extends HAControlBase {
       hass: { attribute: false },
       config: { attribute: false },
       stateObj: { attribute: false },
-      color: { attribute: false }
+      color: { attribute: false },
+      event: { attribute: false }
     };
   }
 
@@ -16,6 +17,9 @@ export class FeatureRendererCard extends HAControlBase {
     element.stateObj = this.stateObj;
     if (this.color) {
         element.color = this.color;
+    }
+    if (this.event) {
+        element.event = this.event;
     }
   }
 

@@ -1,0 +1,124 @@
+/* ==========================================================================
+   CALENDAR LIST CARD ROW STYLESHEET
+   Styles for date columns, event names, descriptions, and feature alignment.
+   ========================================================================== */
+
+.event-row {
+  display: flex;
+  align-items: stretch;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.event-row.has-badge {
+  border-left: 4px solid transparent;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  padding-left: 8px;
+}
+
+.event-row:hover {
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.04);
+}
+
+/* Left date column */
+.event-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  margin-right: 12px;
+  padding-right: 12px;
+  border-right: 2px solid transparent;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.event-date.empty {
+  width: 60px;
+}
+
+.weekday {
+  font-size: 0.85em;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+.day {
+  font-size: 1.7em;
+  font-weight: bold;
+}
+
+.month {
+  font-size: 0.85em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Event details block */
+.event-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  min-width: 0; /* Ensures text-overflow ellipsis works correctly in children */
+}
+
+.event-name {
+  font-size: 1.05em;
+  font-weight: 500;
+  color: var(--primary-text-color);
+  word-break: break-word;
+}
+
+.event-description {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  margin-top: 2px;
+  display: block;
+}
+
+/* Calendar Source badge */
+.event-source {
+  font-size: 0.85em;
+  color: var(--source-color, var(--secondary-text-color));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.event-source ha-icon {
+  --mdc-icon-size: 14px;
+}
+
+/* Relative due-in column */
+.event-due-in {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  margin-left: 12px;
+  text-align: center;
+  width: 70px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.event-due-in.separator {
+  border-left-width: 1px;
+  border-left-style: solid;
+  padding-left: 12px;
+}
+
+/* Features container spacer */
+.event-features {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2px;
+  width: 100%;
+}
