@@ -63,6 +63,7 @@ class VacuumMapCardEditor extends HAControlBase {
       map_height: 350,   // Default map height
       show_toggle: true, // Forces the editor switch to 'On' initially
       sort_by_sequence: true, // Sort rooms by sequence by default
+      show_names: true, // Default to true
       rooms: {},       // Ensure rooms object exists
       ...config
     };
@@ -78,6 +79,7 @@ class VacuumMapCardEditor extends HAControlBase {
       "mark_animation_foreground",
       "map_height",
       "show_toggle",
+      "show_names",
       "sort_by_sequence",
       "selection_color",
       "selection_foreground",
@@ -136,6 +138,7 @@ class VacuumMapCardEditor extends HAControlBase {
         type: "grid", 
         schema: [
           { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } },
+          { name: "show_names", label: this._localize('show_names'), selector: { boolean: {} } },
           { name: "sort_by_sequence", label: this._localize('sort_by_sequence'), selector: { boolean: {} } }
         ] 
       },
@@ -260,6 +263,7 @@ class VacuumMapCardEditor extends HAControlBase {
     if (this._config.mark_animation_foreground !== undefined) cleaned.mark_animation_foreground = this._config.mark_animation_foreground;
     addIfDiff("map_height", 350);
     addIfDiff("show_toggle", true);
+    addIfDiff("show_names", true);
     addIfDiff("sort_by_sequence", true);
     if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
     if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;

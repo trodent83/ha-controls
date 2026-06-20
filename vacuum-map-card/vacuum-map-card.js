@@ -172,9 +172,10 @@ class VacuumMapCard extends HAControlBase {
                    @click="${() => !isReadonly && this._toggleRoom(room.id, selectedRooms, cleanSequence)}">
                 <ha-icon 
                   class="${animationClass}" 
+                  style="${this.config.show_names === false ? 'margin-bottom: 0px;' : ''}"
                   .icon="${customConfig.icon || room.icon || 'mdi:door'}">
                 </ha-icon>
-                <div class="name">${customConfig.label || room.name}</div>
+                ${this.config.show_names !== false ? html`<div class="name">${customConfig.label || room.name}</div>` : ''}
               </div>
             `;
           })}
@@ -281,6 +282,7 @@ class VacuumMapCard extends HAControlBase {
       currently_cleaning_entity: "sensor.vacuum_active_room",
       map_height: 350,
       show_toggle: true,
+      show_names: true,
       sort_by_sequence: true
     };
   }
@@ -303,6 +305,7 @@ class VacuumMapCard extends HAControlBase {
       map_height: 350,
       show_toggle: true,
       sort_by_sequence: true,
+      show_names: true,
       ...config
     };
   }

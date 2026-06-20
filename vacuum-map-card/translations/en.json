@@ -35,5 +35,6 @@
   "coord_y": "Y Position (%)",
   "width": "Width (%)",
   "height": "Height (%)",
-  "color": "Color"
+  "color": "Color",
+  "show_names": "Show Room Names"
 }

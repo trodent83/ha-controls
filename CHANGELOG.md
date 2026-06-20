@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Positioning and sizing configurations (percentages `x`, `y`, `w`, `h`) to scale cleanly when resized.
   - Support for room-specific custom colors.
   - Active cleaning animations (pulsing, blinking, flashing) matching selected color styles.
+  - Optional toggle configuration option `show_names` (default: `true`) to show/hide room name text labels inside the interactive room blocks.
 
 ## [1.0.4] - 2026-06-17
 
