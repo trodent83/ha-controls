@@ -23,6 +23,7 @@ Below are the configuration parameters for the card. Define these fields in your
 | `mark_animation_foreground` | string | No | — | Icon and text color code override applied to the active room button cell. |
 | `columns` | number | No | `4` | Number of columns in the room buttons layout grid (from 2 to 6). |
 | `show_toggle` | boolean | No | `true` | Display the "Toggle All / Select All" button panel at the bottom of the card. |
+| `sort_by_sequence` | boolean | No | `true` | Sort room buttons according to the vacuum's `cleaning_sequence` attribute. |
 | `selection_color` | string | No | `var(--primary-color)` | Button background color applied to room cells when toggled selected. |
 | `selection_foreground` | string | No | `white` | Text and icon color applied to room cells when toggled selected. |
 | `rooms` | object | No | — | Key-value dictionary mapping individual room IDs (strings) to customized settings. See [Room Customization Options](#room-customization-options). |

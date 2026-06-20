@@ -21,6 +21,7 @@
   "animation_fg_color": "Animation Text Color",
   "columns": "Columns",
   "show_toggle_all": "Show Toggle All Button",
+  "sort_by_sequence": "Sort by Cleaning Sequence",
   "active_color": "Active Color",
   "active_text_color": "Active Text Color",
   "room": "Room: {name}",

@@ -62,6 +62,7 @@ class VacuumSelectCardEditor extends HAControlBase {
     this._config = {
       columns: 4,      // Default column count
       show_toggle: true, // Forces the editor switch to 'On' initially
+      sort_by_sequence: true, // Sort rooms by sequence by default
       rooms: {},       // Ensure rooms object exists
       ...config
     };
@@ -77,6 +78,7 @@ class VacuumSelectCardEditor extends HAControlBase {
       "mark_animation_foreground",
       "columns",
       "show_toggle",
+      "sort_by_sequence",
       "selection_color",
       "selection_foreground",
       "rooms"
@@ -125,11 +127,16 @@ class VacuumSelectCardEditor extends HAControlBase {
         ] 
       },
       { 
+        name: "columns", 
+        label: this._localize('columns'), 
+        selector: { number: { min: 2, max: 6, mode: "slider" } } 
+      },
+      { 
         name: "", 
         type: "grid", 
         schema: [
-          { name: "columns", label: this._localize('columns'), selector: { number: { min: 2, max: 6, mode: "slider" } } },
-          { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } }
+          { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } },
+          { name: "sort_by_sequence", label: this._localize('sort_by_sequence'), selector: { boolean: {} } }
         ] 
       },
       { 
@@ -221,6 +228,7 @@ class VacuumSelectCardEditor extends HAControlBase {
     if (this._config.mark_animation_foreground !== undefined) cleaned.mark_animation_foreground = this._config.mark_animation_foreground;
     addIfDiff("columns", 4);
     addIfDiff("show_toggle", true);
+    addIfDiff("sort_by_sequence", true);
     if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
     if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;
     
