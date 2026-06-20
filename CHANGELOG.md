@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2026-06-20
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Interactive 2D layout map-based room selector showing rooms defined in vacuum attributes.
+  - Positioning and sizing configurations (percentages `x`, `y`, `w`, `h`) to scale cleanly when resized.
+  - Support for room-specific custom colors.
+  - Active cleaning animations (pulsing, blinking, flashing) matching selected color styles.
+
 ## [1.0.4] - 2026-06-17
 
 ### Fixed
