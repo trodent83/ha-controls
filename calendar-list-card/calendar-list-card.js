@@ -108,6 +108,7 @@ class CalendarListCard extends HAControlBase {
       show_refresh_button: false,
       show_finished_events: true,
       max_days: 7,
+      max_items: '',
       icon: 'mdi:calendar-multiselect',
       default_due_date_color: '',
       date_separator_color: 'transparent',
@@ -553,7 +554,10 @@ class CalendarListCard extends HAControlBase {
     if (!this.config || !this.hass) return html``;
 
     let lastDate = null;
-    const events = this._events || [];
+    let events = this._events || [];
+    if (this.config.max_items !== undefined && this.config.max_items !== null && this.config.max_items !== '') {
+      events = events.slice(0, parseInt(this.config.max_items));
+    }
 
     return html`
       ${this.renderStyle('calendar-list-card.css')}
