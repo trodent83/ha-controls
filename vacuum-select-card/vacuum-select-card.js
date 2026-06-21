@@ -146,7 +146,7 @@ class VacuumSelectCard extends HAControlBase {
             let animationClass = '';
             let animationStyle = '';
             if (showActiveCleaning) {
-                const markingAnimation = this.config.mark_animation || 'none';
+                const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
                 animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
                 const bgColor = this.config.mark_animation_background;
                 const fgColor = this.config.mark_animation_foreground;

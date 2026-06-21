@@ -270,6 +270,7 @@ class MultiStateCardEditor extends HAControlBase {
         const e = {};
         if (ent.entity !== undefined) e.entity = ent.entity;
         if (ent.disabled_expression !== undefined) e.disabled_expression = ent.disabled_expression;
+        if (ent.state_animations !== undefined) e.state_animations = ent.state_animations;
         if (ent.tap_action !== undefined) e.tap_action = ent.tap_action;
         if (ent.hold_action !== undefined) e.hold_action = ent.hold_action;
         if (ent.features !== undefined) e.features = ent.features;

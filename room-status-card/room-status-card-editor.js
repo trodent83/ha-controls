@@ -287,8 +287,15 @@ class RoomStatusCardEditor extends HAControlBase {
     };
     addIfDiff("name", "Room");
     addIfDiff("icon", "mdi:home");
-    if (this._config.show_header !== undefined) cleaned.show_header = this._config.show_header;
-    if (this._config.show_icon !== undefined) cleaned.show_icon = this._config.show_icon;
+    if (this._config.header_settings !== undefined) {
+      cleaned.header_settings = {};
+      if (this._config.header_settings.show_header !== undefined) {
+        cleaned.header_settings.show_header = this._config.header_settings.show_header;
+      }
+      if (this._config.header_settings.show_icon !== undefined) {
+        cleaned.header_settings.show_icon = this._config.header_settings.show_icon;
+      }
+    }
     
     if (this._config.badges && Array.isArray(this._config.badges)) {
       cleaned.badges = this._config.badges.map(badge => {

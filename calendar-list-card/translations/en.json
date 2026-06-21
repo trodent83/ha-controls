@@ -57,5 +57,10 @@
   "attendees": "Attendees",
   "calendar_name": "Calendar Name",
   "all_day": "All day",
-  "date": "Date"
+  "date": "Date",
+  "max_items": "Max Items",
+  "separator_mode": "Separator Mode",
+  "separator_mode_day": "Day Boundary",
+  "separator_mode_week": "Week Boundary",
+  "separator_mode_month": "Month Boundary"
 }

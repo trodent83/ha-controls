@@ -162,7 +162,7 @@ class VacuumMapCard extends HAControlBase {
             let animationClass = '';
             if (showActiveCleaning) {
                 activeCleaningClass = 'cleaning';
-                const markingAnimation = this.config.mark_animation || 'none';
+                const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
                 animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
             }
             

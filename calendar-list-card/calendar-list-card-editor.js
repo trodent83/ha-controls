@@ -72,6 +72,7 @@ class CalendarListCardEditor extends HAControlBase {
       "title",
       "icon",
       "max_days",
+      "max_items",
       "show_due_date",
       "show_description",
       "show_due_in_days",
@@ -83,6 +84,7 @@ class CalendarListCardEditor extends HAControlBase {
       "day_separator_color",
       "due_in_days_separator_color",
       "source_color",
+      "separator_mode",
       "entities",
       "entity",
       "due_date_colors",
@@ -282,6 +284,7 @@ class CalendarListCardEditor extends HAControlBase {
     if (this._config.title !== undefined) cleaned.title = this._config.title;
     addIfDiff("icon", "mdi:calendar-multiselect");
     if (this._config.max_days !== undefined) cleaned.max_days = this._config.max_days;
+    if (this._config.max_items !== undefined) cleaned.max_items = this._config.max_items;
     
     addIfDiff("show_due_date", true);
     addIfDiff("show_description", false);
@@ -290,6 +293,7 @@ class CalendarListCardEditor extends HAControlBase {
     addIfDiff("show_refresh_button", false);
     addIfDiff("show_finished_events", true);
 
+    addIfDiff("separator_mode", "day");
     addIfDiff("date_separator_color", "transparent");
     
     if (this._config.default_due_date_color !== undefined) cleaned.default_due_date_color = this._config.default_due_date_color;
@@ -394,6 +398,13 @@ class CalendarListCardEditor extends HAControlBase {
                 type="number"
                 .value="${this._config.max_days !== undefined ? this._config.max_days : ''}"
                 .configValue="${'max_days'}"
+                @input="${(e) => this._valueChanged(e)}"
+              ></ha-input>
+              <ha-input
+                label="${this._localize('max_items') || 'Max Items'}"
+                type="number"
+                .value="${this._config.max_items !== undefined ? this._config.max_items : ''}"
+                .configValue="${'max_items'}"
                 @input="${(e) => this._valueChanged(e)}"
               ></ha-input>
               <div class="switches-grid">
@@ -620,6 +631,25 @@ class CalendarListCardEditor extends HAControlBase {
                 .configValue="${'due_in_days_separator_color'}"
                 @input="${(e) => this._valueChanged(e)}"
               ></ha-input>
+              <ha-select
+                label="${this._localize('separator_mode') || 'Separator Mode'}"
+                .value="${this._config.separator_mode || 'day'}"
+                .configValue="${'separator_mode'}"
+                @closed="${(e) => {
+                  e.stopPropagation();
+                  const target = e.target;
+                  if (target.value !== undefined && target.value !== this._config.separator_mode) {
+                    this._valueChanged({ target: { configValue: 'separator_mode', value: target.value } });
+                  }
+                }}"
+                fixedMenuPosition
+                naturalMenuWidth
+                style="width: 100%; display: block; margin-top: 8px;"
+              >
+                <ha-list-item value="day">${this._localize('separator_mode_day') || 'Day Boundary'}</ha-list-item>
+                <ha-list-item value="week">${this._localize('separator_mode_week') || 'Week Boundary'}</ha-list-item>
+                <ha-list-item value="month">${this._localize('separator_mode_month') || 'Month Boundary'}</ha-list-item>
+              </ha-select>
               <ha-input
                 label="${this._localize('source_color') || 'Source Color'}"
                 .value="${this._config.source_color || ''}"

@@ -91,7 +91,8 @@ class CalendarGridCardEditor extends HAControlBase {
       "show_finished_events",
       "show_refresh_button",
       "sidebar_position",
-      "entities"
+      "entities",
+      "event_features"
     ];
     this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
@@ -240,6 +241,7 @@ class CalendarGridCardEditor extends HAControlBase {
     if (this._config.day_names !== undefined) cleaned.day_names = this._config.day_names;
     if (this._config.today_background !== undefined) cleaned.today_background = this._config.today_background;
     if (this._config.today_border !== undefined) cleaned.today_border = this._config.today_border;
+    if (this._config.event_features !== undefined) cleaned.event_features = this._config.event_features;
     
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
@@ -287,6 +289,17 @@ class CalendarGridCardEditor extends HAControlBase {
 
     const entities = this._config.entities || [];
     const dayNames = this._getDayNames();
+
+    const currentFeatures = this._config.event_features || [
+      { type: "time" },
+      { type: "location" },
+      { type: "description" },
+      { type: "attendees" }
+    ];
+    const hasTime = currentFeatures.some(f => f.type === 'time');
+    const hasLocation = currentFeatures.some(f => f.type === 'location');
+    const hasDescription = currentFeatures.some(f => f.type === 'description');
+    const hasAttendees = currentFeatures.some(f => f.type === 'attendees');
 
     return html`
       ${this.renderStyle('calendar-grid-card-editor.css')}
@@ -426,6 +439,35 @@ class CalendarGridCardEditor extends HAControlBase {
               .computeLabel=${(s) => s.label}
               @value-changed=${(ev) => this._formValueChanged(ev)}
           ></ha-form>
+          <div class="event-features-container" style="margin-top: 16px; border-top: 1px solid var(--divider-color); padding-top: 16px;">
+              <div class="heading" style="font-weight: 500; margin-bottom: 8px;">${this._localize('cgc.editor.event_features') || 'Event Details Dialog Features'}</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <ha-formfield label="${this._localize('cgc.editor.feature_time') || 'Show Time'}">
+                      <ha-switch
+                          .checked=${hasTime}
+                          @change=${(ev) => this._toggleEventFeature('time', ev.target.checked)}
+                      ></ha-switch>
+                  </ha-formfield>
+                  <ha-formfield label="${this._localize('cgc.editor.feature_location') || 'Show Location'}">
+                      <ha-switch
+                          .checked=${hasLocation}
+                          @change=${(ev) => this._toggleEventFeature('location', ev.target.checked)}
+                      ></ha-switch>
+                  </ha-formfield>
+                  <ha-formfield label="${this._localize('cgc.editor.feature_description') || 'Show Description'}">
+                      <ha-switch
+                          .checked=${hasDescription}
+                          @change=${(ev) => this._toggleEventFeature('description', ev.target.checked)}
+                      ></ha-switch>
+                  </ha-formfield>
+                  <ha-formfield label="${this._localize('cgc.editor.feature_attendees') || 'Show Attendees'}">
+                      <ha-switch
+                          .checked=${hasAttendees}
+                          @change=${(ev) => this._toggleEventFeature('attendees', ev.target.checked)}
+                      ></ha-switch>
+                  </ha-formfield>
+              </div>
+          </div>
         </div>
       ` : html`
         <div class="card-config" style="margin-top: 0;">
@@ -578,8 +620,26 @@ class CalendarGridCardEditor extends HAControlBase {
    * 
    * @private
    */
-  _toggleDayNames() {
+   _toggleDayNames() {
       this._dayNamesExpanded = !this._dayNamesExpanded;
+  }
+
+  _toggleEventFeature(type, checked) {
+    let currentFeatures = this._config.event_features || [
+      { type: "time" },
+      { type: "location" },
+      { type: "description" },
+      { type: "attendees" }
+    ];
+    if (checked) {
+      if (!currentFeatures.some(f => f.type === type)) {
+        currentFeatures = [...currentFeatures, { type }];
+      }
+    } else {
+      currentFeatures = currentFeatures.filter(f => f.type !== type);
+    }
+    this._config = { ...this._config, event_features: currentFeatures };
+    this._fireConfigChanged();
   }
 
   /**
