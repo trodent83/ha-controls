@@ -175,4 +175,6 @@ class CalendarPropertyFeatureEditor extends HAControlBase {
   }
 }
 
-customElements.define("calendar-property-feature-editor", CalendarPropertyFeatureEditor);
+if (!customElements.get("calendar-property-feature-editor")) {
+  customElements.define("calendar-property-feature-editor", CalendarPropertyFeatureEditor);
+}

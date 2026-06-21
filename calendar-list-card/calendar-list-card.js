@@ -1,6 +1,5 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
-import "./calendar-list-card-row.js?v=1.0.0";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -639,7 +638,9 @@ class CalendarListCard extends HAControlBase {
   }
 }
 
-customElements.define("calendar-list-card", CalendarListCard);
+if (!customElements.get("calendar-list-card")) {
+  customElements.define("calendar-list-card", CalendarListCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

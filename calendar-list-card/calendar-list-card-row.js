@@ -212,4 +212,6 @@ class CalendarListCardRow extends HAControlBase {
   }
 }
 
-customElements.define("calendar-list-card-row", CalendarListCardRow);
+if (!customElements.get("calendar-list-card-row")) {
+  customElements.define("calendar-list-card-row", CalendarListCardRow);
+}

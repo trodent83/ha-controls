@@ -223,7 +223,9 @@ class CalendarPropertyFeature extends HAControlBase {
   }
 }
 
-customElements.define("calendar-property-feature", CalendarPropertyFeature);
+if (!customElements.get("calendar-property-feature")) {
+  customElements.define("calendar-property-feature", CalendarPropertyFeature);
+}
 
 window.customCardFeatures = window.customCardFeatures || [];
 window.customCardFeatures.push({

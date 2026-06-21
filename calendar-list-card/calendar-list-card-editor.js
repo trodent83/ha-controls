@@ -1,6 +1,4 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
-import "../feature-renderer-card/feature-renderer-editor-card.js?v=0.1.9";
-import "../feature-renderer-card/feature-selector-card.js?v=0.1.9";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -647,4 +645,6 @@ class CalendarListCardEditor extends HAControlBase {
   }
 }
 
-customElements.define("calendar-list-card-editor", CalendarListCardEditor);
+if (!customElements.get("calendar-list-card-editor")) {
+  customElements.define("calendar-list-card-editor", CalendarListCardEditor);
+}
