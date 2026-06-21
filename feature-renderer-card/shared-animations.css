@@ -80,3 +80,13 @@
   0%, 50%, 100% { opacity: 1; }
   25%, 75% { opacity: 0; }
 }
+
+/* Rotating animation */
+.rotating {
+  animation: rotating-anim 2s infinite linear;
+}
+@keyframes rotating-anim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

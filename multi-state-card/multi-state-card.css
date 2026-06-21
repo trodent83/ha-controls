@@ -40,6 +40,12 @@ ha-card {
   pointer-events: none;
 }
 
+/* Disabled button styling */
+.btn.is-disabled {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
 /* Informational parameters labels block */
 .info-container {
   display: flex;

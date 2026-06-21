@@ -57,6 +57,28 @@ class MultiStateCard extends HAControlBase {
    * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
    * @returns {boolean} True if the card should re-render, false otherwise
    */
+  /**
+   * Evaluates JavaScript expression securely in a local closure scope.
+   * 
+   * @param {string} expr - Expression string
+   * @param {Object} stateObj - Entity state object
+   * @private
+   * @returns {any} Result of evaluation
+   */
+  _evalExpression(expr, stateObj) {
+    if (!expr) return undefined;
+    try {
+      const hass = this.hass;
+      const entity = stateObj;
+      const state = stateObj?.state;
+      const attributes = stateObj?.attributes || {};
+      return eval(expr);
+    } catch (e) {
+      console.error("[MultiStateCard] Error evaluating expression:", expr, e);
+      return undefined;
+    }
+  }
+
   shouldUpdate(changedProps) {
     if (changedProps.has('config')) {
       this._conditionCache = {};
@@ -83,15 +105,7 @@ class MultiStateCard extends HAControlBase {
         let conditionChanged = false;
 
         if (typeof ent === 'object' && ent.condition) {
-          try {
-            const hass = this.hass;
-            const entity = stateObj;
-            const state = stateObj?.state;
-            const attributes = stateObj?.attributes;
-            conditionResult = !!eval(ent.condition);
-          } catch (e) {
-            conditionResult = false;
-          }
+          conditionResult = !!this._evalExpression(ent.condition, stateObj);
 
           if (this._conditionCache[index] !== conditionResult) {
             this._conditionCache[index] = conditionResult;
@@ -159,9 +173,14 @@ class MultiStateCard extends HAControlBase {
             }
           }
 
+          const isUnavailable = !stateObj || stateObj.state === 'unavailable';
+          const isDisabled = (typeof entConf === 'object' && entConf.disabled_expression)
+            ? !!this._evalExpression(entConf.disabled_expression, stateObj)
+            : false;
+
           return html`<div class="multi-state-entity">
             <div
-              class="btn"
+              class="btn ${isUnavailable ? 'is-unavailable' : ''} ${isDisabled ? 'is-disabled' : ''}"
               @click="${() => this._runAction(entConf, 'tap')}"
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >
@@ -169,16 +188,7 @@ class MultiStateCard extends HAControlBase {
                 <div class="features-container">
                   ${entConf.features.filter(featureConfig => {
                     if (featureConfig.condition) {
-                      try {
-                        const hass = this.hass;
-                        const entity = stateObj;
-                        const state = stateObj?.state;
-                        const attributes = stateObj?.attributes;
-                        return eval(featureConfig.condition);
-                      } catch (e) {
-                        console.error("Error evaluating condition for feature", featureConfig, e);
-                        return false;
-                      }
+                      return !!this._evalExpression(featureConfig.condition, stateObj);
                     }
                     return true;
                   }).map(featureConfig => html`

@@ -185,7 +185,8 @@ class IconCardFeatureEditor extends HAControlBase {
                   { value: "bounce", label: this._localize('bounce') },
                   { value: "flash", label: this._localize('flash') },
                   { value: "float", label: this._localize('float') },
-                  { value: "spin-slow", label: this._localize('spinning') }
+                  { value: "spin-slow", label: this._localize('spinning') },
+                  { value: "rotating", label: this._localize('rotating') || "Rotating (Fast)" }
                 ],
                 mode: "dropdown"
               }
@@ -294,6 +295,7 @@ class IconCardFeatureEditor extends HAControlBase {
                 <ha-list-item value="flash">${this._localize('flash')}</ha-list-item>
                 <ha-list-item value="float">${this._localize('float')}</ha-list-item>
                 <ha-list-item value="spin-slow">${this._localize('spinning')}</ha-list-item>
+                <ha-list-item value="rotating">${this._localize('rotating') || "Rotating (Fast)"}</ha-list-item>
               </ha-select>
             </div>
           </div>
@@ -359,6 +361,7 @@ class IconCardFeatureEditor extends HAControlBase {
                 <ha-list-item value="flash">${this._localize('flash')}</ha-list-item>
                 <ha-list-item value="float">${this._localize('float')}</ha-list-item>
                 <ha-list-item value="spin-slow">${this._localize('spinning')}</ha-list-item>
+                <ha-list-item value="rotating">${this._localize('rotating') || "Rotating (Fast)"}</ha-list-item>
               </ha-select>
             </div>
           </div>
