@@ -44,9 +44,32 @@ ha-card {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Default / Title style styling */
+.header_container.title {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--primary-text-color);
+}
+
+.header_container.title ha-icon {
+  --mdc-icon-size: 24px;
+  color: inherit;
+}
+
+/* Subtitle style overrides */
+.header_container.subtitle {
   font-size: 16px;
   font-weight: 500;
+  line-height: 24px;
   color: var(--secondary-text-color);
+}
+
+.header_container.subtitle ha-icon {
+  --mdc-icon-size: 20px;
+  color: inherit;
 }
 
 /* Title text typography rules */
@@ -54,12 +77,6 @@ ha-card {
   margin: 0;
   font-size: inherit;
   line-height: inherit;
-}
-
-/* Title icon size */
-.header_container ha-icon {
-  --mdc-icon-size: 22px;
-  color: inherit;
 }
 
 /* Right aligned row container for sensors badges */

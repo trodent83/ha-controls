@@ -24,6 +24,7 @@ Below are the configuration parameters for the card. Define these fields in your
 | :--- | :--- | :--- | :--- | :--- |
 | `show_header` | boolean | No | `true` | Display the room name text in the header. |
 | `show_icon` | boolean | No | `true` | Display the room icon in the header. |
+| `heading_style`| string  | No | `title`| The heading style and size. Options: `title` (default, standard card title size) or `subtitle` (smaller subtitle size). |
 
 ---
 

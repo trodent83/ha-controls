@@ -97,6 +97,7 @@ class RoomStatusCard extends HAControlBase {
     const header_settings = this.config.header_settings || {};
     const show_header = header_settings.show_header !== false; // Default true
     const show_icon = header_settings.show_icon !== false;     // Default true
+    const heading_style = header_settings.heading_style || 'title'; // Default title
 
     const badges = this.config.badges || [];
 
@@ -104,7 +105,7 @@ class RoomStatusCard extends HAControlBase {
       ${this.renderStyle('room-status-card.css')}
       <ha-card>
         <div class="card-content">
-          <div class="header_container">
+          <div class="header_container ${heading_style}">
           ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
           ${show_header ? html`<span class="room_title">${this.config.name}</span>` : ''}
           </div>

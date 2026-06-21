@@ -263,6 +263,18 @@ class RoomStatusCardEditor extends HAControlBase {
         schema: [
           { name: "show_header", label: this._localize('display_room_name'), selector: { boolean: {} } },
           { name: "show_icon", label: this._localize('display_icon'), selector: { boolean: {} } },
+          {
+            name: "heading_style",
+            label: this._localize('heading_style') || "Heading Style",
+            selector: {
+              select: {
+                options: [
+                  { value: "title", label: this._localize('style_title') || "Title" },
+                  { value: "subtitle", label: this._localize('style_subtitle') || "Subtitle" }
+                ]
+              }
+            }
+          }
         ]
       }
     ];
@@ -294,6 +306,9 @@ class RoomStatusCardEditor extends HAControlBase {
       }
       if (this._config.header_settings.show_icon !== undefined) {
         cleaned.header_settings.show_icon = this._config.header_settings.show_icon;
+      }
+      if (this._config.header_settings.heading_style !== undefined) {
+        cleaned.header_settings.heading_style = this._config.header_settings.heading_style;
       }
     }
     
