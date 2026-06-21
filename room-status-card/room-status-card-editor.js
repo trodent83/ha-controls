@@ -307,7 +307,7 @@ class RoomStatusCardEditor extends HAControlBase {
       if (this._config.header_settings.show_icon !== undefined) {
         cleaned.header_settings.show_icon = this._config.header_settings.show_icon;
       }
-      if (this._config.header_settings.heading_style !== undefined) {
+      if (this._config.header_settings.heading_style !== undefined && this._config.header_settings.heading_style !== 'subtitle') {
         cleaned.header_settings.heading_style = this._config.header_settings.heading_style;
       }
     }
@@ -372,7 +372,13 @@ class RoomStatusCardEditor extends HAControlBase {
       ${this._activeTab === 'general' ? html`
         <ha-form
           .hass=${this.hass}
-          .data=${this._config}
+          .data=${{
+            ...this._config,
+            header_settings: {
+              heading_style: 'subtitle',
+              ...this._config.header_settings
+            }
+          }}
           .schema=${this._schema()}
           .computeLabel=${(schema) => schema.label || schema.name}
           @value-changed=${this._valueChanged}
