@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /**
  * StateValueFeature
@@ -120,11 +120,21 @@ class StateValueFeature extends HAControlThresholdBase {
     const prefix = this.config.prefix || '';
     const suffix = this.config.suffix || '';
 
+    // Prevent double-rendering units if the formatted displayValue already contains the unit/suffix
+    let finalSuffix = suffix;
+    if (suffix && displayValue && typeof displayValue === 'string') {
+      const cleanDisplay = displayValue.trim();
+      const cleanSuffix = suffix.trim();
+      if (cleanDisplay.endsWith(cleanSuffix)) {
+        finalSuffix = suffix.replace(cleanSuffix, '').trimEnd();
+      }
+    }
+
     return html`
       ${this.renderStyle('state-value-feature.css')}
       ${this.renderStyle('shared-animations.css')}
       <div class="state-value-container ${matchedAnimClass}" style="${style}">
-        ${prefix}${displayValue}${suffix}
+        ${prefix}${displayValue}${finalSuffix}
       </div>
     `;
   }
