@@ -33,12 +33,17 @@ export class FeatureRendererCard extends HAControlBase {
       tag = `hui-${tag}-card-feature`;
     }
 
-    if (this._tag !== tag) {
+    if (this._tag !== tag || (!this._el && customElements.get(tag))) {
       this._tag = tag;
       if (customElements.get(tag)) {
         this._el = document.createElement(tag);
       } else {
         this._el = null;
+        customElements.whenDefined(tag).then(() => {
+          if (this._tag === tag) {
+            this.requestUpdate();
+          }
+        });
       }
     }
     
