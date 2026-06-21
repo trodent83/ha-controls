@@ -114,6 +114,7 @@ class CalendarListCard extends HAControlBase {
       day_separator_color: '',
       due_in_days_separator_color: '',
       source_color: '',
+      separator_mode: 'day',
       features: [],
       ...config
     };
@@ -299,13 +300,46 @@ class CalendarListCard extends HAControlBase {
    * @private
    * @returns {boolean} True if a separator boundary should render
    */
+  /**
+   * Helper utility calculating ISO year and calendar week number for week-separator grouping mode.
+   * 
+   * @param {Date} date - Input date object
+   * @private
+   * @returns {string} Date week sequence string (e.g. '2026-24')
+   */
+  _getWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const year = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return `${year}-${week}`;
+  }
+
+  /**
+   * Evaluates separator conditions between contiguous event groups.
+   * 
+   * @param {Date} lastDate - Date of previous event
+   * @param {Date} currentDate - Date of current event
+   * @private
+   * @returns {boolean} True if a separator boundary should render
+   */
   _shouldShowSeparator(lastDate, currentDate) {
     if (!this.config.day_separator_color || !lastDate || !currentDate) {
       return false;
     }
     
-    // Check if start dates are on different calendar days
-    return lastDate.toDateString() !== currentDate.toDateString();
+    const mode = this.config.separator_mode || 'day';
+    if (mode === 'day') {
+      return lastDate.toDateString() !== currentDate.toDateString();
+    } else if (mode === 'month') {
+      return lastDate.getFullYear() !== currentDate.getFullYear() || 
+             lastDate.getMonth() !== currentDate.getMonth();
+    } else if (mode === 'week') {
+      return this._getWeek(lastDate) !== this._getWeek(currentDate);
+    }
+    return false;
   }
 
   /**
@@ -537,16 +571,19 @@ class CalendarListCard extends HAControlBase {
           <div class="event-list">
             ${events.map((event) => {
               const currentDate = event.start;
-              const isDifferentDay = lastDate === null || lastDate.toDateString() !== currentDate.toDateString();
+              const previousDate = lastDate;
               lastDate = currentDate;
 
               const showGroupingHeaders = this.config.show_grouping_headers !== false;
               let dayHeaderHtml = html``;
               
-              if (isDifferentDay) {
-                if (showGroupingHeaders) {
+              if (showGroupingHeaders) {
+                const isDifferentDay = previousDate === null || previousDate.toDateString() !== currentDate.toDateString();
+                if (isDifferentDay) {
                   dayHeaderHtml = html`<div class="group-header">${this._getGroupHeaderLabel(currentDate)}</div>`;
-                } else if (lastDate !== null && this.config.day_separator_color) {
+                }
+              } else {
+                if (this._shouldShowSeparator(previousDate, currentDate)) {
                   dayHeaderHtml = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
                 }
               }
