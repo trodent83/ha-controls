@@ -67,6 +67,13 @@ loader.loadModules(
 > 1. **Control Directory Updates:** Whenever you modify *any* file inside a control's directory (logic, styles, translations, features), you **must** increment the `VERSION` constant string in the card's loader file (e.g., `example-card-loader.js`). This acts as the cache-busting query parameter for Home Assistant client browsers and guarantees updates are delivered properly.
 > 2. **Base Class Updates:** If any shared base class (such as [ha-control-base.js](file:///d:/Ha/ha-controls/ha-control-base.js) or [ha-control-threshold-base.js](file:///d:/Ha/ha-controls/ha-control-threshold-base.js)) is modified, the version query parameter (e.g., `?v=0.6.0`) in the import statements of all cards and loaders that reference them **must** be updated repository-wide.
 > 3. **Universal Import/Link Versioning:** Every script or stylesheet import/link (including those for base classes and shared utility imports) **must** include a versioning query parameter (e.g., `?v=${VERSION}` or `?v=X.Y.Z`) to avoid stale browser caching and ensure immediate reloading of changes.
+> 4. **Prevent Custom Element Registry Conflicts:** Always wrap `customElements.define` calls in all cards, editors, and features with a registry existence check using `customElements.get` to prevent browser console `DOMException` errors if a file is loaded multiple times (e.g., under different cache-busting query versions):
+>    ```javascript
+>    if (!customElements.get("my-custom-card")) {
+>      customElements.define("my-custom-card", MyCustomCard);
+>    }
+>    ```
+> 5. **Avoid Redundant Static Imports with Query Strings:** To prevent the browser from loading the same file multiple times under different cache-busting version query parameters, avoid importing other local components statically (e.g., `import "../other-card/other-card.js?v=x.y.z";`) inside sub-components if they are already loaded globally by standard dashboard loader resources. Let the global loaders register components globally and reference them as HTML custom elements without duplicate static imports.
 >
 > **Versioning Scheme (Semantic Versioning):**
 > Both release versions (documented in `CHANGELOG.md`) and card/loader versions (defined as `const VERSION = "X.Y.Z"` inside loader scripts) follow the Semantic Versioning (SemVer) standard (`MAJOR.MINOR.PATCH`). Increment the numbers as follows:

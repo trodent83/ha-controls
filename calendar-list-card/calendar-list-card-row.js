@@ -1,5 +1,4 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
-import "../feature-renderer-card/feature-renderer-card.js?v=0.1.10";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.

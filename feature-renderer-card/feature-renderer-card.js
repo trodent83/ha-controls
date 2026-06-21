@@ -54,4 +54,6 @@ export class FeatureRendererCard extends HAControlBase {
   }
 }
 
-customElements.define("feature-renderer-card", FeatureRendererCard);
+if (!customElements.get("feature-renderer-card")) {
+  customElements.define("feature-renderer-card", FeatureRendererCard);
+}
