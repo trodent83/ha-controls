@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Support for room-specific custom colors.
   - Active cleaning animations (pulsing, blinking, flashing) matching selected color styles.
   - Optional toggle configuration option `show_names` (default: `true`) to show/hide room name text labels inside the interactive room blocks.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Chronological vertical list mapping events across multiple Home Assistant calendar entities.
+  - Relative remaining day count formatting (e.g., "Today", "Tomorrow", "In 3 days").
+  - Advanced query constraints mapping (configurable search depth via `max_days` and maximum output limits via `max_items`).
+  - Regular expression patterns filtering supporting case-sensitivity exclusions.
+  - Dynamic threshold date text coloring driven by custom comparison operator thresholds.
+  - Divider separator configuration supporting day, week, or month grouping boundaries.
+  - Seamless child feature rendering via `custom:calendar-property-feature` (extracting time, location, description, or attendees).
 
 ## [1.0.4] - 2026-06-17
 
