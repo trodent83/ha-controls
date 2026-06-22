@@ -1,0 +1,18 @@
+{
+  "entity_not_found": "Entity '{entity}' not found in Home Assistant",
+  "invalid_climate": "Invalid climate entity: '{entity}'",
+  "target_temp": "Target: {temp}°C",
+  "current_temp": "Room Temp",
+  "heating_mode": "Heating",
+  "fan_mode": "Fan",
+  "dehumidify_mode": "Dehumidify",
+  "none_mode": "None",
+  "timer_label": "Timer",
+  "climate_entity": "Climate Entity",
+  "sensor_entity": "Temperature Sensor",
+  "select_entity": "Mode Select Selector",
+  "timer_entity": "Timer Entity",
+  "name": "Card Title",
+  "unrecognized_settings": "Unrecognized settings: {keys}",
+  "clean_settings_desc": "Clean up unrecognized options below."
+}

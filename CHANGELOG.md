@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] - 2026-06-22
+
+### Added
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Reusable climate control card consolidating thermostat controls, target adjustments, and mode selects.
+  - Interactive plus/minus target temperature adjusters.
+  - Temperature sensor threshold mapping for room temperature badge coloring.
+  - Natively renders active timer countdown ticks every second.
+  - Hardware-accelerated blinking effects when climate is actively heating.
+
 ## [1.1.0] - 2026-06-20
 
 ### Added
