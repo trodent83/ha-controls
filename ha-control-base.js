@@ -77,6 +77,15 @@ export class HAControlBase extends LitElement {
     return this._watchedEntities;
   }
 
+  /**
+   * Optimizes card updates by filtering rendering cycles.
+   * Compares states of watched entities inside configuration settings to allow changes.
+   * Supports optional console debug tracking by setting `window.haControlsDebug = true`,
+   * adding `?ha_debug` query flag to the browser URL, or configuring `debug: true` in card configuration.
+   * 
+   * @param {Map<string, any>} changedProps - Reactive properties modified in this cycle
+   * @returns {boolean} True if the control should update and re-render, false otherwise
+   */
   shouldUpdate(changedProps) {
     if (changedProps.has('config') || changedProps.has('stateObj')) {
       this._watchedEntities = null;
@@ -89,18 +98,21 @@ export class HAControlBase extends LitElement {
 
       const watched = this._getWatchedEntities(this.config);
       let hasChanges = false;
+      
+      const debugEnabled = window.haControlsDebug || window.location?.search?.includes('ha_debug') || this.config?.debug;
 
       for (const entityId of watched) {
         const stateObj = this.hass.states[entityId];
         const oldStateObj = oldHass.states[entityId];
         if (oldStateObj !== stateObj) {
-          console.log(`[HAControlBase:${this.localName || this.constructor.name}] State changed for watched entity '${entityId}': '${oldStateObj?.state}' -> '${stateObj?.state}'`);
+          if (debugEnabled) {
+            console.log(`[HAControlBase:${this.localName || this.constructor.name}] State changed for watched entity '${entityId}': '${oldStateObj?.state}' -> '${stateObj?.state}'`);
+          }
           hasChanges = true;
           break;
         }
       }
-      if (!hasChanges && watched.length > 0) {
-        // Log skipped updates for custom controls to help debug change-detection filters
+      if (!hasChanges && watched.length > 0 && debugEnabled) {
         console.debug(`[HAControlBase:${this.localName || this.constructor.name}] Skipping update. Watched entities:`, watched);
       }
       return hasChanges;

@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.4";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.7";
 
 /**
  * TimerCardFeatureEditor

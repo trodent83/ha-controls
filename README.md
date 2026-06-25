@@ -154,6 +154,19 @@ To build the rich visual configuration editors and card controls, this project r
 
 Whenever updates to the Home Assistant frontend occur, developers must ensure these components remain active and supported by the active core frontend release.
 
+## 🔍 Debugging & Diagnostics
+
+The base framework provides built-in conditional tracing to debug update cycles, visibility conditions, and entity-watching:
+
+* **Activate Debug Logging**: You can enable change-detection logs in the browser console dynamically using any of the following methods:
+  * Set a global flag in your browser developer console:
+    ```javascript
+    window.haControlsDebug = true;
+    ```
+  * Append `?ha_debug` to your browser dashboard URL (e.g. `http://homeassistant:8123/lovelace/home?ha_debug`).
+  * Add a `debug: true` field in your dashboard card's YAML configuration.
+* **Log Output**: When enabled, the console will trace exactly which entities are watched, when states change, and which cards or features are updating or skipping updates.
+
 ---
 
 ## 🛠️ Development & Extending
