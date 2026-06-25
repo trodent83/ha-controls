@@ -94,9 +94,14 @@ export class HAControlBase extends LitElement {
         const stateObj = this.hass.states[entityId];
         const oldStateObj = oldHass.states[entityId];
         if (oldStateObj !== stateObj) {
+          console.log(`[HAControlBase:${this.localName || this.constructor.name}] State changed for watched entity '${entityId}': '${oldStateObj?.state}' -> '${stateObj?.state}'`);
           hasChanges = true;
           break;
         }
+      }
+      if (!hasChanges && watched.length > 0) {
+        // Log skipped updates for custom controls to help debug change-detection filters
+        console.debug(`[HAControlBase:${this.localName || this.constructor.name}] Skipping update. Watched entities:`, watched);
       }
       return hasChanges;
     }

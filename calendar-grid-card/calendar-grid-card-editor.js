@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.2";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.4";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
