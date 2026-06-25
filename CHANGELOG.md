@@ -7,10 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.2.3] - 2026-06-25
 
 ### Fixed
+- **Shared Base Class (`HAControlBase`)**:
+  - Fixed a critical change-detection bug where custom feature cards (such as `state-value-feature` or `icon-card-feature`) failed to react to state updates if they relied on the parent card's `stateObj` without configuring an explicit `entity` override in their configuration. The base class `shouldUpdate` and `_getWatchedEntities` methods have been upgraded to automatically register and monitor the parent `stateObj.entity_id` when it is provided.
+  - Upgraded `shouldUpdate` to immediately clear cached watched entities and return `true` whenever `stateObj` itself changes reference.
 - **Feature Renderer Card (`feature-renderer-card`)**:
   - Fixed alignment issues for custom features that display text (`state-value-feature`, `attribute-value-feature`, and `constant-text-feature`) by adding `:host` styles with `display: block` and `width: 100%`. This enables configured `text_align` property settings to correctly apply across their parent container width.
   - Standardized the default text alignment to `'center'` for `state-value-feature` and `attribute-value-feature` (matching `constant-text-feature`) to maintain centered layouts in dashboard columns, status cards, and badges by default without requiring manual YAML configuration changes.
-  - Bumped the card loader version to `0.1.17`.
+  - Bumped the card loader version to `0.1.18` and other card loaders to propagate cache-busting of the updated base classes.
 
 ## [1.2.2] - 2026-06-25
 

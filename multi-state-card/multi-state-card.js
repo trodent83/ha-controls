@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.1";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.2";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -145,11 +145,11 @@ class MultiStateCard extends HAControlBase {
               ${(entConf.features && Array.isArray(entConf.features)) ? html`
                 <div class="features-container">
                   ${entConf.features.filter(featureConfig => {
-                    if (featureConfig.condition) {
-                      return !!this._evalExpression(featureConfig.condition, stateObj);
-                    }
-                    return true;
-                  }).map(featureConfig => html`
+            if (featureConfig.condition) {
+              return !!this._evalExpression(featureConfig.condition, stateObj);
+            }
+            return true;
+          }).map(featureConfig => html`
                     <feature-renderer-card
                       .hass=${this.hass}
                       .config=${featureConfig}

@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.1";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.2";
 
 class FeatureSelector extends HAControlBase {
   static get properties() {

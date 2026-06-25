@@ -1,4 +1,4 @@
-import { HAControlBase, html, css } from "./ha-control-base.js?v=0.6.1";
+import { HAControlBase, html, css } from "./ha-control-base.js?v=0.6.2";
 
 export { html, css };
 

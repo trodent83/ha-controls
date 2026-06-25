@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.8";
+const VERSION = "1.0.9";
 
 // Name of this loader module script
 const SCRIPT_NAME = "calendar-list-card-loader.js";

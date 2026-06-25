@@ -41,7 +41,10 @@ export class HAControlBase extends LitElement {
     if (this._watchedEntities) return this._watchedEntities;
 
     const entities = new Set();
-    if (!config) return [];
+    if (this.stateObj?.entity_id) {
+      entities.add(this.stateObj.entity_id);
+    }
+    if (!config) return Array.from(entities);
 
     const entityRegex = /(?:^|['"/\s(\[{])([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)(?:$|['"/\s)\]}])/g;
 
@@ -75,7 +78,7 @@ export class HAControlBase extends LitElement {
   }
 
   shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
+    if (changedProps.has('config') || changedProps.has('stateObj')) {
       this._watchedEntities = null;
       return true;
     }
