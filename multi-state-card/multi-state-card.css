@@ -14,6 +14,7 @@ ha-card {
 
 /* Individual entity items buttons */
 .btn {
+  width: 100%;
   height: auto;
   min-height: 48px;
   display: flex;
@@ -26,6 +27,7 @@ ha-card {
   -webkit-tap-highlight-color: transparent; /* Cleaner mobile tap response */
   min-width: 60px;
 }
+
 
 /* Active click states overlay */
 .btn:active {
@@ -182,11 +184,17 @@ ha-icon {
 /* Auto fill remaining horizontal width for rows items */
 .content-container.layout-row .multi-state-entity {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 /* Full width sizing for columns items */
 .content-container.layout-column .multi-state-entity {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 /* Padding around inline features renderers with centering layout */

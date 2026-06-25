@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.2] - 2026-06-25
+
+### Fixed
+- **Multi State Card (`multi-state-card`)**:
+  - Fixed an issue where column buttons (`.btn` and `.multi-state-entity`) did not stretch to 100% width, causing nested features to remain left-aligned inside flex rows.
+  - Bumped the card loader version to `0.1.26`.
+
 ## [1.2.1] - 2026-06-25
 
 ### Fixed
