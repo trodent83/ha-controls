@@ -267,7 +267,7 @@ get translationPath() {
 
 ### 1. JavaScript & LitElement Performance
 
-* **Optimize `shouldUpdate`:** Home Assistant updates the global `hass` object whenever *any* entity in the system changes state. Implement `shouldUpdate` to only return `true` if the specific entities or config options referenced in your control have changed state or values.
+* **Inherit `shouldUpdate`**: By default, `HAControlBase` provides a highly optimized, automated implementation of `shouldUpdate`. It recursively scans the card config for any entity references (including inside JS expressions) and only triggers updates when those specific entities change state. Do NOT override `shouldUpdate` unless you have custom internal state variables (like timer clocks or async events), in which case you should execute your checks first and then delegate to `super.shouldUpdate(changedProps)`.
 * **Cleanup Listeners:** Unbind any global window, document, or custom DOM event listeners inside `disconnectedCallback()` to avoid memory leaks.
 * **Leverage Native Actions:** Route user interactions (clicks, long-presses) using Home Assistant's native action router (dispatching a custom `hass-action` event) to support Lovelace's native action configurations.
 

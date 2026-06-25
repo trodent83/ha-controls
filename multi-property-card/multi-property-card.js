@@ -51,62 +51,7 @@ class MultiPropertyCard extends HAControlThresholdBase {
     return document.createElement("multi-property-card-editor");
   }
 
-  /**
-   * Controls when the element should re-render to optimize dashboard performance.
-   * Evaluates javascript conditional expressions on state changes to update element presentation conditionally.
-   * 
-   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
-   * @returns {boolean} True if the card should re-render, false otherwise
-   */
-  shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
-      this._conditionCache = {};
-      return true;
-    }
 
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config || !this.config.entities) return true;
-
-      let hasChanges = false;
-      if (!this._conditionCache) this._conditionCache = {};
-
-      for (const [index, ent] of this.config.entities.entries()) {
-        if (!ent) continue;
-        const entityId = typeof ent === 'string' ? ent : ent.entity;
-        const stateObj = entityId ? this.hass.states[entityId] : undefined;
-        const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
-
-        const stateChanged = oldStateObj !== stateObj;
-
-        let conditionResult = true;
-        let conditionChanged = false;
-
-        if (typeof ent === 'object' && ent.condition) {
-          try {
-            const hass = this.hass;
-            const entity = stateObj;
-            const state = stateObj?.state;
-            const attributes = stateObj?.attributes;
-            conditionResult = !!eval(ent.condition);
-          } catch (e) {
-            conditionResult = false;
-          }
-
-          if (this._conditionCache[index] !== conditionResult) {
-            this._conditionCache[index] = conditionResult;
-            conditionChanged = true;
-          }
-        }
-
-        if (conditionChanged || (conditionResult && stateChanged)) {
-          hasChanges = true;
-        }
-      }
-      return hasChanges;
-    }
-    return true;
-  }
 
   /**
    * Returns default stub configuration details for this custom card.

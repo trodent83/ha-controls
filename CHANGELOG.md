@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.1] - 2026-06-25
+
+### Fixed
+- **Multi State Card (`multi-state-card`)**:
+  - Optimized the update lifecycle (`shouldUpdate`) to dynamically discover and track state updates for all entities referenced inside JS expression strings (such as `hass.states['...']`), resolving UI refresh lag.
+  - Standardized the layout of nested card features (`icon-card-feature`, `state-value-feature`, etc.) to align center vertically and horizontally by default.
+  - Bumped the card loader version to `0.1.25`.
+
 ## [1.2.0] - 2026-06-22
 
 ### Added

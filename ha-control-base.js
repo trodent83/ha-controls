@@ -37,6 +37,69 @@ export class HAControlBase extends LitElement {
     this._translationsLoaded = false;
   }
 
+  _getWatchedEntities(config) {
+    if (this._watchedEntities) return this._watchedEntities;
+
+    const entities = new Set();
+    if (!config) return [];
+
+    const entityRegex = /(?:^|['"/\s(\[{])([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)(?:$|['"/\s)\]}])/g;
+
+    const scanObject = (obj) => {
+      if (!obj) return;
+      if (typeof obj === 'string') {
+        let match;
+        entityRegex.lastIndex = 0;
+        while ((match = entityRegex.exec(obj)) !== null) {
+          const parts = match[1].split('.');
+          if (parts.length === 2 && /^(light|switch|sensor|binary_sensor|input_select|input_number|input_text|input_boolean|media_player|climate|vacuum|timer|weather|todo|person|device_tracker|group|automation|script|scene|notify|number|select|update|button)$/.test(parts[0])) {
+            entities.add(match[1]);
+          }
+        }
+      } else if (Array.isArray(obj)) {
+        obj.forEach(scanObject);
+      } else if (typeof obj === 'object') {
+        Object.keys(obj).forEach(key => {
+          if (key === 'entity' && typeof obj[key] === 'string') {
+            entities.add(obj[key]);
+          } else {
+            scanObject(obj[key]);
+          }
+        });
+      }
+    };
+
+    scanObject(config);
+    this._watchedEntities = Array.from(entities);
+    return this._watchedEntities;
+  }
+
+  shouldUpdate(changedProps) {
+    if (changedProps.has('config')) {
+      this._watchedEntities = null;
+      return true;
+    }
+
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.hass || !this.config) return true;
+
+      const watched = this._getWatchedEntities(this.config);
+      let hasChanges = false;
+
+      for (const entityId of watched) {
+        const stateObj = this.hass.states[entityId];
+        const oldStateObj = oldHass.states[entityId];
+        if (oldStateObj !== stateObj) {
+          hasChanges = true;
+          break;
+        }
+      }
+      return hasChanges;
+    }
+    return true;
+  }
+
   /**
    * Returns the path to the translation files directory.
    * Override in subclasses to point to the local translations folder.

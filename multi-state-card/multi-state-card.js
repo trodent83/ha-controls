@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.1";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -79,48 +79,6 @@ class MultiStateCard extends HAControlBase {
     }
   }
 
-  shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
-      this._conditionCache = {};
-      return true;
-    }
-
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config || !this.config.entities) return true;
-
-      let hasChanges = false;
-      if (!this._conditionCache) this._conditionCache = {};
-
-      for (const [index, ent] of this.config.entities.entries()) {
-        if (!ent) continue;
-        const entityId = typeof ent === 'string' ? ent : ent.entity;
-        if (!entityId) continue;
-        const stateObj = entityId ? this.hass.states[entityId] : undefined;
-        const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
-        
-        const stateChanged = oldStateObj !== stateObj;
-        
-        let conditionResult = true;
-        let conditionChanged = false;
-
-        if (typeof ent === 'object' && ent.condition) {
-          conditionResult = !!this._evalExpression(ent.condition, stateObj);
-
-          if (this._conditionCache[index] !== conditionResult) {
-            this._conditionCache[index] = conditionResult;
-            conditionChanged = true;
-          }
-        }
-
-        if (conditionChanged || (conditionResult && stateChanged)) {
-          hasChanges = true;
-        }
-      }
-      return hasChanges;
-    }
-    return true;
-  }
 
   /**
    * Returns default stub configuration details for this custom card.

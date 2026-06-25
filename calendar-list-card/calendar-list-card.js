@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.1";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
 /**
@@ -149,23 +149,7 @@ class CalendarListCard extends HAControlBase {
       return true;
     }
 
-    if (!changedProps.has('hass')) {
-      return true;
-    }
-
-    const oldHass = changedProps.get('hass');
-    if (!oldHass || !this.hass || !this.config) {
-      return true;
-    }
-
-    const entities = this._getEntities();
-    for (const entityId of entities) {
-      if (oldHass.states[entityId] !== this.hass.states[entityId]) {
-        return true;
-      }
-    }
-
-    return false;
+    return super.shouldUpdate(changedProps);
   }
 
   /**

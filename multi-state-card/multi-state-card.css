@@ -189,7 +189,29 @@ ha-icon {
   width: 100%;
 }
 
-/* Padding around inline features renderers */
+/* Padding around inline features renderers with centering layout */
 .features-container {
   padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+feature-renderer-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+feature-renderer-card > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
 }
