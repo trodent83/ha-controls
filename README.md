@@ -10,7 +10,7 @@ Unlike basic custom cards, this repository implements a unified framework design
 
 * **Dynamic Localization System (`ha-control-base.js`):** Every card inherits from `HAControlBase`, which listens to Home Assistant's active language and dynamically fetches/caches translated files (e.g., `translations/en.json`) with standard translation key interpolation and automatic English fallbacks.
 * **Modular Cache-Busting Loader (`ha-control-loader.js`):** Every card has a dedicated `-loader.js` module that checks for existing scripts, automatically tracks component versions, and dynamically injects the required JavaScript/CSS bundles.
-* **[Dynamic Feature Renderer](file:///d:/Ha/ha-controls/docs/feature-renderer-card.md) (`feature-renderer-card`):** A wrapper card that dynamically resolves and renders standard or custom Home Assistant card features (e.g., cover tilt controls, slider buttons, or custom timers) inside host elements.
+* **[Dynamic Feature Renderer](docs/feature-renderer-card.md) (`feature-renderer-card`):** A wrapper card that dynamically resolves and renders standard or custom Home Assistant card features (e.g., cover tilt controls, slider buttons, or custom timers) inside host elements.
 
 ---
 
@@ -18,21 +18,21 @@ Unlike basic custom cards, this repository implements a unified framework design
 
 | Card Type & Tag | Description | Highlights |
 | :--- | :--- | :--- |
-| [**`calendar-grid-card`**](file:///d:/Ha/ha-controls/docs/calendar-grid-card.md) | A monthly or weekly grid view of events across one or multiple calendars. | Weekly/monthly toggles, custom orientation (horizontal/vertical), sidebar to selectively toggle calendar visibility (cached in `localStorage`), and customizable today borders/backgrounds. |
-| [**`calendar-list-card`**](file:///d:/Ha/ha-controls/docs/calendar-list-card.md) | Chronological events list card for one or multiple Home Assistant calendars. | Relative time calculations (e.g. "In 3 days"), calendar filter regexes, custom date threshold coloring, and modular child feature rendering. |
-| [**`task-list-card`**](file:///d:/Ha/ha-controls/docs/task-list-card.md) | A powerful tasks board for checking off and managing items in `todo` lists. | Support for single/multiple `todo` entities, group tasks on the same day, smart separators (day, week, month), clean sweeping of completed items, and debounced data loading. |
-| [**`universal-select-card`**](file:///d:/Ha/ha-controls/docs/universal-select-card.md) | Segmented button controls to represent and change options for `input_select` entities. | Column/row button layouts, long-press actions (`call-service`, `navigate`, `url`, `more-info`), and dynamic child feature injection (like timers/labels). |
-| [**`vacuum-select-card`**](file:///d:/Ha/ha-controls/docs/vacuum-select-card.md) | Grid-based room selector designed to coordinate multi-room vacuum cleanings. | Automatically extracts segments/rooms from vacuum attributes, tracks selections via text inputs, respects vacuum sequence orders, and pulses/blinks the room button currently being cleaned. |
-| [**`vacuum-map-card`**](file:///d:/Ha/ha-controls/vacuum-map-card/vacuum-map-card.js) | Interactive 2D space map showing selectable, positionable, and sizable rooms. | Custom map height, room coordinates and animations (blink, pulse) matching active vacuum status, select/deselect all, and sequence-based sorting. |
-| [**`room-status-card`**](file:///d:/Ha/ha-controls/docs/room-status-card.md) | A minimalist status header displaying real-time metrics and alerts for rooms. | Custom header icons/names, dynamic status badge widgets (e.g. temp/humidity), and threshold rules that apply alert animations (blink, pulse) and colors on the fly. |
-| [**`multi-property-card`**](file:///d:/Ha/ha-controls/docs/multi-property-card.md) | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, tap/hold actions, and dynamic child features. |
-| [**`multi-state-card`**](file:///d:/Ha/ha-controls/docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
+| [**`calendar-grid-card`**](docs/calendar-grid-card.md) | A monthly or weekly grid view of events across one or multiple calendars. | Weekly/monthly toggles, custom orientation (horizontal/vertical), sidebar to selectively toggle calendar visibility (cached in `localStorage`), and customizable today borders/backgrounds. |
+| [**`calendar-list-card`**](docs/calendar-list-card.md) | Chronological events list card for one or multiple Home Assistant calendars. | Relative time calculations (e.g. "In 3 days"), calendar filter regexes, custom date threshold coloring, and modular child feature rendering. |
+| [**`task-list-card`**](docs/task-list-card.md) | A powerful tasks board for checking off and managing items in `todo` lists. | Support for single/multiple `todo` entities, group tasks on the same day, smart separators (day, week, month), clean sweeping of completed items, and debounced data loading. |
+| [**`universal-select-card`**](docs/universal-select-card.md) | Segmented button controls to represent and change options for `input_select` entities. | Column/row button layouts, long-press actions (`call-service`, `navigate`, `url`, `more-info`), and dynamic child feature injection (like timers/labels). |
+| [**`vacuum-select-card`**](docs/vacuum-select-card.md) | Grid-based room selector designed to coordinate multi-room vacuum cleanings. | Automatically extracts segments/rooms from vacuum attributes, tracks selections via text inputs, respects vacuum sequence orders, and pulses/blinks the room button currently being cleaned. |
+| [**`vacuum-map-card`**](vacuum-map-card/vacuum-map-card.js) | Interactive 2D space map showing selectable, positionable, and sizable rooms. | Custom map height, room coordinates and animations (blink, pulse) matching active vacuum status, select/deselect all, and sequence-based sorting. |
+| [**`room-status-card`**](docs/room-status-card.md) | A minimalist status header displaying real-time metrics and alerts for rooms. | Custom header icons/names, dynamic status badge widgets (e.g. temp/humidity), and threshold rules that apply alert animations (blink, pulse) and colors on the fly. |
+| [**`multi-property-card`**](docs/multi-property-card.md) | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, tap/hold actions, and dynamic child features. |
+| [**`multi-state-card`**](docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
 
 ---
 
 ## ⚙️ Custom Card Features
 
-We provide helper features that plug directly into compatible custom cards (like the **Universal Select Card**, **Multi Property Card**, and **Multi State Card**) by loading the centralized [feature-renderer-card-loader.js](file:///d:/Ha/ha-controls/feature-renderer-card/feature-renderer-card-loader.js) resource (see the [Feature Renderer Documentation](file:///d:/Ha/ha-controls/docs/feature-renderer-card.md) for full details):
+We provide helper features that plug directly into compatible custom cards (like the **Universal Select Card**, **Multi Property Card**, and **Multi State Card**) by loading the centralized [feature-renderer-card-loader.js](feature-renderer-card/feature-renderer-card-loader.js) resource (see the [Feature Renderer Documentation](docs/feature-renderer-card.md) for full details):
 
 * **`timer-card-feature` (`custom:timer-card-feature`):** Renders a real-time running countdown indicator directly on the card. Allows tapping to pause or resume the underlying `timer.*` entity.
 * **`constant-text-feature` (`custom:constant-text-feature`):** Renders customizable static text/labels inside button structures.
@@ -158,7 +158,7 @@ Whenever updates to the Home Assistant frontend occur, developers must ensure th
 
 ## 🛠️ Development & Extending
 
-For detailed development rules, coding standards, and architectural patterns, please review the [Development & Architecture Guidelines](file:///d:/Ha/ha-controls/CONTRIBUTING.md).
+For detailed development rules, coding standards, and architectural patterns, please review the [Development & Architecture Guidelines](CONTRIBUTING.md).
 
 Each card is split into modular components for easier code maintenance:
 

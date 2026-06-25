@@ -43,7 +43,7 @@ deactivate Card
 
 ### 2. Loader Infrastructure Integration
 
-Every custom control must use the unified loader infrastructure provided by [ha-control-loader.js](file:///d:/Ha/ha-controls/ha-control-loader.js).
+Every custom control must use the unified loader infrastructure provided by [ha-control-loader.js](ha-control-loader.js).
 
 * Create a `<control-name>-loader.js` script in the control directory.
 * This loader handles loading matching CSS/JS files dynamically while managing browser caching with a version string parameter.
@@ -65,7 +65,7 @@ loader.loadModules(
 > [!IMPORTANT]
 > **Mandatory Version Increment and Caching Rules:**
 > 1. **Control Directory Updates:** Whenever you modify *any* file inside a control's directory (logic, styles, translations, features), you **must** increment the `VERSION` constant string in the card's loader file (e.g., `example-card-loader.js`). This acts as the cache-busting query parameter for Home Assistant client browsers and guarantees updates are delivered properly.
-> 2. **Base Class Updates:** If any shared base class (such as [ha-control-base.js](file:///d:/Ha/ha-controls/ha-control-base.js) or [ha-control-threshold-base.js](file:///d:/Ha/ha-controls/ha-control-threshold-base.js)) is modified, the version query parameter (e.g., `?v=0.6.0`) in the import statements of all cards and loaders that reference them **must** be updated repository-wide.
+> 2. **Base Class Updates:** If any shared base class (such as [ha-control-base.js](ha-control-base.js) or [ha-control-threshold-base.js](ha-control-threshold-base.js)) is modified, the version query parameter (e.g., `?v=0.6.0`) in the import statements of all cards and loaders that reference them **must** be updated repository-wide.
 > 3. **Universal Import/Link Versioning:** Every script or stylesheet import/link (including those for base classes and shared utility imports) **must** include a versioning query parameter (e.g., `?v=${VERSION}` or `?v=X.Y.Z`) to avoid stale browser caching and ensure immediate reloading of changes.
 > 4. **Prevent Custom Element Registry Conflicts:** Always wrap `customElements.define` calls in all cards, editors, and features with a registry existence check using `customElements.get` to prevent browser console `DOMException` errors if a file is loaded multiple times (e.g., under different cache-busting query versions):
 >    ```javascript
@@ -106,13 +106,13 @@ render() {
 
 * Each card/control must be **fully self-contained** and independently usable in Lovelace dashboards.
 * A control must not depend on another control to be registered in order to load or function correctly.
-* If helper entities or custom features (like sub-elements rendered by [feature-renderer-card.js](file:///d:/Ha/ha-controls/feature-renderer-card/feature-renderer-card.js)) are used, the parent card must degrade gracefully (e.g., displaying an error boundary alert or fallback display) if the requested dependency is missing.
+* If helper entities or custom features (like sub-elements rendered by [feature-renderer-card.js](feature-renderer-card/feature-renderer-card.js)) are used, the parent card must degrade gracefully (e.g., displaying an error boundary alert or fallback display) if the requested dependency is missing.
 
 ### 5. Unified Translation System
 
 All user-facing text strings must support localization using the dynamic translation mechanism.
 
-* Inherit from `HAControlBase` ([ha-control-base.js](file:///d:/Ha/ha-controls/ha-control-base.js)).
+* Inherit from `HAControlBase` ([ha-control-base.js](ha-control-base.js)).
 * Implement `get translationPath()` returning the path to the language folder.
 * Implement `get translationVersion()` to ensure translation cache-busting.
 * Never hardcode strings in the template. Use `this._localize('key')` with optional interpolations.
