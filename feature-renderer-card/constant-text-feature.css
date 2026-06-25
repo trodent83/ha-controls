@@ -1,0 +1,9 @@
+/* ==========================================================================
+   CONSTANT TEXT FEATURE STYLESHEET
+   Styles for rendering static label/text features in custom controls.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}

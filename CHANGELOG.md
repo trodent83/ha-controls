@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.3] - 2026-06-25
+
+### Fixed
+- **Feature Renderer Card (`feature-renderer-card`)**:
+  - Fixed alignment issues for custom features that display text (`state-value-feature`, `attribute-value-feature`, and `constant-text-feature`) by adding `:host` styles with `display: block` and `width: 100%`. This enables configured `text_align` property settings to correctly apply across their parent container width.
+  - Standardized the default text alignment to `'center'` for `state-value-feature` and `attribute-value-feature` (matching `constant-text-feature`) to maintain centered layouts in dashboard columns, status cards, and badges by default without requiring manual YAML configuration changes.
+  - Bumped the card loader version to `0.1.17`.
+
 ## [1.2.2] - 2026-06-25
 
 ### Fixed
