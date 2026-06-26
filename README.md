@@ -29,6 +29,7 @@ Unlike basic custom cards, this repository implements a unified framework design
 | [**`multi-state-card`**](docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
 | [**`navigation-bar-card`**](docs/navigation-bar-card.md) | A custom horizontal navigation bar with dynamic alerts, colors, and badge counters. | Auto-detects active dashboard tab, watches entity states with priority thresholds, and shows notification counters. |
 | [**`light-control-card`**](docs/light-control-card.md) | A premium glassmorphic control card for smart lights. | Vertical/horizontal layouts, inline brightness sliders, warm-to-cool Kelvin temperature ranges, and rainbow hue sliders. |
+| [**`fit-grid-layout`**](docs/fit-grid-layout.md) | A custom viewport-fitting layout engine using CSS Grid. | Dynamic auto-scaling based on ResizeObserver to automatically scale the entire layout down using CSS scale transforms to fit the screen exactly. |
 
 ---
 

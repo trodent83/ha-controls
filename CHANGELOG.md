@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.8] - 2026-06-26
+
+### Added
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Created a custom viewport-fitting layout engine that wraps Lovelace grid dashboard structures and auto-scales down content proportionally using CSS transform scaling and a debounced ResizeObserver.
+  - Added documentation under `docs/fit-grid-layout.md` and catalog registration in `README.md`.
+
 ## [1.2.7] - 2026-06-26
 
 ### Added
