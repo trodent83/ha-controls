@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 // Name of this loader module script
 const SCRIPT_NAME = "navigation-bar-card-loader.js";
@@ -16,6 +16,6 @@ const loader = new HAControlLoader(SCRIPT_NAME, VERSION);
 
 // Dynamically load stylesheets and scripts needed by the control
 loader.loadModules(
-  ["navigation-bar-card.css"],
-  ["navigation-bar-card.js"]
+  ["navigation-bar-card.css", "navigation-bar-card-editor.css"],
+  ["navigation-bar-card.js", "navigation-bar-card-editor.js"]
 );

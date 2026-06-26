@@ -10,6 +10,7 @@ The **Navigation Bar Card** (`custom:navigation-bar-card`) displays a horizontal
 2. **Watched State Counters**: You can specify an `entity` on links (like `todo.german_home`). If the entity state has a positive numeric value, a small circular counter badge will render next to the link text.
 3. **Priority Threshold Rules**: You can customize icons, colors, and animations based on entity state values. Evaluation is performed sequentially from top to bottom (first matching rule applies).
 4. **Multi-Entity Watch overrides**: Within the same navigation tab, you can override `entity` on specific thresholds to prioritize checks across different devices.
+5. **Visual Configuration Editor**: Full dashboard support for Lovelace's graphical editor. You can re-order navigation items, update icon/label settings, and configure threshold rules entirely via the UI form.
 
 ---
 

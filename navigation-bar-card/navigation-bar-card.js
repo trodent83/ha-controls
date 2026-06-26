@@ -19,6 +19,10 @@ class NavigationBarCard extends HAControlThresholdBase {
     return { ...super.properties, config: {} };
   }
 
+  static getConfigElement() {
+    return document.createElement("navigation-bar-card-editor");
+  }
+
   get translationPath() { return "/local/ha-controls/navigation-bar-card/translations"; }
 
   get translationVersion() { return VERSION; }

@@ -1,0 +1,106 @@
+/* ==========================================================================
+   NAVIGATION BAR CARD EDITOR STYLESHEET
+   Styles the navigation bar builder section, thresholds rules block, and list expansions.
+   ========================================================================== */
+
+/* Spacing before the items builder block section */
+.items-section {
+  margin-top: 24px;
+}
+
+/* Expansion panel header line layout */
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Padding inside item settings sheets */
+.item-content {
+  padding: 8px 0;
+}
+
+/* Container grouping thresholds comparison values, colors, and animations */
+.threshold-block {
+  background: var(--secondary-background-color);
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--divider-color);
+}
+
+.threshold-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Horizontal input line fields grouping elements within threshold block rows */
+.threshold-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+/* Utility class to grow text fields to occupy remaining row widths */
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Red colored delete button class */
+.remove-btn-compact {
+  color: var(--error-color);
+}
+
+/* Custom styles for Lovelace expansion configuration panels */
+ha-expansion-panel {
+  margin-bottom: 8px;
+  border: 1px solid var(--divider-color);
+  border-radius: 4px;
+}
+
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  margin-bottom: 16px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Editor utility actions */
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color);
+}
