@@ -16,8 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Feature Renderer Card (`feature-renderer-card`)**:
   - Fixed a bug in `icon-card-feature` where configuring an icon feature without custom thresholds resulted in `_getMatchedProperty` returning `null`, blocking fallback to configured `icon`, `color`, and `animation` values because of strict `=== undefined` checks. Switched to `== null` checks.
   - Resolved a CSS transition conflict in `icon-card-feature.css` where transition on the `transform` property interfered with and stalled the CSS keyframe `rotating` (and other transform-based) animations on the `<ha-icon>`.
-  - Added GPU layers/performance optimization (`will-change: transform`) to transform-based keyframe animations in `shared-animations.css`.
-  - Bumped `feature-renderer-card-loader.js` to `0.1.26`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.9` to bust browser cache.
+  - Added GPU layers/performance optimization (`will-change: transform`, `translateZ(0)`) to transform-based keyframe animations in `shared-animations.css`, and changed the host `<ha-icon>` display setting to `inline-block` to ensure transforms apply reliably across different browser versions.
+  - Bumped `feature-renderer-card-loader.js` to `0.1.27`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.9`, and bumped internal `icon-card-feature` version to `1.0.2` to bust browser cache.
 
 ## [1.2.3] - 2026-06-25
 

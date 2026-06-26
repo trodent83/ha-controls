@@ -51,8 +51,8 @@
   animation: spin-slow-anim 8s infinite linear;
 }
 @keyframes spin-slow-anim {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg) translateZ(0); }
+  100% { transform: rotate(360deg) translateZ(0); }
 }
 
 /* Bounce animation */
@@ -91,7 +91,7 @@
   animation: rotating-anim 2s infinite linear;
 }
 @keyframes rotating-anim {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
 }
 

@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 
 /**
  * IconCardFeature

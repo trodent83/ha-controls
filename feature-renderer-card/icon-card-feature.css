@@ -12,6 +12,7 @@
 }
 
 .icon-feature-container ha-icon {
-  display: flex;
+  display: inline-block;
   transition: color 0.2s ease-in-out;
+  transform: translateZ(0);
 }
