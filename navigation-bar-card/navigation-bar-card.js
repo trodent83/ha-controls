@@ -301,9 +301,16 @@ class NavigationBarCard extends HAControlThresholdBase {
             for (const t of item.thresholds) {
               const targetEntityId = t.entity || entityId;
               if (!targetEntityId) continue;
-              const targetStateObj = this.hass.states[targetEntityId];
-              if (!targetStateObj) continue;
-              const targetValue = targetStateObj.state;
+
+              let targetValue;
+              if (targetEntityId === entityId && (entityId.startsWith("todo.") || entityId.startsWith("calendar."))) {
+                const val = this._filteredCounts[idx];
+                targetValue = val !== undefined ? val : (stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0);
+              } else {
+                const targetStateObj = this.hass.states[targetEntityId];
+                if (!targetStateObj) continue;
+                targetValue = targetStateObj.state;
+              }
 
               if (this._checkThresholdMatch(targetValue, t.value)) {
                 if (t.color !== undefined) color = t.color;
