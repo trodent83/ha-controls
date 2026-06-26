@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.4] - 2026-06-26
+
+### Fixed
+- **Shared Base Class (`HAControlThresholdBase`)**:
+  - Fixed a bug in `_getMatchedProperty` where thresholds were pre-filtered by the presence of the requested property. This caused properties to incorrectly fall through and match lower thresholds (e.g. battery icon blinking green all the time because the 0% threshold was the only one specifying `animation: blink`). The method now correctly finds the matching threshold by value first, then resolves the property.
+  - Updated the import version query parameter (`?v=0.6.7`) for all cards and feature cards referencing `ha-control-threshold-base.js`.
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Fixed a bug where target temperature adjustments (using the + and - buttons) failed for radiator climate entities with a target temperature step size of 1.0°C (e.g. Tuya-based oil radiators). The control now dynamically reads the `target_temp_step` attribute from the climate entity to align temperature changes with the device's step size.
+  - Removed the unused `"Fan"` mode option from the radiator control card, its English localization file, the washroom control helper config, and the module's documentation.
+- **Feature Renderer Card (`feature-renderer-card`)**:
+  - Fixed a bug in `icon-card-feature` where configuring an icon feature without custom thresholds resulted in `_getMatchedProperty` returning `null`, blocking fallback to configured `icon`, `color`, and `animation` values because of strict `=== undefined` checks. Switched to `== null` checks.
+  - Bumped `feature-renderer-card-loader.js` to `0.1.25`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.9` to bust browser cache.
+
 ## [1.2.3] - 2026-06-25
 
 ### Fixed

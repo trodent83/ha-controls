@@ -4,7 +4,6 @@
   "target_temp": "Target: {temp}°C",
   "current_temp": "Room Temp",
   "heating_mode": "Heating",
-  "fan_mode": "Fan",
   "dehumidify_mode": "Dehumidify",
   "none_mode": "None",
   "timer_label": "Timer",

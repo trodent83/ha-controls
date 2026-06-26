@@ -1,4 +1,4 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.6";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.7";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.

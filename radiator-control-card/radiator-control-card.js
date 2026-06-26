@@ -1,4 +1,4 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.6";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.7";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -140,15 +140,19 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const climateState = this.hass.states[this.config.climate_entity];
     if (!climateState) return;
 
+    const step = parseFloat(climateState.attributes.target_temp_step) || 0.5;
+    const direction = amount > 0 ? 1 : -1;
+    const adjustAmount = direction * step;
+
     const currentTarget = parseFloat(climateState.attributes.temperature) || 21.0;
     const minTemp = parseFloat(climateState.attributes.min_temp) || 5.0;
     const maxTemp = parseFloat(climateState.attributes.max_temp) || 35.0;
 
-    let newTemp = currentTarget + amount;
+    let newTemp = currentTarget + adjustAmount;
     newTemp = Math.max(minTemp, Math.min(maxTemp, newTemp));
 
-    // Round to nearest 0.5
-    newTemp = Math.round(newTemp * 2) / 2;
+    // Round to nearest step
+    newTemp = Math.round(newTemp / step) * step;
 
     this.hass.callService("climate", "set_temperature", {
       entity_id: this.config.climate_entity,
@@ -298,7 +302,6 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const modes = [
       { name: "None", label: this._localize('none_mode'), icon: "mdi:power", color: "var(--disabled-text-color)", anim: "" },
       { name: "Heating", label: this._localize('heating_mode'), icon: "mdi:fire", color: "orange", anim: "pulse" },
-      { name: "Fan", label: this._localize('fan_mode'), icon: "mdi:fan", color: "cyan", anim: "rotating" },
       { name: "Dehumidify", label: this._localize('dehumidify_mode'), icon: "mdi:water-percent", color: "blue", anim: "rotating" }
     ];
 

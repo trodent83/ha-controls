@@ -25,17 +25,21 @@ export class HAControlThresholdBase extends HAControlBase {
 
     // Exact string match
     const exactMatch = thresholds.find(t => String(t.value).toLowerCase() === stringState);
-    if (exactMatch && exactMatch[propertyName] !== undefined) return exactMatch[propertyName];
+    if (exactMatch) {
+      return exactMatch[propertyName] !== undefined ? exactMatch[propertyName] : null;
+    }
 
     // Numeric comparison match (parseFloat)
     const numericValue = parseFloat(stateValue);
     if (!isNaN(numericValue)) {
       const numericThresholds = thresholds
-        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)) && t[propertyName] !== undefined)
+        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)))
         .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
 
       const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
-      if (match) return match[propertyName];
+      if (match) {
+        return match[propertyName] !== undefined ? match[propertyName] : null;
+      }
     }
     return null;
   }

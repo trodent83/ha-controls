@@ -1,10 +1,10 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.6";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.7";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /**
  * IconCardFeature
@@ -139,14 +139,14 @@ class IconCardFeature extends HAControlThresholdBase {
     if (this.config.icon_expression) {
       finalIcon = this._evalExpression(this.config.icon_expression, stateObj);
     }
-    if (finalIcon === undefined && value !== undefined) {
+    if (finalIcon == null && value !== undefined) {
       finalIcon = this._getMatchedProperty(value, this.config.thresholds, 'icon');
     }
-    if (finalIcon === undefined && value !== undefined && this.config.state_icons) {
+    if (finalIcon == null && value !== undefined && this.config.state_icons) {
       const lowerVal = String(value).toLowerCase();
       finalIcon = this.config.state_icons[lowerVal] ?? this.config.state_icons[value];
     }
-    if (finalIcon === undefined) {
+    if (finalIcon == null) {
       finalIcon = this.config.icon || stateObj?.attributes?.icon || this._getFallbackIcon(domain, deviceClass);
     }
 
@@ -155,14 +155,14 @@ class IconCardFeature extends HAControlThresholdBase {
     if (this.config.color_expression) {
       finalColor = this._evalExpression(this.config.color_expression, stateObj);
     }
-    if (finalColor === undefined && value !== undefined) {
+    if (finalColor == null && value !== undefined) {
       finalColor = this._getMatchedProperty(value, this.config.thresholds, 'color');
     }
-    if (finalColor === undefined && value !== undefined && this.config.state_colors) {
+    if (finalColor == null && value !== undefined && this.config.state_colors) {
       const lowerVal = String(value).toLowerCase();
       finalColor = this.config.state_colors[lowerVal] ?? this.config.state_colors[value];
     }
-    if (finalColor === undefined) {
+    if (finalColor == null) {
       finalColor = this.config.color || this.color || 'var(--primary-text-color)';
     }
 
@@ -171,14 +171,14 @@ class IconCardFeature extends HAControlThresholdBase {
     if (this.config.animation_expression) {
       finalAnim = this._evalExpression(this.config.animation_expression, stateObj);
     }
-    if (finalAnim === undefined && value !== undefined) {
+    if (finalAnim == null && value !== undefined) {
       finalAnim = this._getMatchedProperty(value, this.config.thresholds, 'animation');
     }
-    if (finalAnim === undefined && value !== undefined && this.config.state_animations) {
+    if (finalAnim == null && value !== undefined && this.config.state_animations) {
       const lowerVal = String(value).toLowerCase();
       finalAnim = this.config.state_animations[lowerVal] ?? this.config.state_animations[value];
     }
-    if (finalAnim === undefined) {
+    if (finalAnim == null) {
       finalAnim = this.config.animation || '';
     }
 
