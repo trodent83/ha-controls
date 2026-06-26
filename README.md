@@ -28,6 +28,7 @@ Unlike basic custom cards, this repository implements a unified framework design
 | [**`multi-property-card`**](docs/multi-property-card.md) | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, tap/hold actions, and dynamic child features. |
 | [**`multi-state-card`**](docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
 | [**`navigation-bar-card`**](docs/navigation-bar-card.md) | A custom horizontal navigation bar with dynamic alerts, colors, and badge counters. | Auto-detects active dashboard tab, watches entity states with priority thresholds, and shows notification counters. |
+| [**`light-control-card`**](docs/light-control-card.md) | A premium glassmorphic control card for smart lights. | Vertical/horizontal layouts, inline brightness sliders, warm-to-cool Kelvin temperature ranges, and rainbow hue sliders. |
 
 ---
 
@@ -88,6 +89,8 @@ lovelace:
     - url: /local/ha-controls/room-status-card/room-status-card-loader.js
       type: module
     - url: /local/ha-controls/calendar-grid-card/calendar-grid-card-loader.js
+      type: module
+    - url: /local/ha-controls/light-control-card/light-control-card-loader.js
       type: module
 ```
 

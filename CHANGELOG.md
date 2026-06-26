@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.7] - 2026-06-26
+
+### Added
+- **Light Control Card (`light-control-card`)**:
+  - Created a custom Lovelace card with glowing icons and horizontal sliders to toggle state and adjust brightness, Kelvin temperature, and RGB/HSL color hue.
+  - Added a visual editor (`light-control-card-editor.js` and `light-control-card-editor.css`) allowing dashboard customization of controls visibility.
+  - Documented features in [docs/light-control-card.md](docs/light-control-card.md) and registered loaders in [README.md](README.md).
+
 ## [1.2.6] - 2026-06-26
 
 ### Added
