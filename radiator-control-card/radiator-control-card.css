@@ -76,6 +76,12 @@ ha-card {
   gap: 24px;
   width: 100%;
   padding: 8px 0;
+  transition: opacity 0.25s ease;
+}
+
+.target-controller.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .adjust-btn {
@@ -92,6 +98,12 @@ ha-card {
   outline: none;
   transition: background 0.2s ease, transform 0.1s ease;
   -webkit-tap-highlight-color: transparent;
+}
+
+.adjust-btn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 .adjust-btn:hover {
@@ -136,6 +148,12 @@ ha-card {
   display: flex;
   gap: 8px;
   width: 100%;
+  transition: opacity 0.25s ease;
+}
+
+.mode-selector.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .mode-btn {

@@ -140,6 +140,8 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const climateState = this.hass.states[this.config.climate_entity];
     if (!climateState) return;
 
+    if (climateState.state === "unavailable" || climateState.state === "unknown") return;
+
     const step = parseFloat(climateState.attributes.target_temp_step) || 0.5;
     const direction = amount > 0 ? 1 : -1;
     const adjustAmount = direction * step;
@@ -154,10 +156,25 @@ class RadiatorControlCard extends HAControlThresholdBase {
     // Round to nearest step
     newTemp = Math.round(newTemp / step) * step;
 
-    this.hass.callService("climate", "set_temperature", {
+    const serviceData = {
       entity_id: this.config.climate_entity,
       temperature: newTemp
-    });
+    };
+
+    // If the climate device is currently off, turn it on by setting hvac_mode to 'heat'
+    if (climateState.state === "off") {
+      const hvacModes = climateState.attributes.hvac_modes || [];
+      if (hvacModes.includes("heat")) {
+        serviceData.hvac_mode = "heat";
+      } else {
+        const fallbackMode = hvacModes.find(m => m !== "off");
+        if (fallbackMode) {
+          serviceData.hvac_mode = fallbackMode;
+        }
+      }
+    }
+
+    this.hass.callService("climate", "set_temperature", serviceData);
   }
 
   /**
@@ -270,15 +287,17 @@ class RadiatorControlCard extends HAControlThresholdBase {
                       climateState.state === "heat" || 
                       climateState.attributes.hvac_action === "heating";
 
+    const isUnavailable = climateState.state === "unavailable" || climateState.state === "unknown";
+
     // Target Temperature Details
-    const targetTemp = parseFloat(climateState.attributes.temperature) || 21.0;
-    const formattedTarget = targetTemp.toFixed(1);
+    const targetTemp = parseFloat(climateState.attributes.temperature);
+    const formattedTarget = isUnavailable ? "--" : (isNaN(targetTemp) ? "21.0" : targetTemp.toFixed(1));
 
     // Current Room Temperature Threshold Styling
     let currentTempText = "--";
     let badgeColor = "var(--secondary-text-color)";
     
-    if (sensorState) {
+    if (sensorState && sensorState.state !== "unavailable" && sensorState.state !== "unknown") {
       const currentTemp = parseFloat(sensorState.state);
       if (!isNaN(currentTemp)) {
         currentTempText = `${currentTemp.toFixed(1)} °C`;
@@ -324,21 +343,21 @@ class RadiatorControlCard extends HAControlThresholdBase {
         </div>
 
         <!-- Target Controller -->
-        <div class="target-controller">
-          <button class="adjust-btn" @click="${() => this._adjustTemperature(-0.5)}">
+        <div class="target-controller ${isUnavailable ? 'disabled' : ''}">
+          <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(-0.5)}">
             <ha-icon icon="mdi:minus"></ha-icon>
           </button>
           <div class="target-display">
-            <span class="target-value">${formattedTarget}°</span>
+            <span class="target-value">${formattedTarget}${isUnavailable ? '' : '°'}</span>
             <span class="target-label">${this._localize('target_temp', { temp: formattedTarget }).split(' ')[0]}</span>
           </div>
-          <button class="adjust-btn" @click="${() => this._adjustTemperature(0.5)}">
+          <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(0.5)}">
             <ha-icon icon="mdi:plus"></ha-icon>
           </button>
         </div>
 
         <!-- Mode Segmented Selector -->
-        <div class="mode-selector">
+        <div class="mode-selector ${isUnavailable ? 'disabled' : ''}">
           ${modes.map(mode => {
             const isActive = activeMode === mode.name;
             const style = isActive
