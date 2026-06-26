@@ -119,3 +119,9 @@ ha-card {
   color: var(--badge-color);
   --mdc-icon-size: 20px;
 }
+
+/* Center nested feature elements vertically with icons */
+.status_badge feature-renderer-card {
+  display: inline-flex;
+  align-items: center;
+}
