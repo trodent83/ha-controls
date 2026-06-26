@@ -9,7 +9,7 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
 /**
  * NavigationBarCardEditor
  * Visual configuration editor for NavigationBarCard.
- * Manages general dashboard navigation items and sequential priority threshold styling.
+ * Manages general dashboard navigation items, item filters, and sequential priority threshold styling.
  * 
  * @extends HAControlBase
  */
@@ -180,6 +180,56 @@ class NavigationBarCardEditor extends HAControlBase {
   }
 
   /**
+   * Appends a blank filter pattern row to an item.
+   * 
+   * @param {number} itemIdx - Index of navigation item
+   * @private
+   */
+  _addFilter(itemIdx) {
+    const items = [...(this._config.items || [])];
+    const filters = [...(items[itemIdx].filters || [])];
+    filters.push({ pattern: "", case_sensitive: true });
+    items[itemIdx] = { ...items[itemIdx], filters };
+    this._config = { ...this._config, items };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Updates properties of a filter pattern.
+   * 
+   * @param {CustomEvent|Event} ev - Input event
+   * @param {number} itemIdx - Index of navigation item
+   * @param {number} filterIdx - Index of filter pattern
+   * @param {string} prop - Property to update ('pattern' or 'case_sensitive')
+   * @private
+   */
+  _filterChanged(ev, itemIdx, filterIdx, prop) {
+    const items = [...(this._config.items || [])];
+    const filters = [...(items[itemIdx].filters || [])];
+    const val = prop === 'case_sensitive' ? ev.target.checked : ev.target.value;
+    filters[filterIdx] = { ...filters[filterIdx], [prop]: val };
+    items[itemIdx] = { ...items[itemIdx], filters };
+    this._config = { ...this._config, items };
+    this._fireConfigChanged();
+  }
+
+  /**
+   * Deletes a filter pattern from an item.
+   * 
+   * @param {number} itemIdx - Index of navigation item
+   * @param {number} filterIdx - Index of filter pattern to remove
+   * @private
+   */
+  _removeFilter(itemIdx, filterIdx) {
+    const items = [...(this._config.items || [])];
+    const filters = [...(items[itemIdx].filters || [])];
+    filters.splice(filterIdx, 1);
+    items[itemIdx] = { ...items[itemIdx], filters };
+    this._config = { ...this._config, items };
+    this._fireConfigChanged();
+  }
+
+  /**
    * Cleans the active configuration of any unrecognized properties.
    * 
    * @private
@@ -199,6 +249,18 @@ class NavigationBarCardEditor extends HAControlBase {
         if (item.entity !== undefined) i.entity = item.entity;
         if (item.show_counter !== undefined) i.show_counter = item.show_counter;
         if (item.color !== undefined) i.color = item.color;
+        if (item.max_days !== undefined) i.max_days = item.max_days;
+        if (item.show_completed !== undefined) i.show_completed = item.show_completed;
+        if (item.show_no_due_date !== undefined) i.show_no_due_date = item.show_no_due_date;
+        
+        if (item.filters && Array.isArray(item.filters)) {
+          i.filters = item.filters.map(f => {
+            const fi = {};
+            if (f.pattern !== undefined) fi.pattern = f.pattern;
+            if (f.case_sensitive !== undefined) fi.case_sensitive = f.case_sensitive;
+            return fi;
+          });
+        }
         
         if (item.thresholds && Array.isArray(item.thresholds)) {
           i.thresholds = item.thresholds.map(t => {
@@ -285,7 +347,22 @@ class NavigationBarCardEditor extends HAControlBase {
                 { name: "color", label: this._localize('color') || 'Default Color', selector: { text: {} } }
               ]
             },
-            { name: "show_counter", label: this._localize('show_counter_badge') || 'Show Counter Badge', selector: { boolean: {} } }
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "show_counter", label: this._localize('show_counter_badge') || 'Show Counter Badge', selector: { boolean: {} } },
+                { name: "show_completed", label: this._localize('show_completed') || 'Show Completed Tasks', selector: { boolean: {} } }
+              ]
+            },
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "max_days", label: this._localize('max_days') || 'Max Days (Offset Limit)', selector: { number: { min: 1, max: 30, mode: "box" } } },
+                { name: "show_no_due_date", label: this._localize('show_no_due_date') || 'Show Tasks Without Due Date', selector: { boolean: {} } }
+              ]
+            }
           ];
 
           return html`
@@ -316,6 +393,36 @@ class NavigationBarCardEditor extends HAControlBase {
                   .computeLabel=${(schema) => schema.label || schema.name}
                   @value-changed=${(e) => this._itemChanged(e, idx)}
                 ></ha-form>
+
+                <!-- Filters section inside item -->
+                <div class="filters-section" style="margin-top: 16px; border-top: 1px dashed var(--divider-color); padding-top: 16px;">
+                  <h4 style="margin-bottom: 8px;">${this._localize('filters') || 'Regex Filters (Exclude)'}</h4>
+                  
+                  ${(item.filters || []).map((filter, filterIdx) => html`
+                    <div class="filter-row" style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                      <ha-input
+                        style="flex: 2;"
+                        label="${this._localize('filter_regex') || 'Filter (Regex)'}"
+                        .value="${filter.pattern || ''}"
+                        @input="${(e) => this._filterChanged(e, idx, filterIdx, 'pattern')}"
+                      ></ha-input>
+                      <ha-formfield label="${this._localize('case_sensitive') || 'Case Sensitive'}" style="flex: 1; display: inline-flex; align-items: center;">
+                        <ha-switch
+                          .checked="${filter.case_sensitive !== false}"
+                          @change="${(e) => this._filterChanged(e, idx, filterIdx, 'case_sensitive')}"
+                        ></ha-switch>
+                      </ha-formfield>
+                      <ha-icon-button
+                        @click="${() => this._removeFilter(idx, filterIdx)}"
+                      ><ha-icon icon="mdi:delete-outline"></ha-icon></ha-icon-button>
+                    </div>
+                  `)}
+
+                  <ha-button @click=${() => this._addFilter(idx)} style="margin-top: 8px;">
+                    <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                    ${this._localize('add_filter') || 'Add Filter'}
+                  </ha-button>
+                </div>
 
                 <!-- Thresholds section inside item -->
                 <div class="thresholds-section" style="margin-top: 16px; border-top: 1px dashed var(--divider-color); padding-top: 16px;">

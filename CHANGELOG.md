@@ -9,7 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - **Navigation Bar Card (`navigation-bar-card`)**:
   - Created a custom Lovelace navigation card with capsule badges that auto-detects active views, supports dynamic thresholds, and renders counter notification badges.
-  - Added a rich visual configuration editor (`navigation-bar-card-editor.js` and `navigation-bar-card-editor.css`) allowing dashboard customization of tabs, icons, actions, and threshold rules.
+  - Implemented async counter calculations for `todo` and `calendar` lists, utilizing the same custom exclusion filters, due dates (`max_days`), completed filter (`show_completed`), and max limits (`max_items`) configured in display cards.
+  - Added a rich visual configuration editor (`navigation-bar-card-editor.js` and `navigation-bar-card-editor.css`) allowing dashboard customization of tabs, icons, actions, regex filters, and threshold rules.
   - Added [navigation-bar-card.md](docs/navigation-bar-card.md) documentation and registered it in the main [README.md](README.md).
 
 ## [1.2.5] - 2026-06-26
