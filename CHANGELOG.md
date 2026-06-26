@@ -13,17 +13,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Radiator Control Card (`radiator-control-card`)**:
   - Fixed a bug where target temperature adjustments (using the + and - buttons) failed for radiator climate entities with a target temperature step size of 1.0°C (e.g. Tuya-based oil radiators). The control now dynamically reads the `target_temp_step` attribute from the climate entity to align temperature changes with the device's step size.
   - Added support for automatically turning on the radiator (setting `hvac_mode` to `heat` or the first available active mode) if the device is currently in the `off` state when adjusting target temperature.
-  - Added visual and interactive disabled state styling (`pointer-events: none`, `opacity: 0.5`) to both target temperature adjusters and mode selectors when the climate entity is in an `unavailable` or `unknown` offline state. In this state, target temperature is displayed as `--` instead of a fallback numeric value.
+  - Added visual and interactive disabled state styling (`pointer-events: none`, `opacity: 0.5`) to target temperature adjusters when the climate entity is in an `unavailable` or `unknown` offline state. In this state, target temperature is displayed as `--`.
+  - Added support to deactivate and disable individual mode segmented selector buttons when their respective devices (radiator climate or dehumidifier switch) go offline (`unavailable` or `unknown`), changing the button icon to an offline cloud icon and appending `(Offline)` to the label text.
   - Removed the unused `"Fan"` mode option from the radiator control card, its English localization file, the washroom control helper config, and the module's documentation.
 - **Feature Renderer Card (`feature-renderer-card`)**:
   - Fixed a bug in `icon-card-feature` where configuring an icon feature without custom thresholds resulted in `_getMatchedProperty` returning `null`, blocking fallback to configured `icon`, `color`, and `animation` values because of strict `=== undefined` checks. Switched to `== null` checks.
   - Resolved a CSS transition conflict in `icon-card-feature.css` where transition on the `transform` property interfered with and stalled the CSS keyframe `rotating` (and other transform-based) animations on the `<ha-icon>`.
   - Added GPU layers/performance optimization (`will-change: transform`, `translateZ(0)`) to transform-based keyframe animations in `shared-animations.css`, and changed the host `<ha-icon>` display setting to `inline-block` to ensure transforms apply reliably across different browser versions.
   - Overrode `createRenderRoot` to render `FeatureRendererCard` in the light DOM, allowing parent stylesheets (e.g., in `room-status-card` and `multi-state-card`) to correctly style and vertically/horizontally center nested child features using flexbox.
-  - Bumped `feature-renderer-card-loader.js` to `0.1.28`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.10`, and bumped internal `icon-card-feature` version to `1.0.2` to bust browser cache.
+  - Bumped `feature-renderer-card-loader.js` to `0.1.28`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.11`, and bumped internal `icon-card-feature` version to `1.0.2` to bust browser cache.
 - **Room Status Card (`room-status-card`)**:
   - Fixed vertical alignment mismatch in room status badges where nested text features were rendered higher than their adjacent icon features. Added `display: inline-flex` and `align-items: center` to both the `<feature-renderer-card>` elements and their nested child feature components (e.g. `<state-value-feature>`) inside `room-status-card.css`.
   - Bumped `room-status-card-loader.js` to `1.0.44` to bust browser cache.
+- **Washroom Scripts (`ha-scripts`)**:
+  - Updated the start/extend script `radiator_start_or_extend.yaml` and the capping script `radiator_cap_timer.yaml` to include template conditions verifying the state of `input_select.washroom_control` and checking that the target device (`climate.kesser_oil_radiator` for "Heating", or `switch.dehumidifier_power_control` for "Dehumidify") is online (not `unavailable` or `unknown`) before managing the timer.
 
 ## [1.2.3] - 2026-06-25
 

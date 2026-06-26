@@ -47,6 +47,12 @@ class RadiatorControlCard extends HAControlThresholdBase {
     return VERSION;
   }
 
+  _getWatchedEntities(config) {
+    const entities = new Set(super._getWatchedEntities(config));
+    entities.add(this.config?.dehumidifier_entity || 'switch.dehumidifier_power_control');
+    return Array.from(entities);
+  }
+
   /**
    * Creates and returns the configuration editor element for this card.
    * Home Assistant Lovelace visual editor links to this method.
@@ -318,10 +324,37 @@ class RadiatorControlCard extends HAControlThresholdBase {
     }
 
     // Modes Configuration
+    const dehumidifierEntity = this.config.dehumidifier_entity || 'switch.dehumidifier_power_control';
+    const dehumidifierState = this.hass.states[dehumidifierEntity];
+
+    const isRadiatorUnavailable = climateState.state === "unavailable" || climateState.state === "unknown";
+    const isDehumidifierUnavailable = !dehumidifierState || dehumidifierState.state === "unavailable" || dehumidifierState.state === "unknown";
+
     const modes = [
-      { name: "None", label: this._localize('none_mode'), icon: "mdi:power", color: "var(--disabled-text-color)", anim: "" },
-      { name: "Heating", label: this._localize('heating_mode'), icon: "mdi:fire", color: "orange", anim: "pulse" },
-      { name: "Dehumidify", label: this._localize('dehumidify_mode'), icon: "mdi:water-percent", color: "blue", anim: "rotating" }
+      { 
+        name: "None", 
+        label: this._localize('none_mode'), 
+        icon: "mdi:power", 
+        color: "var(--disabled-text-color)", 
+        anim: "",
+        disabled: false
+      },
+      { 
+        name: "Heating", 
+        label: isRadiatorUnavailable ? `${this._localize('heating_mode')} (Offline)` : this._localize('heating_mode'), 
+        icon: isRadiatorUnavailable ? "mdi:cloud-off-outline" : "mdi:fire", 
+        color: "orange", 
+        anim: "pulse",
+        disabled: isRadiatorUnavailable
+      },
+      { 
+        name: "Dehumidify", 
+        label: isDehumidifierUnavailable ? `${this._localize('dehumidify_mode')} (Offline)` : this._localize('dehumidify_mode'), 
+        icon: isDehumidifierUnavailable ? "mdi:cloud-off-outline" : "mdi:water-percent", 
+        color: "blue", 
+        anim: "rotating",
+        disabled: isDehumidifierUnavailable
+      }
     ];
 
     const activeMode = selectState ? selectState.state : "None";
@@ -357,19 +390,20 @@ class RadiatorControlCard extends HAControlThresholdBase {
         </div>
 
         <!-- Mode Segmented Selector -->
-        <div class="mode-selector ${isUnavailable ? 'disabled' : ''}">
+        <div class="mode-selector">
           ${modes.map(mode => {
             const isActive = activeMode === mode.name;
+            const isDisabled = mode.disabled;
             const style = isActive
               ? `background-color: ${mode.color}; color: white;`
               : ``;
 
             return html`
-              <div class="mode-btn ${isActive ? 'active ' + mode.anim : ''}"
+              <div class="mode-btn ${isActive ? 'active ' + mode.anim : ''} ${isDisabled ? 'disabled' : ''}"
                    style="${style}"
-                   @click="${() => this._selectOption(mode.name)}"
-                   @contextmenu="${(e) => { e.preventDefault(); this._handleHold(mode.name); }}"
-                   @touchstart="${() => this._holdTimer = setTimeout(() => this._handleHold(mode.name), 1000)}"
+                   @click="${() => !isDisabled && this._selectOption(mode.name)}"
+                   @contextmenu="${(e) => { e.preventDefault(); if (!isDisabled) this._handleHold(mode.name); }}"
+                   @touchstart="${() => { if (!isDisabled) this._holdTimer = setTimeout(() => this._handleHold(mode.name), 1000); }}"
                    @touchend="${() => clearTimeout(this._holdTimer)}">
                 <ha-icon .icon="${mode.icon}"></ha-icon>
                 <span class="mode-label">${mode.label}</span>

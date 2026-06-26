@@ -173,6 +173,12 @@ ha-card {
   box-sizing: border-box;
 }
 
+.mode-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .mode-btn:hover {
   background: rgba(var(--rgb-primary-text-color), 0.08);
   color: var(--primary-text-color);
