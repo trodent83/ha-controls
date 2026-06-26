@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Unified Lovelace dashboard header cards by replacing all `type: heading` cards with `custom:room-status-card` inside `main_view.yaml` and `overview_view.yaml`.
-- Integrated battery percentage and vacuum state inline badges inside the newly unified headers.
+- Integrated battery percentage (for Main Door and Robot Vacuum) and vacuum state inline badges inside the newly unified headers.
+- Replaced `custom:vacuum-map-card` with `custom:vacuum-select-card` in the main view dashboard to render a clean, dynamic button grid for selecting cleaning zones.
 
 ## [1.2.4] - 2026-06-26
 

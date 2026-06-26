@@ -45,7 +45,8 @@ ha-card {
 /* Disabled button styling */
 .btn.is-disabled {
   pointer-events: none;
-  opacity: 0.8;
+  opacity: 0.4;
+  filter: grayscale(1);
 }
 
 /* Informational parameters labels block */
