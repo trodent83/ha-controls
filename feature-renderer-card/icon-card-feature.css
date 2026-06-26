@@ -13,5 +13,5 @@
 
 .icon-feature-container ha-icon {
   display: flex;
-  transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out;
 }

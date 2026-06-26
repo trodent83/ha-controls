@@ -15,7 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Removed the unused `"Fan"` mode option from the radiator control card, its English localization file, the washroom control helper config, and the module's documentation.
 - **Feature Renderer Card (`feature-renderer-card`)**:
   - Fixed a bug in `icon-card-feature` where configuring an icon feature without custom thresholds resulted in `_getMatchedProperty` returning `null`, blocking fallback to configured `icon`, `color`, and `animation` values because of strict `=== undefined` checks. Switched to `== null` checks.
-  - Bumped `feature-renderer-card-loader.js` to `0.1.25`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.9` to bust browser cache.
+  - Resolved a CSS transition conflict in `icon-card-feature.css` where transition on the `transform` property interfered with and stalled the CSS keyframe `rotating` (and other transform-based) animations on the `<ha-icon>`.
+  - Added GPU layers/performance optimization (`will-change: transform`) to transform-based keyframe animations in `shared-animations.css`.
+  - Bumped `feature-renderer-card-loader.js` to `0.1.26`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.9` to bust browser cache.
 
 ## [1.2.3] - 2026-06-25
 
