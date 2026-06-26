@@ -11,6 +11,10 @@ export class FeatureRendererCard extends HAControlBase {
     };
   }
 
+  createRenderRoot() {
+    return this;
+  }
+
   _updateFeatureElementProperties(element) {
     element.hass = this.hass;
     element.config = this.config;

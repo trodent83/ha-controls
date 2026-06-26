@@ -124,4 +124,12 @@ ha-card {
 .status_badge feature-renderer-card {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+}
+
+.status_badge feature-renderer-card > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
