@@ -1,0 +1,104 @@
+/* ==========================================================================
+   NAVIGATION BAR CARD STYLESHEET
+   Styles the capsule links, active tab highlights, counter bubbles, and animation overlays.
+   ========================================================================== */
+
+/* Outer bar wrapper */
+.nav-bar-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 16px;
+  box-sizing: border-box;
+  background: none !important;
+}
+
+/* Individual navigation link capsule */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05);
+  border: 1px solid rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.08);
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  user-select: none;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.nav-item:hover {
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.09) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item:active {
+  transform: translateY(0);
+}
+
+/* Label text styles */
+.nav-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-text-color);
+  transition: color 0.25s ease-in-out;
+}
+
+/* Material Design Icon settings */
+ha-icon {
+  --mdc-icon-size: 18px;
+  color: var(--secondary-text-color);
+  transition: color 0.25s ease-in-out;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Active tab text highlighting */
+.nav-item.active .nav-label {
+  color: var(--primary-color) !important;
+  font-weight: 600;
+}
+
+/* Notification counter circle */
+.nav-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--error-color, #db4437);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+/* Alert Blinking Keyframe and Animation class */
+@keyframes nav-blink {
+  50% { opacity: 0.4; }
+}
+.blink {
+  animation: nav-blink 1.5s linear infinite;
+  will-change: opacity;
+}
+
+/* Pulsing Scale Keyframe and Animation class */
+@keyframes nav-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.pulse {
+  animation: nav-pulse 2s infinite;
+  will-change: transform;
+}

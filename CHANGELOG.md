@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.6] - 2026-06-26
+
+### Added
+- **Navigation Bar Card (`navigation-bar-card`)**:
+  - Created a custom Lovelace navigation card with capsule badges that auto-detects active views, supports dynamic thresholds, and renders counter notification badges.
+  - Added [navigation-bar-card.md](docs/navigation-bar-card.md) documentation and registered it in the main [README.md](README.md).
+
 ## [1.2.5] - 2026-06-26
 
 ### Changed

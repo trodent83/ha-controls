@@ -27,6 +27,7 @@ Unlike basic custom cards, this repository implements a unified framework design
 | [**`room-status-card`**](docs/room-status-card.md) | A minimalist status header displaying real-time metrics and alerts for rooms. | Custom header icons/names, dynamic status badge widgets (e.g. temp/humidity), and threshold rules that apply alert animations (blink, pulse) and colors on the fly. |
 | [**`multi-property-card`**](docs/multi-property-card.md) | Multi-entity layout grid displaying real-time values, units, and custom icons. | Conditional rendering based on dynamic JavaScript evaluation rules (`eval`), custom threshold color-mapping, tap/hold actions, and dynamic child features. |
 | [**`multi-state-card`**](docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
+| [**`navigation-bar-card`**](docs/navigation-bar-card.md) | A custom horizontal navigation bar with dynamic alerts, colors, and badge counters. | Auto-detects active dashboard tab, watches entity states with priority thresholds, and shows notification counters. |
 
 ---
 
