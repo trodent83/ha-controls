@@ -1,5 +1,7 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.8';
+
 /**
  * FitGridLayout
  * A custom Home Assistant view layout card that renders child cards inside a CSS Grid container.
@@ -18,7 +20,11 @@ class FitGridLayout extends HAControlBase {
   }
 
   get translationVersion() {
-    return "1.1.1";
+    return VERSION;
+  }
+
+  renderStyle(filename) {
+    return html`<link rel="stylesheet" href="/local/ha-controls/fit-grid-layout/${filename}?v=${this.translationVersion}">`;
   }
 
   static get properties() {
