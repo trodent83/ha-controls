@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * FitGridLayout
@@ -14,7 +14,7 @@ class FitGridLayout extends HAControlBase {
   }
 
   get translationPath() {
-    return "/local/ha-controls/fit-grid-layout/translations";
+    return null;
   }
 
   get translationVersion() {
@@ -121,7 +121,7 @@ class FitGridLayout extends HAControlBase {
     }
   }
 
-  _showPopup(popupDetail) {
+  async _showPopup(popupDetail) {
     console.log("[FitGridLayout] _showPopup triggered! popupDetail:", JSON.stringify(popupDetail));
     let heading = "";
     let cardConfig = null;
@@ -152,40 +152,31 @@ class FitGridLayout extends HAControlBase {
       return;
     }
 
-    const { type, ...config } = cardConfig;
-    const fullConfig = { type, ...config };
-
-    let tag = type;
-    if (tag.startsWith("custom:")) {
-      tag = tag.slice(7);
-    } else if (!tag.startsWith("hui-")) {
-      tag = `hui-${tag}-card`;
-    }
-
-    const createCard = () => {
-      try {
-        console.log("[FitGridLayout] Creating card element with tag:", tag);
-        const el = document.createElement(tag);
-        el.setConfig(fullConfig);
-        el.hass = this.hass;
-        this._popupEl = el;
-        this._popupHeading = heading;
-        this._activePopup = true;
-        this.requestUpdate();
-      } catch (err) {
-        console.error(`[FitGridLayout] Failed to create popup card of type "${tag}":`, err);
+    try {
+      let el;
+      if (window.loadCardHelpers) {
+        console.log("[FitGridLayout] Creating card element via window.loadCardHelpers");
+        const helpers = await window.loadCardHelpers();
+        el = helpers.createCardElement(cardConfig);
+      } else {
+        console.log("[FitGridLayout] loadCardHelpers unavailable, falling back to manual creation");
+        let tag = cardConfig.type;
+        if (tag.startsWith("custom:")) {
+          tag = tag.slice(7);
+        } else if (!tag.startsWith("hui-")) {
+          tag = `hui-${tag}-card`;
+        }
+        el = document.createElement(tag);
+        el.setConfig(cardConfig);
       }
-    };
-
-    if (customElements.get(tag)) {
-      createCard();
-    } else {
-      console.log("[FitGridLayout] Element not defined yet, waiting for customElements.whenDefined:", tag);
-      customElements.whenDefined(tag).then(() => {
-        createCard();
-      }).catch((err) => {
-        console.error(`[FitGridLayout] Element "${tag}" is undefined or failed to load:`, err);
-      });
+      
+      el.hass = this.hass;
+      this._popupEl = el;
+      this._popupHeading = heading;
+      this._activePopup = true;
+      this.requestUpdate();
+    } catch (err) {
+      console.error(`[FitGridLayout] Failed to create popup card:`, err);
     }
   }
 
