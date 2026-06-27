@@ -319,7 +319,6 @@ class FitGridLayout extends HAControlBase {
   }
 
   render() {
-    console.log("[FitGridLayout] RENDER: _activePopup:", this._activePopup, "has popupEl:", !!this._popupEl);
     if (!this.config || !this.hass) return html``;
 
     const layout = this.config.layout || {};
