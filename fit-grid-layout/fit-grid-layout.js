@@ -91,6 +91,10 @@ class FitGridLayout extends HAControlBase {
     }
   }
 
+  get _debugEnabled() {
+    return window.haControlsDebug || window.location?.search?.includes('ha_debug') || this.config?.debug;
+  }
+
   _handleShowPopup(e) {
     const detail = e.detail;
     if (!detail) return;
@@ -99,7 +103,9 @@ class FitGridLayout extends HAControlBase {
 
   _handleLLCustom(e) {
     const detail = e.detail;
-    console.log("[FitGridLayout] RECEIVED ll-custom event! detail:", JSON.stringify(detail));
+    if (this._debugEnabled) {
+      console.log("[FitGridLayout] RECEIVED ll-custom event! detail:", JSON.stringify(detail));
+    }
     if (!detail) return;
 
     if (detail.grid_popup_close) {
@@ -122,7 +128,9 @@ class FitGridLayout extends HAControlBase {
   }
 
   async _showPopup(popupDetail) {
-    console.log("[FitGridLayout] _showPopup triggered! popupDetail:", JSON.stringify(popupDetail));
+    if (this._debugEnabled) {
+      console.log("[FitGridLayout] _showPopup triggered! popupDetail:", JSON.stringify(popupDetail));
+    }
     let heading = "";
     let cardConfig = null;
 
@@ -145,7 +153,9 @@ class FitGridLayout extends HAControlBase {
       }
     }
 
-    console.log("[FitGridLayout] Resolved popup cardConfig:", JSON.stringify(cardConfig), "heading:", heading);
+    if (this._debugEnabled) {
+      console.log("[FitGridLayout] Resolved popup cardConfig:", JSON.stringify(cardConfig), "heading:", heading);
+    }
 
     if (!cardConfig || !cardConfig.type) {
       console.warn("[FitGridLayout] Missing cardConfig or cardConfig.type in popup!");
@@ -155,11 +165,15 @@ class FitGridLayout extends HAControlBase {
     try {
       let el;
       if (window.loadCardHelpers) {
-        console.log("[FitGridLayout] Creating card element via window.loadCardHelpers");
+        if (this._debugEnabled) {
+          console.log("[FitGridLayout] Creating card element via window.loadCardHelpers");
+        }
         const helpers = await window.loadCardHelpers();
         el = helpers.createCardElement(cardConfig);
       } else {
-        console.log("[FitGridLayout] loadCardHelpers unavailable, falling back to manual creation");
+        if (this._debugEnabled) {
+          console.log("[FitGridLayout] loadCardHelpers unavailable, falling back to manual creation");
+        }
         let tag = cardConfig.type;
         if (tag.startsWith("custom:")) {
           tag = tag.slice(7);

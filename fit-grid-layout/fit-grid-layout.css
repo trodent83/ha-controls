@@ -35,13 +35,13 @@
 
 /* Semi-transparent backdrop scrim */
 .popup-scrim {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 100;
+  z-index: 1000;
   cursor: pointer;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -49,13 +49,13 @@
 
 /* Centered popup window at 1:1 scale (independent of scaling) */
 .popup-window-container {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 101;
-  max-width: 92%;
-  max-height: 92%;
+  z-index: 1001;
+  max-width: 92vw;
+  max-height: 92vh;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
