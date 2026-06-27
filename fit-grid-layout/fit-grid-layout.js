@@ -62,6 +62,13 @@ class FitGridLayout extends HAControlBase {
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has("cards") || changedProperties.has("config") || changedProperties.has("hass")) {
+      // Dynamically apply configured layout height to the host element
+      if (this.config && this.config.layout && this.config.layout.height) {
+        this.style.height = this.config.layout.height;
+      } else {
+        this.style.height = "";
+      }
+
       // Propagate state object updates to all child card elements
       if (this.cards && Array.isArray(this.cards)) {
         this.cards.forEach(card => {
@@ -194,6 +201,13 @@ class FitGridLayout extends HAControlBase {
     const availableHeight = this.clientHeight || (window.innerHeight - 56);
 
     if (availableWidth <= 0 || availableHeight <= 0) return;
+
+    // Prevent ResizeObserver loops by skipping if host size hasn't changed since last scale calculation
+    if (this._lastWidth === availableWidth && this._lastHeight === availableHeight) {
+      return;
+    }
+    this._lastWidth = availableWidth;
+    this._lastHeight = availableHeight;
 
     // Disable transition during measurement to get instant dimension values
     const originalTransition = container.style.transition;
