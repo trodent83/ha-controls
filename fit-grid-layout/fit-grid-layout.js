@@ -13,6 +13,14 @@ class FitGridLayout extends HAControlBase {
     return document.createElement("fit-grid-layout-editor");
   }
 
+  get translationPath() {
+    return "/local/ha-controls/fit-grid-layout/translations";
+  }
+
+  get translationVersion() {
+    return "1.1.1";
+  }
+
   static get properties() {
     return {
       ...super.properties,
