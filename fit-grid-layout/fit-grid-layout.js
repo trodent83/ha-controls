@@ -9,17 +9,27 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.7";
  * @extends HAControlBase
  */
 class FitGridLayout extends HAControlBase {
+  static getConfigElement() {
+    return document.createElement("fit-grid-layout-editor");
+  }
+
   static get properties() {
     return {
       ...super.properties,
       config: {},
-      cards: { type: Array }
+      cards: { type: Array },
+      _activePopup: { type: Boolean, state: true },
+      _popupEl: { type: Object, state: true },
+      _popupHeading: { type: String, state: true }
     };
   }
 
   constructor() {
     super();
     this.cards = [];
+    this._activePopup = false;
+    this._popupEl = null;
+    this._popupHeading = "";
     this._resizeObserver = null;
     this._calculateScaleDebounced = this._debounce(() => this._calculateScale(), 30);
   }
@@ -31,6 +41,11 @@ class FitGridLayout extends HAControlBase {
 
     // Watch resize changes on the window
     window.addEventListener("resize", this._calculateScaleDebounced);
+
+    // Listen to custom popup events and standard Lovelace actions
+    this.addEventListener("show-grid-popup", (e) => this._handleShowPopup(e));
+    this.addEventListener("close-grid-popup", () => this._handleClosePopup());
+    this.addEventListener("ll-custom", (e) => this._handleLLCustom(e));
 
     // Initial scale computation
     setTimeout(() => this._calculateScale(), 50);
@@ -55,6 +70,105 @@ class FitGridLayout extends HAControlBase {
       }
       this._calculateScaleDebounced();
     }
+    // Propagate state object updates to the active popup card if one is open
+    if (changedProperties.has("hass") && this._popupEl) {
+      this._popupEl.hass = this.hass;
+    }
+  }
+
+  _handleShowPopup(e) {
+    const detail = e.detail;
+    if (!detail) return;
+    this._showPopup(detail);
+  }
+
+  _handleLLCustom(e) {
+    const detail = e.detail;
+    if (!detail) return;
+
+    if (detail.grid_popup_close) {
+      e.stopPropagation();
+      // If closing also triggers a service call
+      const service = detail.perform_action || detail.service;
+      if (service) {
+        const [domain, serviceName] = service.split('.');
+        this.hass.callService(domain, serviceName, detail.data, detail.target);
+      }
+      this._handleClosePopup();
+      return;
+    }
+
+    const popupDetail = detail.grid_popup || detail.group_popup;
+    if (popupDetail) {
+      e.stopPropagation();
+      this._showPopup(popupDetail);
+    }
+  }
+
+  _showPopup(popupDetail) {
+    let heading = "";
+    let cardConfig = null;
+
+    // Check if configuration is nested inside heading/body
+    if (popupDetail.body) {
+      heading = popupDetail.heading || "";
+      cardConfig = popupDetail.body;
+    } else {
+      cardConfig = popupDetail;
+    }
+
+    // Support static config lookup via popup_id
+    if (popupDetail.popup_id && this.config.popups && this.config.popups[popupDetail.popup_id]) {
+      const staticPopup = this.config.popups[popupDetail.popup_id];
+      if (staticPopup.body) {
+        heading = staticPopup.heading || heading;
+        cardConfig = staticPopup.body;
+      } else {
+        cardConfig = staticPopup;
+      }
+    }
+
+    if (!cardConfig || !cardConfig.type) return;
+
+    const { type, ...config } = cardConfig;
+    const fullConfig = { type, ...config };
+
+    let tag = type;
+    if (tag.startsWith("custom:")) {
+      tag = tag.slice(7);
+    } else if (!tag.startsWith("hui-")) {
+      tag = `hui-${tag}-card`;
+    }
+
+    const createCard = () => {
+      try {
+        const el = document.createElement(tag);
+        el.setConfig(fullConfig);
+        el.hass = this.hass;
+        this._popupEl = el;
+        this._popupHeading = heading;
+        this._activePopup = true;
+        this.requestUpdate();
+      } catch (err) {
+        console.error(`[FitGridLayout] Failed to create popup card of type "${tag}":`, err);
+      }
+    };
+
+    if (customElements.get(tag)) {
+      createCard();
+    } else {
+      customElements.whenDefined(tag).then(() => {
+        createCard();
+      }).catch((err) => {
+        console.error(`[FitGridLayout] Element "${tag}" is undefined or failed to load:`, err);
+      });
+    }
+  }
+
+  _handleClosePopup() {
+    this._activePopup = false;
+    this._popupEl = null;
+    this._popupHeading = "";
   }
 
   /**
@@ -149,7 +263,7 @@ class FitGridLayout extends HAControlBase {
 
     return html`
       ${this.renderStyle("fit-grid-layout.css")}
-      <div id="grid-container" style="${gridStyle}">
+      <div id="grid-container" class="${this._activePopup ? 'popup-active' : ''}" style="${gridStyle}">
         ${(this.cards || []).map((card, index) => {
           const cardConfig = (this.config.cards && this.config.cards[index]) || {};
           const viewLayout = cardConfig.view_layout || {};
@@ -170,6 +284,23 @@ class FitGridLayout extends HAControlBase {
           `;
         })}
       </div>
+
+      ${this._activePopup && this._popupEl ? html`
+        <div class="popup-scrim" @click="${this._handleClosePopup}"></div>
+        <div class="popup-window-container">
+          <div class="popup-card-wrapper">
+            ${this._popupHeading ? html`
+              <div class="popup-header">
+                <h3>${this._popupHeading}</h3>
+              </div>
+            ` : html``}
+            <div class="popup-body">
+              ${this._popupEl}
+            </div>
+            <button class="popup-close-btn" @click="${this._handleClosePopup}">×</button>
+          </div>
+        </div>
+      ` : html``}
     `;
   }
 }

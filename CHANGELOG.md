@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.9] - 2026-06-27
+
+### Added
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Implemented dynamic popup overlay support, locking background dashboard interaction and showing custom card/control popups at 1:1 scale under `:host`.
+  - Added support for standard Lovelace action triggers (`action: fire-dom-event` intercepting `ll-custom` events) to show/close popups generically.
+  - Added nested popup configuration support via `grid_popup` and `group_popup` details supporting custom `heading` labels and `body` card parameters.
+  - Built a multi-tab visual configuration editor (`fit-grid-layout-editor.js` and `fit-grid-layout-editor.css`) for Layout, Background, and Popups configuration.
+  - Documented popup actions and schemas in `docs/fit-grid-layout.md` and bumped loader to version `1.0.1`.
+
 ## [1.2.8] - 2026-06-26
 
 ### Added
