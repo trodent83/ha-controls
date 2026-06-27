@@ -177,6 +177,17 @@ class MultiStateCard extends HAControlBase {
   _runAction(item, actionType) {
     const actionConfig = actionType === 'hold' ? item.hold_action : item.tap_action;
     if (!actionConfig || actionConfig.action === "none") return;
+    
+    // Direct dispatch of ll-custom for fire-dom-event actions to ensure bubbling to layout container
+    if (actionConfig.action === "fire-dom-event") {
+      this.dispatchEvent(new CustomEvent("ll-custom", {
+        detail: actionConfig,
+        bubbles: true,
+        composed: true
+      }));
+      return;
+    }
+
     this.dispatchEvent(new CustomEvent("hass-action", {
       detail: { config: item, action: actionType },
       bubbles: true, composed: true,
