@@ -250,6 +250,18 @@ class FitGridLayout extends HAControlBase {
     }
   }
 
+  _getViewLayout(card, index) {
+    if (!card) return {};
+    const cardConfig = card.config || card._config || (card.host && (card.host.config || card.host._config));
+    if (cardConfig && cardConfig.view_layout) {
+      return cardConfig.view_layout;
+    }
+    if (this.config && this.config.cards && this.config.cards[index]) {
+      return this.config.cards[index].view_layout || {};
+    }
+    return {};
+  }
+
   setConfig(config) {
     this.config = config;
   }
@@ -279,8 +291,7 @@ class FitGridLayout extends HAControlBase {
       ${this.renderStyle("fit-grid-layout.css")}
       <div id="grid-container" class="${this._activePopup ? 'popup-active' : ''}" style="${gridStyle}">
         ${(this.cards || []).map((card, index) => {
-          const cardConfig = (this.config.cards && this.config.cards[index]) || {};
-          const viewLayout = cardConfig.view_layout || {};
+          const viewLayout = this._getViewLayout(card, index);
           const gridArea = viewLayout.grid_area || '';
           const placeSelf = viewLayout.place_self || '';
 
