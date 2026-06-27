@@ -87,8 +87,12 @@ export class HAControlBase extends LitElement {
    * @returns {boolean} True if the control should update and re-render, false otherwise
    */
   shouldUpdate(changedProps) {
-    if (changedProps.has('config') || changedProps.has('stateObj')) {
-      this._watchedEntities = null;
+    // If any property other than 'hass' changed, we must update
+    const hasOtherChanges = Array.from(changedProps.keys()).some(key => key !== 'hass');
+    if (hasOtherChanges) {
+      if (changedProps.has('config') || changedProps.has('stateObj')) {
+        this._watchedEntities = null;
+      }
       return true;
     }
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vacuum Map Card Loader Module
  * Handles dynamic cache-busted loading of JS modules and CSS stylesheets.
  */
@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.1.8";
+const VERSION = "1.1.9";
 
 // Name of this loader module script
 const SCRIPT_NAME = "vacuum-map-card-loader.js";

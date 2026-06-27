@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Fit Grid Layout Loader Module
  * Handles dynamic cache-busted loading of JS modules and CSS stylesheets.
  */
@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.7";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.1.2";
+const VERSION = "1.1.3";
 
 // Name of this loader module script
 const SCRIPT_NAME = "fit-grid-layout-loader.js";
