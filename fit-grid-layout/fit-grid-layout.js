@@ -272,6 +272,7 @@ class FitGridLayout extends HAControlBase {
     if (!card) return {};
     
     const cardConfig = card.config || card._config || (card.host && (card.host.config || card.host._config));
+    console.log("[FitGridLayout] card tagName:", card.tagName, "index:", index, "config found:", !!cardConfig, "cardConfig:", cardConfig);
     
     if (cardConfig) {
       if (cardConfig.view_layout) {
