@@ -91,6 +91,7 @@ class FitGridLayout extends HAControlBase {
 
   _handleLLCustom(e) {
     const detail = e.detail;
+    console.log("[FitGridLayout] RECEIVED ll-custom event! detail:", JSON.stringify(detail));
     if (!detail) return;
 
     if (detail.grid_popup_close) {
@@ -113,6 +114,7 @@ class FitGridLayout extends HAControlBase {
   }
 
   _showPopup(popupDetail) {
+    console.log("[FitGridLayout] _showPopup triggered! popupDetail:", JSON.stringify(popupDetail));
     let heading = "";
     let cardConfig = null;
 
@@ -135,7 +137,12 @@ class FitGridLayout extends HAControlBase {
       }
     }
 
-    if (!cardConfig || !cardConfig.type) return;
+    console.log("[FitGridLayout] Resolved popup cardConfig:", JSON.stringify(cardConfig), "heading:", heading);
+
+    if (!cardConfig || !cardConfig.type) {
+      console.warn("[FitGridLayout] Missing cardConfig or cardConfig.type in popup!");
+      return;
+    }
 
     const { type, ...config } = cardConfig;
     const fullConfig = { type, ...config };
@@ -149,6 +156,7 @@ class FitGridLayout extends HAControlBase {
 
     const createCard = () => {
       try {
+        console.log("[FitGridLayout] Creating card element with tag:", tag);
         const el = document.createElement(tag);
         el.setConfig(fullConfig);
         el.hass = this.hass;
@@ -164,6 +172,7 @@ class FitGridLayout extends HAControlBase {
     if (customElements.get(tag)) {
       createCard();
     } else {
+      console.log("[FitGridLayout] Element not defined yet, waiting for customElements.whenDefined:", tag);
       customElements.whenDefined(tag).then(() => {
         createCard();
       }).catch((err) => {
