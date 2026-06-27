@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -53,13 +53,6 @@ class VacuumMapCard extends HAControlBase {
 
 
 
-  /**
-   * Renders the custom card's HTML template.
-   * Displays the 2D layout map showing positionable room rectangles, selection state, and blinking cleaning highlights.
-   * 
-   * @protected
-   * @returns {import('lit-html').TemplateResult} The rendered template output
-   */
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
     const output = this.hass.states[this.config.output_entity];
@@ -74,13 +67,50 @@ class VacuumMapCard extends HAControlBase {
 
     if (!vacuum || !output) return this.renderError(this._localize('missing_entities'));
 
-    const currentMap = vacuum.attributes.selected_map;
-    const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
-    let rooms = allRooms.filter(room => !this.config.rooms?.[room.id]?.disabled);
-
     const isReadonly = this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on';
+    const isEditMode = this.config.edit_mode === true &&
+      (this.closest('hui-card-preview') !== null || this.closest('dialog-edit-card') !== null);
     
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
+
+    // Merge configuration rooms and state attribute rooms
+    const configRooms = [];
+    if (this.config.rooms && typeof this.config.rooms === 'object') {
+      for (const [id, r] of Object.entries(this.config.rooms)) {
+        if (!r.disabled) {
+          configRooms.push({
+            id: isNaN(id) ? id : parseFloat(id),
+            name: r.label || `Room ${id}`,
+            icon: r.icon || 'mdi:door',
+            ...r
+          });
+        }
+      }
+    }
+
+    const currentMap = vacuum.attributes.selected_map;
+    const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
+    
+    const combinedRoomsMap = new Map();
+    
+    // Config rooms have priority
+    configRooms.forEach(room => {
+      combinedRoomsMap.set(room.id.toString(), room);
+    });
+    
+    // Add any missing vacuum state rooms
+    allRooms.forEach(room => {
+      const roomIdStr = room.id.toString();
+      if (!this.config.rooms?.[room.id]?.disabled && !combinedRoomsMap.has(roomIdStr)) {
+        combinedRoomsMap.set(roomIdStr, {
+          id: room.id,
+          name: room.name,
+          icon: room.icon || 'mdi:door'
+        });
+      }
+    });
+    
+    let rooms = Array.from(combinedRoomsMap.values());
 
     const sortBySequence = this.config.sort_by_sequence !== false;
     if (sortBySequence && cleanSequence.length > 0 && cleanSequence[0] !== "") {
@@ -103,9 +133,11 @@ class VacuumMapCard extends HAControlBase {
     const selectionForeground = this.config.selection_foreground || 'white';
     const cleaningBlinkColor = this.config.mark_animation_background || '#4CAF50';
 
+    const containerClass = `container ${isReadonly ? 'readonly' : ''} ${isEditMode ? 'edit-mode' : ''}`;
+
     return html`
       ${this.renderStyle('vacuum-map-card.css')}
-      <div class="container ${isReadonly ? 'readonly' : ''}" 
+      <div class="${containerClass}" 
           style="--map-height: ${mapHeight}; 
                   --selection-color: ${selectionColor}; 
                   --selection-foreground: ${selectionForeground};
@@ -138,13 +170,25 @@ class VacuumMapCard extends HAControlBase {
             return html`
               <div class="room-block ${isSelected ? 'selected' : ''} ${activeCleaningClass}" 
                    style="${posStyle}"
-                   @click="${() => !isReadonly && this._toggleRoom(room.id, selectedRooms, cleanSequence)}">
+                   @mousedown="${(e) => this._handleMouseDown(e, room.id)}"
+                   @touchstart="${(e) => this._handleMouseDown(e, room.id)}"
+                   @click="${(e) => this._handleRoomClick(e, room.id, selectedRooms, cleanSequence, isReadonly, isEditMode)}">
                 <ha-icon 
                   class="${animationClass}" 
                   style="${this.config.show_names === false ? 'margin-bottom: 0px;' : ''}"
                   .icon="${customConfig.icon || room.icon || 'mdi:door'}">
                 </ha-icon>
                 ${this.config.show_names !== false ? html`<div class="name">${customConfig.label || room.name}</div>` : ''}
+                
+                ${isEditMode ? html`
+                  <div class="delete-handle" @click="${(e) => this._handleDeleteClick(e, room.id)}">
+                    <ha-icon .icon=${'mdi:close'}></ha-icon>
+                  </div>
+                  <div class="resize-handle" 
+                       @mousedown="${(e) => this._handleResizeMouseDown(e, room.id)}"
+                       @touchstart="${(e) => this._handleResizeMouseDown(e, room.id)}">
+                  </div>
+                ` : ''}
               </div>
             `;
           })}
@@ -165,6 +209,161 @@ class VacuumMapCard extends HAControlBase {
         ` : ''}
       </div>
     `;
+  }
+
+  _handleRoomClick(e, roomId, selectedRooms, cleanSequence, isReadonly, isEditMode) {
+    if (isReadonly || isEditMode) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+    this._toggleRoom(roomId, selectedRooms, cleanSequence);
+  }
+
+  _handleDeleteClick(e, roomId) {
+    e.stopPropagation();
+    e.preventDefault();
+    const event = new CustomEvent("room-layout-changed", {
+      detail: {
+        roomId: roomId,
+        deleted: true
+      },
+      bubbles: true,
+      composed: true
+    });
+    this.dispatchEvent(event);
+  }
+
+  _handleMouseDown(e, roomId) {
+    if (!this.config.edit_mode) return;
+    if (e.target.closest('.resize-handle') || e.target.closest('.delete-handle')) return;
+    
+    e.stopPropagation();
+    
+    const blockEl = e.currentTarget;
+    const mapContainer = this.shadowRoot.querySelector('.map-container');
+    const rect = mapContainer.getBoundingClientRect();
+    
+    const startClientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const customConfig = this.config.rooms?.[roomId] || {};
+    const startX = customConfig.x !== undefined ? parseFloat(customConfig.x) : 0;
+    const startY = customConfig.y !== undefined ? parseFloat(customConfig.y) : 0;
+    const w = customConfig.w !== undefined ? parseFloat(customConfig.w) : 15;
+    const h = customConfig.h !== undefined ? parseFloat(customConfig.h) : 15;
+    
+    let finalX = startX;
+    let finalY = startY;
+    
+    const handleMouseMove = (ev) => {
+      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      
+      const deltaX = clientX - startClientX;
+      const deltaY = clientY - startClientY;
+      
+      const pctDeltaX = (deltaX / rect.width) * 100;
+      const pctDeltaY = (deltaY / rect.height) * 100;
+      
+      finalX = Math.round(startX + pctDeltaX);
+      finalY = Math.round(startY + pctDeltaY);
+      
+      finalX = Math.max(0, Math.min(100 - w, finalX));
+      finalY = Math.max(0, Math.min(100 - h, finalY));
+      
+      blockEl.style.left = `${finalX}%`;
+      blockEl.style.top = `${finalY}%`;
+    };
+    
+    const handleMouseUp = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+      
+      const event = new CustomEvent("room-layout-changed", {
+        detail: {
+          roomId: roomId,
+          x: finalX,
+          y: finalY
+        },
+        bubbles: true,
+        composed: true
+      });
+      this.dispatchEvent(event);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove, { passive: true });
+    window.addEventListener('touchend', handleMouseUp);
+  }
+
+  _handleResizeMouseDown(e, roomId) {
+    if (!this.config.edit_mode) return;
+    
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const blockEl = e.currentTarget.closest('.room-block');
+    const mapContainer = this.shadowRoot.querySelector('.map-container');
+    const rect = mapContainer.getBoundingClientRect();
+    
+    const startClientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const customConfig = this.config.rooms?.[roomId] || {};
+    const x = customConfig.x !== undefined ? parseFloat(customConfig.x) : 0;
+    const y = customConfig.y !== undefined ? parseFloat(customConfig.y) : 0;
+    const startW = customConfig.w !== undefined ? parseFloat(customConfig.w) : 15;
+    const startH = customConfig.h !== undefined ? parseFloat(customConfig.h) : 15;
+    
+    let finalW = startW;
+    let finalH = startH;
+    
+    const handleMouseMove = (ev) => {
+      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      
+      const deltaX = clientX - startClientX;
+      const deltaY = clientY - startClientY;
+      
+      const pctDeltaX = (deltaX / rect.width) * 100;
+      const pctDeltaY = (deltaY / rect.height) * 100;
+      
+      finalW = Math.round(startW + pctDeltaX);
+      finalH = Math.round(startH + pctDeltaY);
+      
+      finalW = Math.max(2, Math.min(100 - x, finalW));
+      finalH = Math.max(2, Math.min(100 - y, finalH));
+      
+      blockEl.style.width = `${finalW}%`;
+      blockEl.style.height = `${finalH}%`;
+    };
+    
+    const handleMouseUp = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+      
+      const event = new CustomEvent("room-layout-changed", {
+        detail: {
+          roomId: roomId,
+          w: finalW,
+          h: finalH
+        },
+        bubbles: true,
+        composed: true
+      });
+      this.dispatchEvent(event);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove, { passive: true });
+    window.addEventListener('touchend', handleMouseUp);
   }
 
   /**

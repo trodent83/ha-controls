@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.11] - 2026-06-27
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Implemented visual interactive drag-and-drop dragging (`x`, `y`) and corner handle resizing (`w`, `h`) directly on the live map preview block element.
+  - Added a delete handle overlay (close icon) on each room block to remove the room layout visually from the map preview.
+  - Built a custom Rooms configuration panel in the GUI editor containing a room addition form, expandable entries accordions for all properties (Label, Icon, Color, Active Animation, coordinates, disabled state), and deletion buttons.
+  - Upgraded the card engine to merge state-reported vacuum rooms and custom configuration-defined rooms seamlessly.
+  - Bumped loader to version `1.2.0` and cache-busted the elements.
+
 ## [1.2.10] - 2026-06-27
 
 ### Fixed

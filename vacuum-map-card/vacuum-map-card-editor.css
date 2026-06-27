@@ -46,3 +46,98 @@
 .editor-actions ha-button.warning {
   --mdc-theme-primary: var(--error-color);
 }
+
+/* Rooms custom editor layout */
+.rooms-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editor-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+  margin: 8px 0;
+}
+
+.add-room-card {
+  padding: 16px;
+  background: var(--secondary-background-color, rgba(120, 120, 120, 0.05));
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.input-row ha-textfield {
+  flex: 1;
+}
+
+/* Configured rooms accordion list */
+.rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.room-card {
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card-background-color, rgba(120, 120, 120, 0.03));
+}
+
+.room-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--secondary-background-color, rgba(120, 120, 120, 0.05));
+  cursor: pointer;
+  user-select: none;
+}
+
+.room-card-header:hover {
+  background: var(--divider-color);
+}
+
+.room-card-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--primary-text-color);
+}
+
+.room-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--divider-color);
+}
+
+.coordinates-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.danger-button {
+  --mdc-theme-primary: var(--error-color);
+}

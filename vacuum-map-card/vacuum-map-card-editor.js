@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -25,7 +25,10 @@ class VacuumMapCardEditor extends HAControlBase {
     return { 
       ...super.properties, 
       _config: { type: Object },
-      _activeTab: { type: String }
+      _activeTab: { type: String },
+      _expandedRoomId: { type: String },
+      _newRoomId: { type: String },
+      _newRoomLabel: { type: String }
     };
   }
 
@@ -36,6 +39,9 @@ class VacuumMapCardEditor extends HAControlBase {
   constructor() {
     super();
     this._activeTab = 'general';
+    this._expandedRoomId = null;
+    this._newRoomId = '';
+    this._newRoomLabel = '';
   }
 
   /**
@@ -292,6 +298,137 @@ class VacuumMapCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this._handleRoomLayoutChangedBound = this._handleRoomLayoutChanged.bind(this);
+    window.addEventListener('room-layout-changed', this._handleRoomLayoutChangedBound);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._handleRoomLayoutChangedBound) {
+      window.removeEventListener('room-layout-changed', this._handleRoomLayoutChangedBound);
+    }
+  }
+
+  _handleRoomLayoutChanged(ev) {
+    const { roomId, x, y, w, h, deleted } = ev.detail;
+    if (!this._config) return;
+    
+    const rooms = { ...(this._config.rooms || {}) };
+    
+    if (deleted) {
+      delete rooms[roomId];
+    } else {
+      const current = rooms[roomId] || {};
+      rooms[roomId] = {
+        ...current,
+        ...(x !== undefined ? { x } : {}),
+        ...(y !== undefined ? { y } : {}),
+        ...(w !== undefined ? { w } : {}),
+        ...(h !== undefined ? { h } : {})
+      };
+    }
+    
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    
+    this._fireConfigChanged();
+  }
+
+  _toggleEditMode(e) {
+    this._config = {
+      ...this._config,
+      edit_mode: e.target.checked
+    };
+    this._fireConfigChanged();
+  }
+
+  _addCustomRoom() {
+    const id = this._newRoomId?.trim();
+    const label = this._newRoomLabel?.trim();
+    
+    if (!id || isNaN(id)) {
+      alert("Please enter a valid numeric Room ID.");
+      return;
+    }
+    
+    const roomId = parseFloat(id);
+    const rooms = { ...(this._config.rooms || {}) };
+    
+    if (rooms[roomId]) {
+      alert(`Room ID ${roomId} is already configured.`);
+      return;
+    }
+    
+    rooms[roomId] = {
+      label: label || `Room ${roomId}`,
+      icon: "mdi:door",
+      x: 10,
+      y: 10,
+      w: 15,
+      h: 15,
+      color: "#666666"
+    };
+    
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    
+    this._newRoomId = '';
+    this._newRoomLabel = '';
+    this._expandedRoomId = roomId.toString();
+    this._fireConfigChanged();
+  }
+
+  _toggleExpandRoom(id) {
+    this._expandedRoomId = this._expandedRoomId === id ? null : id;
+  }
+
+  _updateRoomProp(id, prop, value) {
+    if (!this._config) return;
+    const rooms = { ...(this._config.rooms || {}) };
+    const current = rooms[id] || {};
+    
+    let val = value;
+    if (prop === 'x' || prop === 'y' || prop === 'w' || prop === 'h') {
+      if (isNaN(val)) val = 0;
+      val = Math.max(0, Math.min(100, val));
+    }
+    
+    rooms[id] = {
+      ...current,
+      [prop]: val
+    };
+    
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    this._fireConfigChanged();
+  }
+
+  _deleteRoom(e, id) {
+    if (e) e.stopPropagation();
+    if (!confirm(`Are you sure you want to delete Room ${id}?`)) return;
+    
+    const rooms = { ...(this._config.rooms || {}) };
+    delete rooms[id];
+    
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    
+    if (this._expandedRoomId === id) {
+      this._expandedRoomId = null;
+    }
+    this._fireConfigChanged();
+  }
+
   /**
    * Resets the active configuration back to standard stub values.
    * 
@@ -315,10 +452,6 @@ class VacuumMapCardEditor extends HAControlBase {
    */
   render() {
     if (!this.hass || !this._config) return html``;
-    const vacuumId = this._config?.vacuum_entity;
-    const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
-    const currentMap = vacuum?.attributes?.selected_map;
-    const roomsData = vacuum?.attributes?.rooms?.[currentMap] || [];
 
     return html`
       ${this.renderStyle('vacuum-map-card-editor.css')}
@@ -348,19 +481,131 @@ class VacuumMapCardEditor extends HAControlBase {
           @value-changed=${this._valueChanged}
         ></ha-form>
       ` : html`
-        ${roomsData.length === 0 ? html`
-          <div style="padding: 16px; text-align: center; color: var(--secondary-text-color);">
-            ${this._localize('no_rooms_found') || 'No rooms found for the selected vacuum entity.'}
+        <div class="rooms-editor-container">
+          <!-- Toggle Edit/Placement Mode -->
+          <div class="input-row" style="margin-bottom: 8px;">
+            <ha-formfield label="Interactive Placement Mode (Drag & Resize on Map)">
+              <ha-switch
+                .checked=${this._config.edit_mode === true}
+                @change=${(e) => this._toggleEditMode(e)}
+              ></ha-switch>
+            </ha-formfield>
           </div>
-        ` : html`
-          <ha-form
-            .hass=${this.hass}
-            .data=${this._config}
-            .schema=${this._roomsSchema()}
-            .computeLabel=${(s) => s.label || s.name}
-            @value-changed=${this._valueChanged}
-          ></ha-form>
-        `}
+
+          <!-- Add Room Form -->
+          <div class="add-room-card">
+            <div class="editor-section-title" style="margin-top: 0px;">Add New Custom Room</div>
+            <div class="input-row">
+              <ha-textfield
+                label="Room ID (number)"
+                type="number"
+                .value=${this._newRoomId || ''}
+                @input=${(e) => { this._newRoomId = e.target.value; }}
+              ></ha-textfield>
+              <ha-textfield
+                label="Room Name"
+                .value=${this._newRoomLabel || ''}
+                @input=${(e) => { this._newRoomLabel = e.target.value; }}
+              ></ha-textfield>
+            </div>
+            <ha-button @click=${this._addCustomRoom} outlined style="align-self: flex-end;">
+              <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+              Add Room
+            </ha-button>
+          </div>
+
+          <!-- Configured Rooms List -->
+          <div class="editor-section-title">Configured Rooms (${Object.keys(this._config.rooms || {}).length})</div>
+          <div class="rooms-list">
+            ${Object.entries(this._config.rooms || {}).map(([id, room]) => {
+              const isExpanded = this._expandedRoomId === id;
+              return html`
+                <div class="room-card">
+                  <div class="room-card-header" @click=${() => this._toggleExpandRoom(id)}>
+                    <div class="room-card-header-title">
+                      <ha-icon .icon=${room.icon || 'mdi:door'}></ha-icon>
+                      <span>${room.label || `Room ${id}`} (ID: ${id})</span>
+                    </div>
+                    <div class="room-card-header-actions">
+                      <ha-icon .icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>
+                    </div>
+                  </div>
+                  
+                  ${isExpanded ? html`
+                    <div class="room-card-body">
+                      <div class="input-row">
+                        <ha-textfield
+                          label="Label / Name"
+                          .value=${room.label || ''}
+                          @change=${(e) => this._updateRoomProp(id, 'label', e.target.value)}
+                        ></ha-textfield>
+                        <ha-textfield
+                          label="Icon"
+                          .value=${room.icon || ''}
+                          @change=${(e) => this._updateRoomProp(id, 'icon', e.target.value)}
+                        ></ha-textfield>
+                      </div>
+                      
+                      <div class="input-row">
+                        <ha-textfield
+                          label="Color (Hex / CSS)"
+                          .value=${room.color || ''}
+                          @change=${(e) => this._updateRoomProp(id, 'color', e.target.value)}
+                        ></ha-textfield>
+                        <ha-textfield
+                          label="Active Animation"
+                          .value=${room.animation || 'none'}
+                          @change=${(e) => this._updateRoomProp(id, 'animation', e.target.value)}
+                        ></ha-textfield>
+                      </div>
+
+                      <div class="coordinates-grid">
+                        <ha-textfield
+                          label="X (%)"
+                          type="number"
+                          .value=${room.x !== undefined ? room.x : 0}
+                          @change=${(e) => this._updateRoomProp(id, 'x', parseFloat(e.target.value))}
+                        ></ha-textfield>
+                        <ha-textfield
+                          label="Y (%)"
+                          type="number"
+                          .value=${room.y !== undefined ? room.y : 0}
+                          @change=${(e) => this._updateRoomProp(id, 'y', parseFloat(e.target.value))}
+                        ></ha-textfield>
+                        <ha-textfield
+                          label="W (%)"
+                          type="number"
+                          .value=${room.w !== undefined ? room.w : 15}
+                          @change=${(e) => this._updateRoomProp(id, 'w', parseFloat(e.target.value))}
+                        ></ha-textfield>
+                        <ha-textfield
+                          label="H (%)"
+                          type="number"
+                          .value=${room.h !== undefined ? room.h : 15}
+                          @change=${(e) => this._updateRoomProp(id, 'h', parseFloat(e.target.value))}
+                        ></ha-textfield>
+                      </div>
+
+                      <div class="input-row" style="justify-content: space-between; margin-top: 8px;">
+                        <ha-formfield label="Disable Room">
+                          <ha-switch
+                            .checked=${room.disabled === true}
+                            @change=${(e) => this._updateRoomProp(id, 'disabled', e.target.checked)}
+                          ></ha-switch>
+                        </ha-formfield>
+                        
+                        <ha-button @click=${(e) => this._deleteRoom(e, id)} class="danger-button" outlined>
+                          <ha-icon icon="mdi:trash-can-outline" slot="icon"></ha-icon>
+                          Delete Room
+                        </ha-button>
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            })}
+          </div>
+        </div>
       `}
 
       <div class="editor-actions">
@@ -376,13 +621,6 @@ class VacuumMapCardEditor extends HAControlBase {
     `;
   }
 
-  /**
-   * Dispatches a custom 'config-changed' event up to Lovelace card configuration frame
-   * to notify it that configuration options have been updated.
-   * 
-   * @param {CustomEvent} ev - Form value-changed event containing updated config dictionary
-   * @private
-   */
   _valueChanged(ev) {
     const event = new CustomEvent("config-changed", {
       detail: { config: ev.detail.value },
