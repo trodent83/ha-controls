@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.7";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 
 // Name of this loader module script
 const SCRIPT_NAME = "fit-grid-layout-loader.js";

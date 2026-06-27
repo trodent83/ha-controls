@@ -250,15 +250,48 @@ class FitGridLayout extends HAControlBase {
     }
   }
 
+  _isConfigMatch(c1, c2) {
+    if (!c1 || !c2) return false;
+    if (c1.type !== c2.type) return false;
+    if (c1.entity !== c2.entity) return false;
+    if (c1.name !== c2.name) return false;
+    if (c1.title !== c2.title) return false;
+    
+    // For grid cards, compare child card types to ensure correct match
+    if (c1.cards && c2.cards) {
+      if (c1.cards.length !== c2.cards.length) return false;
+      for (let i = 0; i < c1.cards.length; i++) {
+        if (c1.cards[i] && c2.cards[i] && c1.cards[i].type !== c2.cards[i].type) return false;
+      }
+    }
+    
+    return true;
+  }
+
   _getViewLayout(card, index) {
     if (!card) return {};
+    
     const cardConfig = card.config || card._config || (card.host && (card.host.config || card.host._config));
-    if (cardConfig && cardConfig.view_layout) {
-      return cardConfig.view_layout;
+    
+    if (cardConfig) {
+      if (cardConfig.view_layout) {
+        return cardConfig.view_layout;
+      }
+      
+      // Match card structurally against original configs to resolve correct view_layout
+      if (this.config && this.config.cards) {
+        const matched = this.config.cards.find(c => this._isConfigMatch(c, cardConfig));
+        if (matched && matched.view_layout) {
+          return matched.view_layout;
+        }
+      }
     }
+    
+    // Fallback to index matching
     if (this.config && this.config.cards && this.config.cards[index]) {
       return this.config.cards[index].view_layout || {};
     }
+    
     return {};
   }
 
