@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.10] - 2026-06-27
+
+### Fixed
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Fixed scaling calculation issues and prevented infinite ResizeObserver trigger loops by caching and comparing host element available client dimensions.
+  - Dynamically set host element height using the configured dashboard layout height setting, preventing grid content from collapsing.
+  - Resolved view layout styling issues inside the shadow DOM by defining a valid `translationPath` to correctly reference `fit-grid-layout.css`.
+  - Added support for hyphenated CSS Grid layout keys (`grid-area`, `place-self`, etc.) when parsing `view_layout` parameters.
+- **Multi State Card (`multi-state-card`)**:
+  - Fixed `fire-dom-event` tap/hold actions by directly dispatching the `"ll-custom"` event from the card element with `bubbles: true` and `composed: true`, ensuring bubbling to view containers.
+
 ## [1.2.9] - 2026-06-27
 
 ### Added
