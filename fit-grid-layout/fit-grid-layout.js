@@ -328,6 +328,7 @@ class FitGridLayout extends HAControlBase {
           const viewLayout = this._getViewLayout(card, index);
           const gridArea = viewLayout.grid_area || '';
           const placeSelf = viewLayout.place_self || '';
+          console.log("[FitGridLayout] MAPPING index:", index, "tagName:", card.tagName, "resolved gridArea:", gridArea, "placeSelf:", placeSelf);
 
           const style = `
             ${gridArea ? `grid-area: ${gridArea};` : ''}
