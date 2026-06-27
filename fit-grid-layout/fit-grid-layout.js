@@ -251,45 +251,93 @@ class FitGridLayout extends HAControlBase {
   }
 
   _isConfigMatch(c1, c2) {
-    if (!c1 || !c2) return false;
-    if (c1.type !== c2.type) return false;
-    if (c1.entity !== c2.entity) return false;
-    if (c1.name !== c2.name) return false;
-    if (c1.title !== c2.title) return false;
+    if (!c1 || !c2) {
+      console.log("[FitGridLayout] Mismatch: one is empty.", "c1:", !!c1, "c2:", !!c2);
+      return false;
+    }
+    if (c1.type !== c2.type) {
+      console.log("[FitGridLayout] Mismatch type:", c1.type, "vs", c2.type);
+      return false;
+    }
+    if (c1.entity !== c2.entity) {
+      console.log("[FitGridLayout] Mismatch entity:", c1.entity, "vs", c2.entity);
+      return false;
+    }
+    if (c1.name !== c2.name) {
+      console.log("[FitGridLayout] Mismatch name:", c1.name, "vs", c2.name);
+      return false;
+    }
+    if (c1.title !== c2.title) {
+      console.log("[FitGridLayout] Mismatch title:", c1.title, "vs", c2.title);
+      return false;
+    }
     
     // For grid cards, compare child card types to ensure correct match
     if (c1.cards && c2.cards) {
-      if (c1.cards.length !== c2.cards.length) return false;
+      if (c1.cards.length !== c2.cards.length) {
+        console.log("[FitGridLayout] Mismatch nested cards length:", c1.cards.length, "vs", c2.cards.length);
+        return false;
+      }
       for (let i = 0; i < c1.cards.length; i++) {
-        if (c1.cards[i] && c2.cards[i] && c1.cards[i].type !== c2.cards[i].type) return false;
+        const type1 = c1.cards[i] ? c1.cards[i].type : undefined;
+        const type2 = c2.cards[i] ? c2.cards[i].type : undefined;
+        if (type1 !== type2) {
+          console.log("[FitGridLayout] Mismatch nested card type at index", i, ":", type1, "vs", type2);
+          return false;
+        }
       }
     }
     
+    console.log("[FitGridLayout] MATCH SUCCESS!", c1.type || c1);
     return true;
   }
 
   _getViewLayout(card, index) {
     if (!card) return {};
     
-    const cardConfig = card.config || card._config || (card.host && (card.host.config || card.host._config));
-    console.log("[FitGridLayout] card tagName:", card.tagName, "index:", index, "config found:", !!cardConfig, "cardConfig:", cardConfig);
+    // Log all properties of the card element to find where config is stored
+    const cardKeys = Object.keys(card);
+    const hostKeys = card.host ? Object.keys(card.host) : [];
+    console.log("[FitGridLayout] Card element keys:", cardKeys);
+    if (card.host) {
+      console.log("[FitGridLayout] Card element host keys:", hostKeys);
+    }
+
+    const directConfig = card.config;
+    const underscoreConfig = card._config;
+    const hostConfig = card.host ? (card.host.config || card.host._config) : null;
+    const shadowConfig = card.shadowRoot ? (card.shadowRoot.host ? (card.shadowRoot.host.config || card.shadowRoot.host._config) : null) : null;
+
+    console.log("[FitGridLayout] Direct config:", !!directConfig, "Underscore config:", !!underscoreConfig, "Host config:", !!hostConfig, "Shadow host config:", !!shadowConfig);
+
+    const cardConfig = directConfig || underscoreConfig || hostConfig || shadowConfig;
     
     if (cardConfig) {
+      console.log("[FitGridLayout] Found cardConfig keys:", Object.keys(cardConfig));
+      console.log("[FitGridLayout] Found cardConfig.view_layout:", JSON.stringify(cardConfig.view_layout));
+      
       if (cardConfig.view_layout) {
         return cardConfig.view_layout;
       }
       
       // Match card structurally against original configs to resolve correct view_layout
       if (this.config && this.config.cards) {
+        console.log("[FitGridLayout] Attempting structural matching for config:", JSON.stringify(cardConfig));
         const matched = this.config.cards.find(c => this._isConfigMatch(c, cardConfig));
-        if (matched && matched.view_layout) {
-          return matched.view_layout;
+        if (matched) {
+          console.log("[FitGridLayout] Matched config view_layout:", JSON.stringify(matched.view_layout));
+          if (matched.view_layout) return matched.view_layout;
+        } else {
+          console.warn("[FitGridLayout] Structural matching found no matches in this.config.cards!");
         }
       }
+    } else {
+      console.warn("[FitGridLayout] No card config object found anywhere on card element!");
     }
     
     // Fallback to index matching
     if (this.config && this.config.cards && this.config.cards[index]) {
+      console.log("[FitGridLayout] Falling back to index matching. Index:", index, "ViewLayout:", JSON.stringify(this.config.cards[index].view_layout));
       return this.config.cards[index].view_layout || {};
     }
     
