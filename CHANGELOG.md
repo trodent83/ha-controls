@@ -13,10 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added layout transformation actions (**Flip H**, **Flip V**, and **Rotate 90°** clockwise) in the editor toolbar to instantly align room overlay configurations.
   - Integrated Home Assistant room name entities (`select.*_room_*_name`) to display and dynamically update room names globally directly from the card editor dropdown.
   - Added a premium 8-directional edge (top, bottom, left, right) and corner (NW, NE, SW, SE) visual dragging and resizing system directly on the live map preview block element.
+  - Isolated visual editor room selection focus from regular cleaning queues to ensure handles activate instantly on click/drag in edit mode.
   - Expanded resize hover edges to 16px and corner node hit targets to 26px to provide easy, high-comfort touch and mouse targeting.
   - Replaced the deprecated `<ha-textfield>` element with standard `<ha-input>` elements in the visual editor configurations repository-wide.
   - Rearranged the coordinates layout grid in the editor panel to a spacious 2-column layout to prevent fields from collapsing.
-  - Bumped loader to version `1.3.8` to force cache-busting.
+  - Bumped loader to version `1.3.9` to force cache-busting.
 
 ## [1.2.11] - 2026-06-27
 

@@ -158,7 +158,9 @@ class VacuumMapCard extends HAControlBase {
         
         <div class="map-container">
           ${rooms.map(room => {
-            const isSelected = selectedRooms.includes(room.id);
+            const isSelected = isEditMode
+              ? (this._selectedEditingRoomId === room.id)
+              : selectedRooms.includes(room.id);
             const customConfig = this.config.rooms?.[room.id] || {};
             
             const x = customConfig.x !== undefined ? customConfig.x : 0;
@@ -259,6 +261,9 @@ class VacuumMapCard extends HAControlBase {
     if (e.target.closest('.resize-handle') || e.target.closest('.delete-handle')) return;
     
     e.stopPropagation();
+    
+    this._selectedEditingRoomId = roomId;
+    this.requestUpdate();
     
     const blockEl = e.target.closest('.room-block');
     if (!blockEl) return;
