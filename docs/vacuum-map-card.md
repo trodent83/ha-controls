@@ -85,4 +85,18 @@ rooms:
     y: 20
     w: 25
     h: 25
+  "3":
+    label: "Bedroom (L-Shaped)"
+    icon: mdi:bed
+    color: "rgba(33, 150, 243, 0.2)"
+    x: 15
+    y: 50
+    w: 20
+    h: 20
+    # Additional shape segments to form an L-shape block
+    shapes:
+      - x: 35
+        y: 50
+        w: 10
+        h: 10
 ```

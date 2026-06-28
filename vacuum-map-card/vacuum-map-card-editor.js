@@ -326,12 +326,28 @@ class VacuumMapCardEditor extends HAControlBase {
       const newW = (w !== undefined && !isNaN(w)) ? w : current.w;
       const newH = (h !== undefined && !isNaN(h)) ? h : current.h;
       
+      let shapes = current.shapes;
+      if (Array.isArray(shapes) && shapes.length > 0 && current.x !== undefined && current.y !== undefined) {
+        const deltaX = newX - current.x;
+        const deltaY = newY - current.y;
+        if (deltaX !== 0 || deltaY !== 0) {
+          shapes = shapes.map(s => ({
+            ...s,
+            x: Math.round((s.x !== undefined ? s.x : 0) + deltaX),
+            y: Math.round((s.y !== undefined ? s.y : 0) + deltaY),
+            w: s.w !== undefined ? s.w : 15,
+            h: s.h !== undefined ? s.h : 15
+          }));
+        }
+      }
+      
       rooms[roomId] = {
         ...current,
         ...(newX !== undefined ? { x: newX } : {}),
         ...(newY !== undefined ? { y: newY } : {}),
         ...(newW !== undefined ? { w: newW } : {}),
-        ...(newH !== undefined ? { h: newH } : {})
+        ...(newH !== undefined ? { h: newH } : {}),
+        ...(shapes !== undefined ? { shapes: shapes } : {})
       };
     }
     

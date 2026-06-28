@@ -180,8 +180,11 @@ class VacuumMapCard extends HAControlBase {
                 animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
             }
             
+            const extraShapes = Array.isArray(customConfig.shapes) ? customConfig.shapes : [];
+            
             return html`
               <div class="room-block ${isSelected ? 'selected' : ''} ${activeCleaningClass}" 
+                   data-room-id="${room.id}"
                    style="${posStyle}"
                    @mousedown="${(e) => this._handleMouseDown(e, room.id)}"
                    @touchstart="${(e) => this._handleMouseDown(e, room.id)}"
@@ -199,6 +202,24 @@ class VacuumMapCard extends HAControlBase {
                   </div>
                 ` : ''}
               </div>
+              
+              ${extraShapes.map((shape, idx) => {
+                const sx = shape.x !== undefined ? shape.x : 0;
+                const sy = shape.y !== undefined ? shape.y : 0;
+                const sw = shape.w !== undefined ? shape.w : 15;
+                const sh = shape.h !== undefined ? shape.h : 15;
+                const shapePosStyle = `left: ${sx}%; top: ${sy}%; width: ${sw}%; height: ${sh}%; ${roomColorStyle}`;
+                
+                return html`
+                  <div class="room-block extra-shape ${isSelected ? 'selected' : ''} ${activeCleaningClass}"
+                       data-room-id="${room.id}"
+                       style="${shapePosStyle}"
+                       @mousedown="${(e) => this._handleMouseDown(e, room.id)}"
+                       @touchstart="${(e) => this._handleMouseDown(e, room.id)}"
+                       @click="${(e) => this._handleRoomClick(e, room.id, selectedRooms, cleanSequence, isReadonly, isEditMode)}">
+                  </div>
+                `;
+              })}
             `;
           })}
         </div>
@@ -287,8 +308,26 @@ class VacuumMapCard extends HAControlBase {
       finalX = Math.max(0, Math.min(100 - w, finalX));
       finalY = Math.max(0, Math.min(100 - h, finalY));
       
-      blockEl.style.left = `${finalX}%`;
-      blockEl.style.top = `${finalY}%`;
+      const deltaXShift = finalX - startX;
+      const deltaYShift = finalY - startY;
+
+      const mainEl = mapContainer.querySelector(`.room-block[data-room-id="${roomId}"]:not(.extra-shape)`);
+      if (mainEl) {
+        mainEl.style.left = `${finalX}%`;
+        mainEl.style.top = `${finalY}%`;
+      }
+
+      const extraEls = mapContainer.querySelectorAll(`.room-block.extra-shape[data-room-id="${roomId}"]`);
+      const shapes = Array.isArray(customConfig.shapes) ? customConfig.shapes : [];
+      extraEls.forEach((el, idx) => {
+        const shape = shapes[idx];
+        if (shape) {
+          const sx = shape.x !== undefined ? shape.x : 0;
+          const sy = shape.y !== undefined ? shape.y : 0;
+          el.style.left = `${Math.round(sx + deltaXShift)}%`;
+          el.style.top = `${Math.round(sy + deltaYShift)}%`;
+        }
+      });
     };
     
     const handleMouseUp = () => {
