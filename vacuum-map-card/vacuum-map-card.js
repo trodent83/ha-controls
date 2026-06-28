@@ -219,7 +219,7 @@ class VacuumMapCard extends HAControlBase {
         <!-- Toggle All Button - Defaults to Visible -->
         ${this.config.show_toggle !== false ? html`
           <div class="tile-button"
-               @click="${() => !isReadonly && this._toggleAll(rooms, selectedRooms, cleanSequence)}">
+               @click="${() => !isReadonly && !isEditMode && this._toggleAll(rooms, selectedRooms, cleanSequence)}">
             <div class="tile-icon-container">
                <ha-icon .icon="${allVisibleSelected ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline'}"></ha-icon>
             </div>
@@ -452,6 +452,7 @@ class VacuumMapCard extends HAControlBase {
    * @protected
    */
   _toggleAll(rooms, selectedRooms, cleanSequence) {
+    if (this.config.edit_mode) return;
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
     
     let newSelection = [];

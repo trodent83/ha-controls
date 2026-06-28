@@ -62,6 +62,7 @@
     border: 2px solid var(--selection-color, var(--primary-color, #10b981));
     box-shadow: 0 0 12px var(--room-color);
     font-weight: 500;
+    overflow: visible !important;
 }
 
 /* Hover effects for blocks */
@@ -359,4 +360,11 @@
     display: flex !important;
     align-items: center;
     justify-content: center;
+}
+
+/* Disable Select All button styling in edit mode */
+.container.edit-mode .tile-button {
+    pointer-events: none;
+    opacity: 0.45;
+    cursor: default;
 }

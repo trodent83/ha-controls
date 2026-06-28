@@ -15,9 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added a premium 8-directional edge (top, bottom, left, right) and corner (NW, NE, SW, SE) visual dragging and resizing system directly on the live map preview block element.
   - Isolated visual editor room selection focus from regular cleaning queues to ensure handles activate instantly on click/drag in edit mode.
   - Expanded resize hover edges to 16px and corner node hit targets to 26px to provide easy, high-comfort touch and mouse targeting.
+  - Set CSS `overflow: visible !important` on selected room blocks to prevent resize handles and corner nodes from being clipped by `.room-block` boundary styles.
   - Replaced the deprecated `<ha-textfield>` element with standard `<ha-input>` elements in the visual editor configurations repository-wide.
   - Rearranged the coordinates layout grid in the editor panel to a spacious 2-column layout to prevent fields from collapsing.
-  - Bumped loader to version `1.3.9` to force cache-busting.
+  - Disabled and visual-dimmed the "Select All" toggle button in edit mode to prevent altering active cleaning queues while editing room coordinates.
+  - Bumped loader to version `1.3.11` to force cache-busting.
 
 ## [1.2.11] - 2026-06-27
 
