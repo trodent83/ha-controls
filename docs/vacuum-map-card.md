@@ -51,10 +51,8 @@ You can customize each room individually inside the `rooms` configuration block:
 
 ## 🎨 Interactive Visual Placement Mode
 
-When `edit_mode: true` is toggled (either in YAML or via the GUI editor toolbar switch):
-* **Select Room**: Clicking a room block on the map highlights it and displays its **8-directional resizing handles**. Focus switches seamlessly as you click/drag different room blocks. Note that editing selections are isolated from regular cleaning selections so layout adjustments do not interfere with your cleaning queue.
-* **Visual Drag & Move**: Click and drag the center area of a room block to reposition it horizontally (`x`) and vertically (`y`).
-* **8-Directional Resizing**: Move your cursor over any edge border (thickness: `16px`) or any corner circle indicator node (generous touch hit target: `26px`) to scale dimensions (`w`, `h`) in any direction.
+* **Visual Drag & Move**: Click and drag the area of a room block to reposition it horizontally (`x`) and vertically (`y`) on the map.
+* **Layout Sizing**: Room dimensions (width `w` and height `h`) are configured by typing numeric percentage values into the `W (%)` and `H (%)` fields in the card editor configurations panel.
 * **Layout Toolbar Actions**:
   * **Flip H**: Flips the horizontal positioning of all rooms overlay layout blocks.
   * **Flip V**: Flips the vertical positioning of all rooms overlay layout blocks.

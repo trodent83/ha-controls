@@ -62,7 +62,6 @@
     border: 2px solid var(--selection-color, var(--primary-color, #10b981));
     box-shadow: 0 0 12px var(--room-color);
     font-weight: 500;
-    overflow: visible !important;
 }
 
 /* Hover effects for blocks */
@@ -243,91 +242,7 @@
     opacity: 1.0;
 }
 
-/* Grab resize handles positioned along edges and corners */
-.room-block.selected .resize-handle {
-    position: absolute;
-    background: transparent;
-    z-index: 15;
-    pointer-events: auto;
-}
 
-/* Edges (Double the hover width to 16px for easy selection, inset edges to prevent overlap) */
-.room-block.selected .resize-handle.top {
-    top: -8px;
-    left: 8px;
-    right: 8px;
-    height: 16px;
-    cursor: n-resize;
-}
-.room-block.selected .resize-handle.bottom {
-    bottom: -8px;
-    left: 8px;
-    right: 8px;
-    height: 16px;
-    cursor: s-resize;
-}
-.room-block.selected .resize-handle.left {
-    left: -8px;
-    top: 8px;
-    bottom: 8px;
-    width: 16px;
-    cursor: w-resize;
-}
-.room-block.selected .resize-handle.right {
-    right: -8px;
-    top: 8px;
-    bottom: 8px;
-    width: 16px;
-    cursor: e-resize;
-}
-
-/* Corners (visual nodes) */
-.room-block.selected .resize-handle.top-left,
-.room-block.selected .resize-handle.top-right,
-.room-block.selected .resize-handle.bottom-left,
-.room-block.selected .resize-handle.bottom-right {
-    width: 10px;
-    height: 10px;
-    background: var(--primary-color, #03a9f4);
-    border: 1.5px solid white;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-}
-
-.room-block.selected .resize-handle.top-left {
-    top: -6px;
-    left: -6px;
-    cursor: nwse-resize;
-}
-.room-block.selected .resize-handle.top-right {
-    top: -6px;
-    right: -6px;
-    cursor: nesw-resize;
-}
-.room-block.selected .resize-handle.bottom-left {
-    bottom: -6px;
-    left: -6px;
-    cursor: nesw-resize;
-}
-.room-block.selected .resize-handle.bottom-right {
-    bottom: -6px;
-    right: -6px;
-    cursor: nwse-resize;
-}
-
-/* Corners hit target expansion (adds invisible 26px target box) */
-.room-block.selected .resize-handle.top-left::after,
-.room-block.selected .resize-handle.top-right::after,
-.room-block.selected .resize-handle.bottom-left::after,
-.room-block.selected .resize-handle.bottom-right::after {
-    content: "";
-    position: absolute;
-    top: -8px;
-    left: -8px;
-    width: 26px;
-    height: 26px;
-    background: transparent;
-}
 
 /* Delete handle positioned in the top-right corner */
 .room-block .delete-handle {

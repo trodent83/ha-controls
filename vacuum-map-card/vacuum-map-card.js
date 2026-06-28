@@ -158,9 +158,7 @@ class VacuumMapCard extends HAControlBase {
         
         <div class="map-container">
           ${rooms.map(room => {
-            const isSelected = isEditMode
-              ? (this._selectedEditingRoomId === room.id)
-              : selectedRooms.includes(room.id);
+            const isSelected = selectedRooms.includes(room.id);
             const customConfig = this.config.rooms?.[room.id] || {};
             
             const x = customConfig.x !== undefined ? customConfig.x : 0;
@@ -199,17 +197,6 @@ class VacuumMapCard extends HAControlBase {
                   <div class="delete-handle" @click="${(e) => this._handleDeleteClick(e, room.id)}">
                     <ha-icon .icon=${'mdi:close'}></ha-icon>
                   </div>
-                  ${isSelected ? html`
-                    <div class="resize-handle top" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'n')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'n')}"></div>
-                    <div class="resize-handle bottom" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 's')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 's')}"></div>
-                    <div class="resize-handle left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'w')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'w')}"></div>
-                    <div class="resize-handle right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'e')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'e')}"></div>
-                    
-                    <div class="resize-handle top-left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'nw')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'nw')}"></div>
-                    <div class="resize-handle top-right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'ne')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'ne')}"></div>
-                    <div class="resize-handle bottom-left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'sw')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'sw')}"></div>
-                    <div class="resize-handle bottom-right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'se')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'se')}"></div>
-                  ` : ''}
                 ` : ''}
               </div>
             `;
@@ -261,9 +248,6 @@ class VacuumMapCard extends HAControlBase {
     if (e.target.closest('.resize-handle') || e.target.closest('.delete-handle')) return;
     
     e.stopPropagation();
-    
-    this._selectedEditingRoomId = roomId;
-    this.requestUpdate();
     
     const blockEl = e.target.closest('.room-block');
     if (!blockEl) return;
@@ -333,113 +317,7 @@ class VacuumMapCard extends HAControlBase {
     window.addEventListener('touchend', handleMouseUp);
   }
 
-  _handleEdgeResizeMouseDown(e, roomId, direction) {
-    if (!this.config.edit_mode) return;
-    
-    e.stopPropagation();
-    e.preventDefault();
-    
-    const blockEl = e.target.closest('.room-block');
-    if (!blockEl) return;
-    const mapContainer = this.shadowRoot.querySelector('.map-container');
-    const rect = mapContainer.getBoundingClientRect();
-    
-    const startClientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    const customConfig = this.config.rooms?.[roomId] || {};
-    const rawX = parseFloat(customConfig.x);
-    const rawY = parseFloat(customConfig.y);
-    const rawW = parseFloat(customConfig.w);
-    const rawH = parseFloat(customConfig.h);
-    
-    const startX = !isNaN(rawX) ? rawX : 0;
-    const startY = !isNaN(rawY) ? rawY : 0;
-    const startW = !isNaN(rawW) ? rawW : 15;
-    const startH = !isNaN(rawH) ? rawH : 15;
-    
-    let finalX = startX;
-    let finalY = startY;
-    let finalW = startW;
-    let finalH = startH;
-    
-    const handleMouseMove = (ev) => {
-      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-      
-      const deltaX = clientX - startClientX;
-      const deltaY = clientY - startClientY;
-      
-      const pctDeltaX = (deltaX / rect.width) * 100;
-      const pctDeltaY = (deltaY / rect.height) * 100;
-      
-      // Calculate adjustments based on direction
-      // Top resize
-      if (direction.includes('n')) {
-        const potentialY = startY + pctDeltaY;
-        const potentialH = startH - pctDeltaY;
-        if (potentialH >= 2 && potentialY >= 0) {
-          finalY = Math.round(potentialY);
-          finalH = Math.round(potentialH);
-        }
-      }
-      // Bottom resize
-      if (direction.includes('s')) {
-        const potentialH = startH + pctDeltaY;
-        if (potentialH >= 2) {
-          finalH = Math.round(potentialH);
-          finalH = Math.max(2, Math.min(100 - finalY, finalH));
-        }
-      }
-      // Left resize
-      if (direction.includes('w')) {
-        const potentialX = startX + pctDeltaX;
-        const potentialW = startW - pctDeltaX;
-        if (potentialW >= 2 && potentialX >= 0) {
-          finalX = Math.round(potentialX);
-          finalW = Math.round(potentialW);
-        }
-      }
-      // Right resize
-      if (direction.includes('e')) {
-        const potentialW = startW + pctDeltaX;
-        if (potentialW >= 2) {
-          finalW = Math.round(potentialW);
-          finalW = Math.max(2, Math.min(100 - finalX, finalW));
-        }
-      }
-      
-      blockEl.style.left = `${finalX}%`;
-      blockEl.style.top = `${finalY}%`;
-      blockEl.style.width = `${finalW}%`;
-      blockEl.style.height = `${finalH}%`;
-    };
-    
-    const handleMouseUp = () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleMouseMove);
-      window.removeEventListener('touchend', handleMouseUp);
-      
-      const event = new CustomEvent("room-layout-changed", {
-        detail: {
-          roomId: roomId,
-          x: finalX,
-          y: finalY,
-          w: finalW,
-          h: finalH
-        },
-        bubbles: true,
-        composed: true
-      });
-      this.dispatchEvent(event);
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchmove', handleMouseMove, { passive: true });
-    window.addEventListener('touchend', handleMouseUp);
-  }
+
 
   /**
    * Toggles the selection state of all visible rooms.
