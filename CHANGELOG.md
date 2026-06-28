@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2026-06-28
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Implemented automatic layout coordinates extraction from Home Assistant map camera entities (`camera.*_map*`), parsing absolute coordinates and mapping them to 0-100% card percentage boundaries.
+  - Added support for extracting coordinates directly from the room's geometry `outline` points array attribute as a fallback.
+  - Added layout transformation actions (**Flip H**, **Flip V**, and **Rotate 90°** clockwise) in the editor toolbar to instantly align room overlay configurations.
+  - Integrated Home Assistant room name entities (`select.*_room_*_name`) to display and dynamically update room names globally directly from the card editor dropdown.
+  - Replaced the text icon configuration input with Home Assistant's built-in visual `<ha-icon-picker>` search select dialog.
+  - Added numeric coordinates/sizes input fields in the editor expanded panel.
+  - Added robust validation to filter out `NaN` values and protect coordinates configuration from corrupting.
+  - Prevented drag-and-resize layout lag on the map display by disabling room block transitions dynamically when edit mode is active.
+  - Bumped loader to version `1.3.3` to force cache-busting.
+
 ## [1.2.11] - 2026-06-27
 
 ### Added

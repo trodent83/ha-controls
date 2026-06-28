@@ -497,6 +497,84 @@ class VacuumMapCardEditor extends HAControlBase {
     alert(`Successfully extracted coordinates for ${roomCoordinates.length} rooms from camera "${selectedCameraId}"!`);
   }
 
+  _flipLayoutHorizontal() {
+    if (!this._config?.rooms) return;
+    const rooms = { ...this._config.rooms };
+    let changed = false;
+    for (const [id, r] of Object.entries(rooms)) {
+      if (r && r.x !== undefined && r.w !== undefined) {
+        const x = parseFloat(r.x);
+        const w = parseFloat(r.w);
+        if (!isNaN(x) && !isNaN(w)) {
+          rooms[id] = {
+            ...r,
+            x: Math.max(0, Math.min(100 - w, Math.round(100 - x - w)))
+          };
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      this._config = { ...this._config, rooms };
+      this._fireConfigChanged();
+    }
+  }
+
+  _flipLayoutVertical() {
+    if (!this._config?.rooms) return;
+    const rooms = { ...this._config.rooms };
+    let changed = false;
+    for (const [id, r] of Object.entries(rooms)) {
+      if (r && r.y !== undefined && r.h !== undefined) {
+        const y = parseFloat(r.y);
+        const h = parseFloat(r.h);
+        if (!isNaN(y) && !isNaN(h)) {
+          rooms[id] = {
+            ...r,
+            y: Math.max(0, Math.min(100 - h, Math.round(100 - y - h)))
+          };
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      this._config = { ...this._config, rooms };
+      this._fireConfigChanged();
+    }
+  }
+
+  _rotateLayout90() {
+    if (!this._config?.rooms) return;
+    const rooms = { ...this._config.rooms };
+    let changed = false;
+    for (const [id, r] of Object.entries(rooms)) {
+      if (r && r.x !== undefined && r.y !== undefined && r.w !== undefined && r.h !== undefined) {
+        const x = parseFloat(r.x);
+        const y = parseFloat(r.y);
+        const w = parseFloat(r.w);
+        const h = parseFloat(r.h);
+        if (!isNaN(x) && !isNaN(y) && !isNaN(w) && !isNaN(h)) {
+          const newW = h;
+          const newH = w;
+          const newX = Math.max(0, Math.min(100 - newW, Math.round(100 - y - h)));
+          const newY = Math.max(0, Math.min(100 - newH, Math.round(x)));
+          rooms[id] = {
+            ...r,
+            x: newX,
+            y: newY,
+            w: newW,
+            h: newH
+          };
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      this._config = { ...this._config, rooms };
+      this._fireConfigChanged();
+    }
+  }
+
   _addCustomRoom() {
     const id = this._newRoomId?.trim();
     const label = this._newRoomLabel?.trim();
@@ -712,12 +790,26 @@ class VacuumMapCardEditor extends HAControlBase {
           </div>
 
           <!-- Configured/Discovered Rooms List -->
-          <div class="editor-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="editor-section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <span>Rooms Layout & Settings (${rooms.length})</span>
-            <ha-button @click=${this._autoExtractLayout} outlined style="--mdc-theme-primary: var(--primary-color);">
-              <ha-icon icon="mdi:auto-upload" slot="icon"></ha-icon>
-              Auto-Extract Layout
-            </ha-button>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <ha-button @click=${this._autoExtractLayout} outlined style="--mdc-theme-primary: var(--primary-color);">
+                <ha-icon icon="mdi:auto-upload" slot="icon"></ha-icon>
+                Auto-Extract
+              </ha-button>
+              <ha-button @click=${this._flipLayoutHorizontal} outlined title="Flip Horizontally">
+                <ha-icon icon="mdi:flip-horizontal" slot="icon"></ha-icon>
+                Flip H
+              </ha-button>
+              <ha-button @click=${this._flipLayoutVertical} outlined title="Flip Vertically">
+                <ha-icon icon="mdi:flip-vertical" slot="icon"></ha-icon>
+                Flip V
+              </ha-button>
+              <ha-button @click=${this._rotateLayout90} outlined title="Rotate 90 Degrees Clockwise">
+                <ha-icon icon="mdi:rotate-right" slot="icon"></ha-icon>
+                Rotate 90°
+              </ha-button>
+            </div>
           </div>
           <div class="rooms-list">
             ${rooms.map((room) => {
