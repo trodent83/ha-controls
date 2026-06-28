@@ -23,6 +23,7 @@ Below is the complete configuration schema for the card. Define these fields in 
 | `show_finished_events`| boolean | No | `true` | When set to `false`, events that have already ended will be filtered out and hidden. |
 | `show_refresh_button` | boolean | No | `true` | Displays a reload icon button in the header bar. |
 | `sidebar_position` | string | No | `right` | Position of the list visibility toggle panel. Supported values: `right`, `left`, `top`, `bottom`, `hidden`. |
+| `event_features` | array | No | Default list | List of features displayed in the event details popup dialog. Supported: `time`, `location`, `description`, `attendees`. |
 
 ---
 

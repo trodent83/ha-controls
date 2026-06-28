@@ -32,11 +32,24 @@ ha-card {
 
 /* Flex row grouping room title header and status badges list */
 .card-content {
-  padding: 12px 12px !important;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* Default / Subtitle style card spacing */
+.card-content,
+.card-content.subtitle {
+  padding: 8px 16px !important;
+  min-height: 40px;
+}
+
+/* Title style card spacing */
+.card-content.title {
+  padding: 12px 16px !important;
+  min-height: 56px;
 }
 
 /* Left aligned room name icon/label container */
@@ -44,9 +57,34 @@ ha-card {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Default / Subtitle style styling */
+.header_container,
+.header_container.subtitle {
   font-size: 16px;
   font-weight: 500;
+  line-height: 24px;
   color: var(--secondary-text-color);
+}
+
+.header_container ha-icon,
+.header_container.subtitle ha-icon {
+  --mdc-icon-size: 20px;
+  color: inherit;
+}
+
+/* Title style overrides */
+.header_container.title {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--primary-text-color);
+}
+
+.header_container.title ha-icon {
+  --mdc-icon-size: 24px;
+  color: inherit;
 }
 
 /* Title text typography rules */
@@ -54,12 +92,6 @@ ha-card {
   margin: 0;
   font-size: inherit;
   line-height: inherit;
-}
-
-/* Title icon size */
-.header_container ha-icon {
-  --mdc-icon-size: 22px;
-  color: inherit;
 }
 
 /* Right aligned row container for sensors badges */
@@ -86,4 +118,18 @@ ha-card {
   color: inherit;
   color: var(--badge-color);
   --mdc-icon-size: 20px;
+}
+
+/* Center nested feature elements vertically with icons */
+.status_badge feature-renderer-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status_badge feature-renderer-card > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }

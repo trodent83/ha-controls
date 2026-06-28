@@ -1,0 +1,260 @@
+/* ==========================================================================
+   RADIATOR CONTROL CARD STYLESHEET
+   Supports responsive grid layouts, custom HSL hover/active states, 
+   thermostat target controllers, and GPU-accelerated animations.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Card container outer wrap */
+ha-card {
+  border-radius: var(--ha-card-border-radius, 12px);
+  overflow: hidden;
+  padding: 16px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--ha-card-background, var(--card-background-color, rgba(20, 24, 28, 0.9)));
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.05));
+  box-shadow: var(--ha-card-box-shadow, 0 4px 16px rgba(0, 0, 0, 0.25));
+  transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   HEADER SECTION STYLES
+   ========================================================================== */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-text-color);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.title-icon {
+  --mdc-icon-size: 20px;
+  color: var(--secondary-text-color);
+}
+
+/* Blinks radiator icon if heating state is active */
+.title-icon.heating {
+  color: var(--warning-color, orange);
+  animation: blink-orange 1.5s linear infinite;
+  will-change: opacity, color;
+}
+
+.temp-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: rgba(var(--rgb-primary-text-color), 0.05);
+}
+
+/* ==========================================================================
+   TARGET THERMOSTAT CONTROLLER
+   ========================================================================== */
+.target-controller {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  padding: 8px 0;
+  transition: opacity 0.25s ease;
+}
+
+.target-controller.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.adjust-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(var(--rgb-primary-text-color), 0.08);
+  color: var(--primary-text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.adjust-btn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.adjust-btn:hover {
+  background: rgba(var(--rgb-primary-text-color), 0.15);
+}
+
+.adjust-btn:active {
+  transform: scale(0.9);
+}
+
+.adjust-btn ha-icon {
+  --mdc-icon-size: 22px;
+}
+
+.target-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.target-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary-text-color);
+}
+
+.target-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  margin-top: 4px;
+  color: var(--secondary-text-color);
+}
+
+/* ==========================================================================
+   MODE SELECTOR SEGMENTED BUTTONS
+   ========================================================================== */
+.mode-selector {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  transition: opacity 0.25s ease;
+}
+
+.mode-selector.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: rgba(var(--rgb-primary-text-color), 0.05);
+  color: var(--disabled-text-color);
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.mode-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.mode-btn:hover {
+  background: rgba(var(--rgb-primary-text-color), 0.08);
+  color: var(--primary-text-color);
+}
+
+.mode-btn.active {
+  color: var(--primary-background-color, #fff);
+  font-weight: 500;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mode-btn ha-icon {
+  --mdc-icon-size: 20px;
+  margin-bottom: 4px;
+}
+
+.mode-label {
+  font-size: 9px;
+  text-align: center;
+}
+
+/* Rotation for active fan modes */
+.mode-btn.active.rotating ha-icon {
+  animation: rotation-loop 2s linear infinite;
+  will-change: transform;
+}
+
+/* Pulsing effect for active heat states */
+.mode-btn.active.pulse ha-icon {
+  animation: pulse-loop 2.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ==========================================================================
+   TIMER COUNTDOWN BAR
+   ========================================================================== */
+.timer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(var(--rgb-warning-color, 255, 152, 0), 0.1);
+  color: var(--warning-color, orange);
+  font-size: 11px;
+  font-weight: 500;
+  box-sizing: border-box;
+  animation: pulse-timer 3s ease-in-out infinite;
+}
+
+.timer-container ha-icon {
+  --mdc-icon-size: 14px;
+}
+
+/* ==========================================================================
+   ANIMATIONS DEFINITIONS
+   ========================================================================== */
+@keyframes rotation-loop {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-loop {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+@keyframes pulse-timer {
+  0%, 100% { background: rgba(var(--rgb-warning-color, 255, 152, 0), 0.1); }
+  50% { background: rgba(var(--rgb-warning-color, 255, 152, 0), 0.18); }
+}
+
+@keyframes blink-orange {
+  0%, 100% { opacity: 1; color: var(--warning-color, orange); }
+  50% { opacity: 0.3; color: var(--primary-text-color); }
+}

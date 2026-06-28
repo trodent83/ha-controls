@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -269,6 +269,8 @@ class MultiStateCardEditor extends HAControlBase {
       cleaned.entities = this._config.entities.map(ent => {
         const e = {};
         if (ent.entity !== undefined) e.entity = ent.entity;
+        if (ent.disabled_expression !== undefined) e.disabled_expression = ent.disabled_expression;
+        if (ent.state_animations !== undefined) e.state_animations = ent.state_animations;
         if (ent.tap_action !== undefined) e.tap_action = ent.tap_action;
         if (ent.hold_action !== undefined) e.hold_action = ent.hold_action;
         if (ent.features !== undefined) e.features = ent.features;
@@ -341,12 +343,14 @@ class MultiStateCardEditor extends HAControlBase {
 
               const combinedData = {
                 entity: ent.entity || "",
+                disabled_expression: ent.disabled_expression || "",
                 tap_action: ent.tap_action || { action: "none" },
                 hold_action: ent.hold_action || { action: "none" }
               };
 
               const combinedSchema = [
                 { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
+                { name: "disabled_expression", label: this._localize('disabled_expression') || "Disabled Expression", selector: { text: {} } },
                 { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
                 { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
               ];

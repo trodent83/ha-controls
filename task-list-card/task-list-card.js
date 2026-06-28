@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -128,6 +128,10 @@ class TaskListCard extends HAControlBase {
    * @returns {boolean} True if the card should re-render, false otherwise
    */
   shouldUpdate(changedProps) {
+    if (changedProps.has('config')) {
+      return true;
+    }
+
     if (!changedProps.has("hass")) {
       return true;
     }
@@ -161,7 +165,7 @@ class TaskListCard extends HAControlBase {
       return false;
     }
 
-    return true;
+    return super.shouldUpdate(changedProps);
   }
 
   /**

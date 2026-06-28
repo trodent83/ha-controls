@@ -48,6 +48,11 @@ Renders the localized main state value of the parent entity or an overridden ent
 | `entity` | string | No | Parent Entity | Optional entity ID override to read the state value from. |
 | `prefix` | string | No | — | Text printed immediately before the state value. |
 | `suffix` | string | No | — | Text printed immediately after the state value. |
+| `font_size` | string | No | — | CSS font size parameter (e.g., `12px` or `0.85rem`). |
+| `font_weight`| string | No | `normal` | Text thickness weight class. Supported values: `normal`, `bold`. |
+| `text_align` | string | No | `left` | Text alignment inside its slot. Supported values: `left`, `center`, `right`. |
+| `color` | string | No | `inherit` | Default text color CSS style. |
+| `thresholds` | array | No | — | Threshold rules configuration block to customize color/animations based on state value limits. |
 
 ---
 
@@ -61,6 +66,11 @@ Renders a specific subproperty (attribute) of the parent entity or an overridden
 | `entity` | string | No | Parent Entity | Optional entity ID override to read the attribute from. |
 | `prefix` | string | No | — | Text printed before the attribute value. |
 | `suffix` | string | No | — | Text printed after the attribute value. |
+| `font_size` | string | No | — | CSS font size parameter (e.g., `12px` or `0.85rem`). |
+| `font_weight`| string | No | `normal` | Text thickness weight class. Supported values: `normal`, `bold`. |
+| `text_align` | string | No | `left` | Text alignment inside its slot. Supported values: `left`, `center`, `right`. |
+| `color` | string | No | `inherit` | Default text color CSS style. |
+| `thresholds` | array | No | — | Threshold rules configuration block to customize color/animations based on attribute value limits. |
 
 ---
 

@@ -1,0 +1,129 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#grid-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.grid-item-wrapper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Dim & blur background when popup is active */
+#grid-container.popup-active {
+  pointer-events: none;
+  filter: blur(5px) grayscale(20%);
+  opacity: 0.55;
+}
+
+/* Semi-transparent backdrop scrim */
+.popup-scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Centered popup window at 1:1 scale (independent of scaling) */
+.popup-window-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  max-width: 92vw;
+  max-height: 92vh;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+  animation: popup-appear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.popup-card-wrapper {
+  background: var(--ha-card-background, var(--card-background-color, #1c1c1e));
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  position: relative;
+  overflow: auto;
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+  min-width: 320px;
+}
+
+.popup-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-text-color, #ffffff);
+}
+
+.popup-body {
+  width: 100%;
+}
+
+.popup-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--secondary-text-color, #a0a0a2);
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.popup-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--primary-text-color, #ffffff);
+}
+
+@keyframes popup-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

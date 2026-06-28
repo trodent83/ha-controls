@@ -3,6 +3,11 @@
    Centralized animation keyframes for custom Lovelace dashboard features.
    ========================================================================== */
 
+/* GPU Optimization */
+.bounce, .rotating, .pulse, .shake, .float, .spin-slow {
+  will-change: transform;
+}
+
 /* Blink animation */
 .blink {
   animation: blink-anim 1s infinite alternate;
@@ -46,8 +51,8 @@
   animation: spin-slow-anim 8s infinite linear;
 }
 @keyframes spin-slow-anim {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg) translateZ(0); }
+  100% { transform: rotate(360deg) translateZ(0); }
 }
 
 /* Bounce animation */
@@ -80,3 +85,13 @@
   0%, 50%, 100% { opacity: 1; }
   25%, 75% { opacity: 0; }
 }
+
+/* Rotating animation */
+.rotating {
+  animation: rotating-anim 2s infinite linear;
+}
+@keyframes rotating-anim {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
+

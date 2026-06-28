@@ -1,0 +1,203 @@
+/* ==========================================================================
+   LIGHT CONTROL CARD STYLESHEET
+   Styles the light row layout, brightness/color sliders, and offline states.
+   ========================================================================== */
+
+ha-card {
+  padding: 16px;
+  background: var(--ha-card-background, rgba(255, 255, 255, 0.05));
+  border-radius: var(--ha-card-border-radius, 12px);
+  border: var(--ha-card-border, 1px solid rgba(255, 255, 255, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* Header Row layout */
+.light-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.light-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Glowing bulb icon classes */
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05);
+  transition: all 0.3s ease;
+}
+
+.icon-container.is-on {
+  background: var(--light-color-glow, rgba(255, 215, 0, 0.2));
+  box-shadow: 0 0 10px var(--light-color-glow, rgba(255, 215, 0, 0.15));
+}
+
+.light-icon {
+  --mdc-icon-size: 22px;
+  color: var(--secondary-text-color);
+  transition: color 0.3s ease;
+}
+
+.icon-container.is-on .light-icon {
+  color: var(--light-color, #ffd700);
+}
+
+/* Text elements styling */
+.text-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.light-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.light-status {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+  margin-top: 2px;
+}
+
+/* Controls section (with sliding expansion animation) */
+.light-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
+}
+
+.light-controls.is-expanded {
+  max-height: 250px; /* Expands to show sliders */
+  opacity: 1;
+  padding-top: 4px;
+}
+
+/* Individual slider row layout */
+.control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--secondary-text-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-value {
+  color: var(--primary-text-color);
+}
+
+/* Premium Range Sliders styling */
+.slider-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+input[type="range"].light-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.08);
+  margin: 8px 0;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+/* Specific background tracks */
+input[type="range"].light-slider.brightness-slider {
+  background: linear-gradient(to right, rgba(255,255,255,0.05), rgba(var(--rgb-primary-color, 3, 169, 244), 0.6));
+}
+
+input[type="range"].light-slider.temp-slider {
+  /* Warm orange to cool white/blue gradient */
+  background: linear-gradient(to right, #ffb366, #ffdf80, #ffffff, #cce0ff, #80b3ff);
+}
+
+input[type="range"].light-slider.hue-slider {
+  /* Rainbow hue gradient */
+  background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+}
+
+/* Slider Thumb styling (Webkit) */
+input[type="range"].light-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+
+input[type="range"].light-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"].light-slider::-webkit-slider-thumb:active {
+  transform: scale(1.0);
+}
+
+/* Slider Thumb styling (Mozilla) */
+input[type="range"].light-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+
+input[type="range"].light-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Unavailable/Offline elements locking */
+.is-unavailable {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--error-color, #db4437);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+}

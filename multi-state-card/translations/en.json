@@ -9,6 +9,7 @@
   "tap_action": "Tap Action",
   "hold_action": "Hold Action",
   "entity_override": "Entity Override",
+  "disabled_expression": "Disabled Expression",
   "add_entity": "Add Entity",
   "add_feature": "Add Feature",
   "unrecognized_settings": "Unrecognized configuration settings: {keys}",

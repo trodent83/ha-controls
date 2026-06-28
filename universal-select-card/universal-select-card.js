@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -52,58 +52,7 @@ class UniversalSelectCard extends HAControlBase {
     return 1;
   }
 
-  /**
-   * Controls when the element should re-render to optimize dashboard performance.
-   * Re-renders on config updates or only when configured entities, labels, or feature items change state.
-   * 
-   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
-   * @returns {boolean} True if the card should re-render, false otherwise
-   */
-  shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
-      return true;
-    }
 
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config) return true;
-
-      // Update if the main controlled entity changes its state
-      if (oldHass.states[this.config.entity] !== this.hass.states[this.config.entity]) {
-        return true;
-      }
-
-      // Update if the locking entity changes its state (used to disable the control)
-      if (this.config.lock_entity && 
-          oldHass.states[this.config.lock_entity] !== this.hass.states[this.config.lock_entity]) {
-        return true;
-      }
-
-      const stateObj = this.hass.states[this.config.entity];
-      if (stateObj) {
-        const option = stateObj.state;
-        const optCfg = this.config.options_config?.[option];
-        
-        // If the option's label depends on another entity's state, update when that entity changes
-        if (optCfg?.active_label_entity && 
-            oldHass.states[optCfg.active_label_entity] !== this.hass.states[optCfg.active_label_entity]) {
-          return true;
-        }
-        
-        // Propagate updates if any feature entity state changes
-        if (Array.isArray(optCfg?.features)) {
-          for (const feature of optCfg.features) {
-            const fEntity = feature.entity;
-            if (fEntity && oldHass.states[fEntity] !== this.hass.states[fEntity]) {
-              return true;
-            }
-          }
-        }
-      }
-      return false;
-    }
-    return true;
-  }
 
   /**
    * Renders the custom card's HTML template.

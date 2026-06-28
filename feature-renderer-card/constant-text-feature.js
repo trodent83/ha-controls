@@ -1,10 +1,10 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /**
  * ConstantTextFeature
@@ -98,7 +98,10 @@ class ConstantTextFeature extends HAControlBase {
       text-align: ${this.config.text_align || 'center'};
     `;
 
-    return html`<div style="${style}">${text}</div>`;
+    return html`
+      ${this.renderStyle('constant-text-feature.css')}
+      <div style="${style}">${text}</div>
+    `;
   }
 }
 

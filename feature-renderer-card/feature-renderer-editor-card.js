@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * FeatureRendererEditorCard
@@ -87,4 +87,6 @@ export class FeatureRendererEditorCard extends HAControlBase {
   }
 }
 
-customElements.define("feature-renderer-editor-card", FeatureRendererEditorCard);
+if (!customElements.get("feature-renderer-editor-card")) {
+  customElements.define("feature-renderer-editor-card", FeatureRendererEditorCard);
+}

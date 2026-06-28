@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -97,14 +97,15 @@ class RoomStatusCard extends HAControlBase {
     const header_settings = this.config.header_settings || {};
     const show_header = header_settings.show_header !== false; // Default true
     const show_icon = header_settings.show_icon !== false;     // Default true
+    const heading_style = header_settings.heading_style || 'subtitle'; // Default subtitle
 
     const badges = this.config.badges || [];
 
     return html`
       ${this.renderStyle('room-status-card.css')}
       <ha-card>
-        <div class="card-content">
-          <div class="header_container">
+        <div class="card-content ${heading_style}">
+          <div class="header_container ${heading_style}">
           ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
           ${show_header ? html`<span class="room_title">${this.config.name}</span>` : ''}
           </div>

@@ -1,0 +1,17 @@
+/* ==========================================================================
+   LIGHT CONTROL CARD EDITOR STYLESHEET
+   Styles settings rows and buttons inside the visual card editor.
+   ========================================================================== */
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color);
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color);
+}

@@ -18,6 +18,7 @@
   "shake": "Shake",
   "float": "Float",
   "spin_slow": "Spin Slow",
+  "active_label_entity": "Active Label Entity",
   "active_label_script": "Active Label Script (JS)",
   "hold_action": "Hold Action (Selected)",
   "button_option": "Button: {option}",

@@ -27,6 +27,8 @@ Each button tile inside the `entities` array is configured as follows:
 | :--- | :--- | :--- | :--- | :--- |
 | `entity` | string | **Yes** | — | Target entity ID to monitor and associate with this button (e.g. `switch.hallway_light`). |
 | `condition` | string | No | — | JavaScript visibility expression. If it evaluates to `false`, the button is hidden. See [Conditional Visibility](#conditional-visibility). |
+| `disabled_expression` | string | No | — | JavaScript expression. If it evaluates to `true`, the button interaction is disabled and opacity is lowered. |
+| `state_animations` | object | No | — | Map of entity state values to animation classes (e.g., `locking: rotating`). |
 | `tap_action` | object | No | — | Lovelace tap action configuration (e.g., toggle, more-info, call-service). |
 | `hold_action` | object | No | — | Lovelace long-press action configuration. |
 | `features` | array | No | — | Nested array of child card feature configurations (like icons, texts, or timers) rendered inside the button. |

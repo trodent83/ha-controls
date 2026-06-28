@@ -1,0 +1,26 @@
+/* ==========================================================================
+   RADIATOR CONTROL CARD EDITOR STYLESHEET
+   Supports card configuration editor layouts, labels, and actions.
+   ========================================================================== */
+
+.editor-form {
+  padding: 8px 0;
+}
+
+ha-form {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+  padding-top: 16px;
+}
+
+ha-button.warning {
+  --mdc-theme-primary: var(--error-color, #ff5252);
+}

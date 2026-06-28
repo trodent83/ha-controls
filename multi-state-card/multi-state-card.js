@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -57,56 +57,28 @@ class MultiStateCard extends HAControlBase {
    * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
    * @returns {boolean} True if the card should re-render, false otherwise
    */
-  shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
-      this._conditionCache = {};
-      return true;
+  /**
+   * Evaluates JavaScript expression securely in a local closure scope.
+   * 
+   * @param {string} expr - Expression string
+   * @param {Object} stateObj - Entity state object
+   * @private
+   * @returns {any} Result of evaluation
+   */
+  _evalExpression(expr, stateObj) {
+    if (!expr) return undefined;
+    try {
+      const hass = this.hass;
+      const entity = stateObj;
+      const state = stateObj?.state;
+      const attributes = stateObj?.attributes || {};
+      return eval(expr);
+    } catch (e) {
+      console.error("[MultiStateCard] Error evaluating expression:", expr, e);
+      return undefined;
     }
-
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config || !this.config.entities) return true;
-
-      let hasChanges = false;
-      if (!this._conditionCache) this._conditionCache = {};
-
-      for (const [index, ent] of this.config.entities.entries()) {
-        if (!ent) continue;
-        const entityId = typeof ent === 'string' ? ent : ent.entity;
-        if (!entityId) continue;
-        const stateObj = entityId ? this.hass.states[entityId] : undefined;
-        const oldStateObj = entityId ? oldHass.states[entityId] : undefined;
-        
-        const stateChanged = oldStateObj !== stateObj;
-        
-        let conditionResult = true;
-        let conditionChanged = false;
-
-        if (typeof ent === 'object' && ent.condition) {
-          try {
-            const hass = this.hass;
-            const entity = stateObj;
-            const state = stateObj?.state;
-            const attributes = stateObj?.attributes;
-            conditionResult = !!eval(ent.condition);
-          } catch (e) {
-            conditionResult = false;
-          }
-
-          if (this._conditionCache[index] !== conditionResult) {
-            this._conditionCache[index] = conditionResult;
-            conditionChanged = true;
-          }
-        }
-
-        if (conditionChanged || (conditionResult && stateChanged)) {
-          hasChanges = true;
-        }
-      }
-      return hasChanges;
-    }
-    return true;
   }
+
 
   /**
    * Returns default stub configuration details for this custom card.
@@ -159,29 +131,25 @@ class MultiStateCard extends HAControlBase {
             }
           }
 
+          const isUnavailable = !stateObj || stateObj.state === 'unavailable';
+          const isDisabled = (typeof entConf === 'object' && entConf.disabled_expression)
+            ? !!this._evalExpression(entConf.disabled_expression, stateObj)
+            : false;
+
           return html`<div class="multi-state-entity">
             <div
-              class="btn"
+              class="btn ${isUnavailable ? 'is-unavailable' : ''} ${isDisabled ? 'is-disabled' : ''}"
               @click="${() => this._runAction(entConf, 'tap')}"
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >
               ${(entConf.features && Array.isArray(entConf.features)) ? html`
                 <div class="features-container">
                   ${entConf.features.filter(featureConfig => {
-                    if (featureConfig.condition) {
-                      try {
-                        const hass = this.hass;
-                        const entity = stateObj;
-                        const state = stateObj?.state;
-                        const attributes = stateObj?.attributes;
-                        return eval(featureConfig.condition);
-                      } catch (e) {
-                        console.error("Error evaluating condition for feature", featureConfig, e);
-                        return false;
-                      }
-                    }
-                    return true;
-                  }).map(featureConfig => html`
+            if (featureConfig.condition) {
+              return !!this._evalExpression(featureConfig.condition, stateObj);
+            }
+            return true;
+          }).map(featureConfig => html`
                     <feature-renderer-card
                       .hass=${this.hass}
                       .config=${featureConfig}
@@ -209,6 +177,17 @@ class MultiStateCard extends HAControlBase {
   _runAction(item, actionType) {
     const actionConfig = actionType === 'hold' ? item.hold_action : item.tap_action;
     if (!actionConfig || actionConfig.action === "none") return;
+    
+    // Direct dispatch of ll-custom for fire-dom-event actions to ensure bubbling to layout container
+    if (actionConfig.action === "fire-dom-event") {
+      this.dispatchEvent(new CustomEvent("ll-custom", {
+        detail: actionConfig,
+        bubbles: true,
+        composed: true
+      }));
+      return;
+    }
+
     this.dispatchEvent(new CustomEvent("hass-action", {
       detail: { config: item, action: actionType },
       bubbles: true, composed: true,

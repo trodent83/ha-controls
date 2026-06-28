@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -263,6 +263,18 @@ class RoomStatusCardEditor extends HAControlBase {
         schema: [
           { name: "show_header", label: this._localize('display_room_name'), selector: { boolean: {} } },
           { name: "show_icon", label: this._localize('display_icon'), selector: { boolean: {} } },
+          {
+            name: "heading_style",
+            label: this._localize('heading_style') || "Heading Style",
+            selector: {
+              select: {
+                options: [
+                  { value: "title", label: this._localize('style_title') || "Title" },
+                  { value: "subtitle", label: this._localize('style_subtitle') || "Subtitle" }
+                ]
+              }
+            }
+          }
         ]
       }
     ];
@@ -287,8 +299,18 @@ class RoomStatusCardEditor extends HAControlBase {
     };
     addIfDiff("name", "Room");
     addIfDiff("icon", "mdi:home");
-    if (this._config.show_header !== undefined) cleaned.show_header = this._config.show_header;
-    if (this._config.show_icon !== undefined) cleaned.show_icon = this._config.show_icon;
+    if (this._config.header_settings !== undefined) {
+      cleaned.header_settings = {};
+      if (this._config.header_settings.show_header !== undefined) {
+        cleaned.header_settings.show_header = this._config.header_settings.show_header;
+      }
+      if (this._config.header_settings.show_icon !== undefined) {
+        cleaned.header_settings.show_icon = this._config.header_settings.show_icon;
+      }
+      if (this._config.header_settings.heading_style !== undefined && this._config.header_settings.heading_style !== 'subtitle') {
+        cleaned.header_settings.heading_style = this._config.header_settings.heading_style;
+      }
+    }
     
     if (this._config.badges && Array.isArray(this._config.badges)) {
       cleaned.badges = this._config.badges.map(badge => {
@@ -350,7 +372,13 @@ class RoomStatusCardEditor extends HAControlBase {
       ${this._activeTab === 'general' ? html`
         <ha-form
           .hass=${this.hass}
-          .data=${this._config}
+          .data=${{
+            ...this._config,
+            header_settings: {
+              heading_style: 'subtitle',
+              ...this._config.header_settings
+            }
+          }}
           .schema=${this._schema()}
           .computeLabel=${(schema) => schema.label || schema.name}
           @value-changed=${this._valueChanged}

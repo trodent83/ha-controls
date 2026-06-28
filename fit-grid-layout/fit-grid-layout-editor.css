@@ -1,0 +1,57 @@
+/* ==========================================================================
+   FIT GRID LAYOUT EDITOR STYLESHEET
+   Styles for tab lists, forms, and general controls editing panels.
+   ========================================================================== */
+
+.panel-content {
+  padding: 12px 0;
+}
+
+.form-divider {
+  border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
+  margin: 24px 0 16px 0;
+}
+
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
+  margin-bottom: 8px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--secondary-text-color, #a0a0a2);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color, #ffffff);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color, #4caf50);
+  border-bottom: 2px solid var(--primary-color, #4caf50);
+}
+
+/* Editor utility actions */
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
+  padding-top: 16px;
+}
+
+.editor-actions ha-button.warning {
+  --mdc-theme-primary: var(--error-color, #ff5252);
+}

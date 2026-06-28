@@ -4,6 +4,164 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2026-06-28
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Implemented automatic layout coordinates extraction from Home Assistant map camera entities (`camera.*_map*`), parsing absolute coordinates and mapping them to 0-100% card percentage boundaries.
+  - Added support for extracting coordinates directly from the room's geometry `outline` points array attribute as a fallback.
+  - Added layout transformation actions (**Flip H**, **Flip V**, and **Rotate 90°** clockwise) in the editor toolbar to instantly align room overlay configurations.
+  - Integrated Home Assistant room name entities (`select.*_room_*_name`) to display and dynamically update room names globally directly from the card editor dropdown.
+  - Replaced the deprecated `<ha-textfield>` element with standard `<ha-input>` elements in the visual editor configurations repository-wide.
+  - Rearranged the coordinates layout grid in the editor panel to a spacious 2-column layout to prevent fields from collapsing.
+  - Disabled and visual-dimmed the "Select All" toggle button in edit mode to prevent altering active cleaning queues while editing room coordinates.
+  - Removed visual drag-resizing handles from map overlay blocks to simplify placement. Room overlay sizing is configured exclusively via the card editor's numeric text input fields.
+  - Added support for configuring L-shaped or custom rooms using multiple layout shape segments (`shapes: [{x, y, w, h}]`) in the YAML settings, shifting all segments in lockstep when the room block is dragged.
+  - Implemented a shape management interface inside the room configuration accordion tabs, allowing users to add, edit coordinates (aligned in a spacious 2x2 grid layout), and delete extra shape segments visually.
+  - Upgraded the **Auto-Extract** tool to automatically decompose multi-vertex polygon outlines (like L-shapes) from map cameras into multiple grid-checked rectangular segments, saving them directly as extra room shapes.
+  - Bumped loader to version `1.3.16` to force cache-busting.
+
+## [1.2.11] - 2026-06-27
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Implemented visual interactive drag-and-drop dragging (`x`, `y`) and corner handle resizing (`w`, `h`) directly on the live map preview block element.
+  - Added a delete handle overlay (close icon) on each room block to remove the room layout visually from the map preview.
+  - Built a custom Rooms configuration panel in the GUI editor containing a room addition form, expandable entries accordions for all properties (Label, Icon, Color, Active Animation, coordinates, disabled state), and deletion buttons.
+  - Upgraded the card engine to merge state-reported vacuum rooms and custom configuration-defined rooms seamlessly.
+  - Bumped loader to version `1.2.0` and cache-busted the elements.
+
+## [1.2.10] - 2026-06-27
+
+### Fixed
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Fixed scaling calculation issues and prevented infinite ResizeObserver trigger loops by caching and comparing host element available client dimensions.
+  - Dynamically set host element height using the configured dashboard layout height setting, preventing grid content from collapsing.
+  - Resolved view layout styling issues inside the shadow DOM by defining a valid `translationPath` to correctly reference `fit-grid-layout.css`.
+  - Added support for hyphenated CSS Grid layout keys (`grid-area`, `place-self`, etc.) when parsing `view_layout` parameters.
+- **Multi State Card (`multi-state-card`)**:
+  - Fixed `fire-dom-event` tap/hold actions by directly dispatching the `"ll-custom"` event from the card element with `bubbles: true` and `composed: true`, ensuring bubbling to view containers.
+
+## [1.2.9] - 2026-06-27
+
+### Added
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Implemented dynamic popup overlay support, locking background dashboard interaction and showing custom card/control popups at 1:1 scale under `:host`.
+  - Added support for standard Lovelace action triggers (`action: fire-dom-event` intercepting `ll-custom` events) to show/close popups generically.
+  - Added nested popup configuration support via `grid_popup` and `group_popup` details supporting custom `heading` labels and `body` card parameters.
+  - Built a multi-tab visual configuration editor (`fit-grid-layout-editor.js` and `fit-grid-layout-editor.css`) for Layout, Background, and Popups configuration.
+  - Documented popup actions and schemas in `docs/fit-grid-layout.md` and bumped loader to version `1.0.1`.
+
+## [1.2.8] - 2026-06-26
+
+### Added
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Created a custom viewport-fitting layout engine that wraps Lovelace grid dashboard structures and auto-scales down content proportionally using CSS transform scaling and a debounced ResizeObserver.
+  - Added documentation under `docs/fit-grid-layout.md` and catalog registration in `README.md`.
+
+## [1.2.7] - 2026-06-26
+
+### Added
+- **Light Control Card (`light-control-card`)**:
+  - Created a custom Lovelace card with glowing icons and horizontal sliders to toggle state and adjust brightness, Kelvin temperature, and RGB/HSL color hue.
+  - Added a visual editor (`light-control-card-editor.js` and `light-control-card-editor.css`) allowing dashboard customization of controls visibility.
+  - Documented features in [docs/light-control-card.md](docs/light-control-card.md) and registered loaders in [README.md](README.md).
+
+## [1.2.6] - 2026-06-26
+
+### Added
+- **Navigation Bar Card (`navigation-bar-card`)**:
+  - Created a custom Lovelace navigation card with capsule badges that auto-detects active views, supports dynamic thresholds, and renders counter notification badges.
+  - Implemented async counter calculations for `todo` and `calendar` lists, utilizing the same custom exclusion filters, due dates (`max_days`), completed filter (`show_completed`), and max limits (`max_items`) configured in display cards. Resolved threshold rule evaluation mismatches by mapping main todo/calendar rules to evaluate against these filtered values instead of raw entity state counts.
+  - Added a rich visual configuration editor (`navigation-bar-card-editor.js` and `navigation-bar-card-editor.css`) allowing dashboard customization of tabs, icons, actions, regex filters, and threshold rules.
+  - Added [navigation-bar-card.md](docs/navigation-bar-card.md) documentation and registered it in the main [README.md](README.md).
+
+## [1.2.5] - 2026-06-26
+
+### Changed
+- Unified Lovelace dashboard header cards by replacing all `type: heading` cards with `custom:room-status-card` inside `main_view.yaml` and `overview_view.yaml`.
+- Integrated battery percentage (for Main Door and Robot Vacuum) and vacuum state inline badges inside the newly unified headers.
+- Replaced `custom:vacuum-map-card` with `custom:vacuum-select-card` in the main view dashboard to render a clean, dynamic button grid for selecting cleaning zones.
+
+## [1.2.4] - 2026-06-26
+
+### Fixed
+- **Shared Base Class (`HAControlThresholdBase`)**:
+  - Fixed a bug in `_getMatchedProperty` where thresholds were pre-filtered by the presence of the requested property. This caused properties to incorrectly fall through and match lower thresholds (e.g. battery icon blinking green all the time because the 0% threshold was the only one specifying `animation: blink`). The method now correctly finds the matching threshold by value first, then resolves the property.
+  - Updated the import version query parameter (`?v=0.6.7`) for all cards and feature cards referencing `ha-control-threshold-base.js`.
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Fixed a bug where target temperature adjustments (using the + and - buttons) failed for radiator climate entities with a target temperature step size of 1.0°C (e.g. Tuya-based oil radiators). The control now dynamically reads the `target_temp_step` attribute from the climate entity to align temperature changes with the device's step size.
+  - Added support for automatically turning on the radiator (setting `hvac_mode` to `heat` or the first available active mode) if the device is currently in the `off` state when adjusting target temperature.
+  - Added visual and interactive disabled state styling (`pointer-events: none`, `opacity: 0.5`) to target temperature adjusters when the climate entity is in an `unavailable` or `unknown` offline state. In this state, target temperature is displayed as `--`.
+  - Added support to deactivate and disable individual mode segmented selector buttons when their respective devices (radiator climate or dehumidifier switch) go offline (`unavailable` or `unknown`), changing the button icon to an offline cloud icon and appending `(Offline)` to the label text.
+  - Removed the unused `"Fan"` mode option from the radiator control card, its English localization file, the washroom control helper config, and the module's documentation.
+- **Feature Renderer Card (`feature-renderer-card`)**:
+  - Fixed a bug in `icon-card-feature` where configuring an icon feature without custom thresholds resulted in `_getMatchedProperty` returning `null`, blocking fallback to configured `icon`, `color`, and `animation` values because of strict `=== undefined` checks. Switched to `== null` checks.
+  - Resolved a CSS transition conflict in `icon-card-feature.css` where transition on the `transform` property interfered with and stalled the CSS keyframe `rotating` (and other transform-based) animations on the `<ha-icon>`.
+  - Added GPU layers/performance optimization (`will-change: transform`, `translateZ(0)`) to transform-based keyframe animations in `shared-animations.css`, and changed the host `<ha-icon>` display setting to `inline-block` to ensure transforms apply reliably across different browser versions.
+  - Overrode `createRenderRoot` to render `FeatureRendererCard` in the light DOM, allowing parent stylesheets (e.g., in `room-status-card` and `multi-state-card`) to correctly style and vertically/horizontally center nested child features using flexbox.
+  - Bumped `feature-renderer-card-loader.js` to `0.1.28`, `multi-property-card-loader.js` to `1.0.39`, and `radiator-control-card-loader.js` to `1.0.11`, and bumped internal `icon-card-feature` version to `1.0.2` to bust browser cache.
+- **Room Status Card (`room-status-card`)**:
+  - Fixed vertical alignment mismatch in room status badges where nested text features were rendered higher than their adjacent icon features. Added `display: inline-flex` and `align-items: center` to both the `<feature-renderer-card>` elements and their nested child feature components (e.g. `<state-value-feature>`) inside `room-status-card.css`.
+  - Bumped `room-status-card-loader.js` to `1.0.44` to bust browser cache.
+- **Washroom Scripts (`ha-scripts`)**:
+  - Updated the start/extend script `radiator_start_or_extend.yaml` and the capping script `radiator_cap_timer.yaml` to include template conditions verifying the state of `input_select.washroom_control` and checking that the target device (`climate.kesser_oil_radiator` for "Heating", or `switch.dehumidifier_power_control` for "Dehumidify") is online (not `unavailable` or `unknown`) before managing the timer.
+
+## [1.2.3] - 2026-06-25
+
+### Fixed
+- **Shared Base Class (`HAControlBase`)**:
+  - Fixed a critical change-detection bug where custom feature cards (such as `state-value-feature` or `icon-card-feature`) failed to react to state updates if they relied on the parent card's `stateObj` without configuring an explicit `entity` override in their configuration. The base class `shouldUpdate` and `_getWatchedEntities` methods have been upgraded to automatically register and monitor the parent `stateObj.entity_id` when it is provided.
+  - Upgraded `shouldUpdate` to immediately clear cached watched entities and return `true` whenever `stateObj` itself changes reference.
+  - Added optional and togglable console debug logging inside `shouldUpdate` to trace watched entities and state changes in the browser. Logging can be enabled dynamically via `window.haControlsDebug = true`, appending `?ha_debug` to the URL, or adding `debug: true` to the card YAML config.
+- **Feature Renderer Card (`feature-renderer-card`)**:
+  - Fixed alignment issues for custom features that display text (`state-value-feature`, `attribute-value-feature`, and `constant-text-feature`) by adding `:host` styles with `display: block` and `width: 100%`. This enables configured `text_align` property settings to correctly apply across their parent container width.
+  - Standardized the default text alignment to `'center'` for `state-value-feature` and `attribute-value-feature` (matching `constant-text-feature`) to maintain centered layouts in dashboard columns, status cards, and badges by default without requiring manual YAML configuration changes.
+  - Bumped the card loader version to `0.1.18` and other card loaders to propagate cache-busting of the updated base classes.
+
+## [1.2.2] - 2026-06-25
+
+### Fixed
+- **Multi State Card (`multi-state-card`)**:
+  - Fixed an issue where column buttons (`.btn` and `.multi-state-entity`) did not stretch to 100% width, causing nested features to remain left-aligned inside flex rows.
+  - Bumped the card loader version to `0.1.26`.
+
+## [1.2.1] - 2026-06-25
+
+### Fixed
+- **Multi State Card (`multi-state-card`)**:
+  - Optimized the update lifecycle (`shouldUpdate`) to dynamically discover and track state updates for all entities referenced inside JS expression strings (such as `hass.states['...']`), resolving UI refresh lag.
+  - Standardized the layout of nested card features (`icon-card-feature`, `state-value-feature`, etc.) to align center vertically and horizontally by default.
+  - Bumped the card loader version to `0.1.25`.
+
+## [1.2.0] - 2026-06-22
+
+### Added
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Reusable climate control card consolidating thermostat controls, target adjustments, and mode selects.
+  - Interactive plus/minus target temperature adjusters.
+  - Temperature sensor threshold mapping for room temperature badge coloring.
+  - Natively renders active timer countdown ticks every second.
+  - Hardware-accelerated blinking effects when climate is actively heating.
+
+## [1.1.0] - 2026-06-20
+
+### Added
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Interactive 2D layout map-based room selector showing rooms defined in vacuum attributes.
+  - Positioning and sizing configurations (percentages `x`, `y`, `w`, `h`) to scale cleanly when resized.
+  - Support for room-specific custom colors.
+  - Active cleaning animations (pulsing, blinking, flashing) matching selected color styles.
+  - Optional toggle configuration option `show_names` (default: `true`) to show/hide room name text labels inside the interactive room blocks.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Chronological vertical list mapping events across multiple Home Assistant calendar entities.
+  - Relative remaining day count formatting (e.g., "Today", "Tomorrow", "In 3 days").
+  - Advanced query constraints mapping (configurable search depth via `max_days` and maximum output limits via `max_items`).
+  - Regular expression patterns filtering supporting case-sensitivity exclusions.
+  - Dynamic threshold date text coloring driven by custom comparison operator thresholds.
+  - Divider separator configuration supporting day, week, or month grouping boundaries.
+  - Seamless child feature rendering via `custom:calendar-property-feature` (extracting time, location, description, or attendees).
+
 ## [1.0.4] - 2026-06-17
 
 ### Fixed

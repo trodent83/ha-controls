@@ -1,4 +1,4 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.0";
+﻿import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -63,6 +63,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
     const knownKeys = [
       "show_label",
       "show_value",
+      "show_icon",
       "show_unavailable",
       "layout",
       "entities"
@@ -293,6 +294,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
         schema: [
           { name: "show_label", label: this._localize('show_labels'), selector: { boolean: {} } },
           { name: "show_value", label: this._localize('show_values'), selector: { boolean: {} } },
+          { name: "show_icon", label: this._localize('show_icons') || "Show Icons", selector: { boolean: {} } },
           { name: "show_unavailable", label: show_unavailable, selector: { boolean: {} } }
         ]
       },
@@ -339,9 +341,13 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
         const e = {};
         if (ent.entity !== undefined) e.entity = ent.entity;
         if (ent.name !== undefined) e.name = ent.name;
+        if (ent.attribute !== undefined) e.attribute = ent.attribute;
+        if (ent.unit !== undefined) e.unit = ent.unit;
         if (ent.value !== undefined) e.value = ent.value;
         if (ent.icon !== undefined) e.icon = ent.icon;
         if (ent.show_icon !== undefined) e.show_icon = ent.show_icon;
+        if (ent.show_value !== undefined) e.show_value = ent.show_value;
+        if (ent.show_label !== undefined) e.show_label = ent.show_label;
         if (ent.color !== undefined) e.color = ent.color;
         if (ent.label_font_size !== undefined) e.label_font_size = ent.label_font_size;
         if (ent.label_bold !== undefined) e.label_bold = ent.label_bold;
@@ -417,6 +423,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
             .data=${{
               show_label: this._config.show_label !== false,
               show_value: this._config.show_value !== false,
+              show_icon: this._config.show_icon !== false,
               show_unavailable: this._config.show_unavailable === true,
               layout: this._config.layout || "row"
             }}
@@ -438,9 +445,13 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
               const combinedData = {
                 entity: entityId,
                 name: ent.name || "",
+                attribute: ent.attribute || "",
+                unit: ent.unit || "",
                 value: ent.value || "",
                 icon: ent.icon || "",
                 show_icon: ent.show_icon !== false,
+                show_value: ent.show_value !== false,
+                show_label: ent.show_label !== false,
                 color: ent.color || "",
                 label_font_size: ent.label_font_size ? String(ent.label_font_size).replace("px", "") : "",
                 label_bold: ent.label_bold === true,
@@ -453,6 +464,14 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
               const combinedSchema = [
                 { name: "entity", label: this._localize('entity'), selector: { entity: {} } },
                 { name: "name", label: this._localize('friendly_name_override'), selector: { text: {} } },
+                {
+                  name: "",
+                  type: "grid",
+                  schema: [
+                    { name: "attribute", label: this._localize('attribute') || "Attribute Override", selector: { text: {} } },
+                    { name: "unit", label: this._localize('unit_override') || "Unit Override", selector: { text: {} } }
+                  ]
+                },
                 { name: "value", label: this._localize('static_value'), selector: { text: {} } },
                 {
                   name: "",
@@ -460,6 +479,14 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
                   schema: [
                     { name: "icon", label: this._localize('icon_override'), selector: { icon: {} } },
                     { name: "show_icon", label: this._localize('show_icon'), selector: { boolean: {} } }
+                  ]
+                },
+                {
+                  name: "",
+                  type: "grid",
+                  schema: [
+                    { name: "show_value", label: this._localize('show_value') || "Show Value", selector: { boolean: {} } },
+                    { name: "show_label", label: this._localize('show_label') || "Show Label", selector: { boolean: {} } }
                   ]
                 },
                 { name: "color", label: this._localize('color_override'), selector: { text: {} } },

@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 export class FeatureRendererCard extends HAControlBase {
   static get properties() {
@@ -6,8 +6,13 @@ export class FeatureRendererCard extends HAControlBase {
       hass: { attribute: false },
       config: { attribute: false },
       stateObj: { attribute: false },
-      color: { attribute: false }
+      color: { attribute: false },
+      event: { attribute: false }
     };
+  }
+
+  createRenderRoot() {
+    return this;
   }
 
   _updateFeatureElementProperties(element) {
@@ -16,6 +21,9 @@ export class FeatureRendererCard extends HAControlBase {
     element.stateObj = this.stateObj;
     if (this.color) {
         element.color = this.color;
+    }
+    if (this.event) {
+        element.event = this.event;
     }
   }
 
@@ -29,12 +37,17 @@ export class FeatureRendererCard extends HAControlBase {
       tag = `hui-${tag}-card-feature`;
     }
 
-    if (this._tag !== tag) {
+    if (this._tag !== tag || (!this._el && customElements.get(tag))) {
       this._tag = tag;
       if (customElements.get(tag)) {
         this._el = document.createElement(tag);
       } else {
         this._el = null;
+        customElements.whenDefined(tag).then(() => {
+          if (this._tag === tag) {
+            this.requestUpdate();
+          }
+        });
       }
     }
     
@@ -45,4 +58,6 @@ export class FeatureRendererCard extends HAControlBase {
   }
 }
 
-customElements.define("feature-renderer-card", FeatureRendererCard);
+if (!customElements.get("feature-renderer-card")) {
+  customElements.define("feature-renderer-card", FeatureRendererCard);
+}

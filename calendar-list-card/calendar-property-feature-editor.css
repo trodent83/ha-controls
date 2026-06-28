@@ -1,0 +1,13 @@
+/* ==========================================================================
+   CALENDAR PROPERTY FEATURE EDITOR STYLESHEET
+   Styles the form fields and alignment in Lovelace configuration editor.
+   ========================================================================== */
+
+:host {
+  display: block;
+}
+
+ha-form {
+  display: block;
+  margin-bottom: 16px;
+}

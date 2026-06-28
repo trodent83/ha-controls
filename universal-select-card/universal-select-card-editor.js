@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -144,6 +144,7 @@ class UniversalSelectCardEditor extends HAControlBase {
       for (const [optName, optConf] of Object.entries(this._config.options_config)) {
         const o = {};
         if (optConf.label !== undefined) o.label = optConf.label;
+        if (optConf.active_label_entity !== undefined) o.active_label_entity = optConf.active_label_entity;
         if (optConf.icon !== undefined) o.icon = optConf.icon;
         if (optConf.color !== undefined) o.color = optConf.color;
         if (optConf.animation !== undefined) o.animation = optConf.animation;
@@ -266,6 +267,7 @@ class UniversalSelectCardEditor extends HAControlBase {
             type: "grid",
             schema: [
               { name: "label", label: this._localize('custom_label'), selector: { text: {} } },
+              { name: "active_label_entity", label: this._localize('active_label_entity') || "Active Label Entity", selector: { entity: {} } },
               { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
               { name: "color", label: this._localize('color'), selector: { text: {} } },
               { 

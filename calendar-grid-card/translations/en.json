@@ -49,5 +49,10 @@
   "cgc.editor.add_new_calendar": "Add new calendar",
   "cgc.event.all_day": "All day",
   "unrecognized_settings": "Unrecognized configuration settings: {keys}",
-  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration."
+  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration.",
+  "cgc.editor.event_features": "Event Details Dialog Features",
+  "cgc.editor.feature_time": "Show Time",
+  "cgc.editor.feature_location": "Show Location",
+  "cgc.editor.feature_description": "Show Description",
+  "cgc.editor.feature_attendees": "Show Attendees"
 }

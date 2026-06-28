@@ -3,6 +3,11 @@
    Styles for rendering dynamic text state values in custom controls.
    ========================================================================== */
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .state-value-container {
   display: inline-block;
   width: 100%;

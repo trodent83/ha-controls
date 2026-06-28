@@ -1,0 +1,332 @@
+/* ==========================================================================
+   CALENDAR LIST CARD STYLESHEET
+   Styles the card layout, refresh button, loading animations, and details dialog.
+   ========================================================================== */
+
+/* Main wrapper layout */
+.event-list-wrapper {
+  position: relative !important;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.empty-text {
+  padding: 16px;
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-size: 0.95em;
+}
+
+/* Day separator line injected between different days */
+.day-separator {
+  margin: 10px 16px;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+/* Grouping header labels */
+.group-header {
+  margin: 14px 12px 4px 12px;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary-color);
+  letter-spacing: 0.8px;
+}
+
+/* Header line layout containing title/icon */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 0 16px;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--primary-text-color);
+  display: flex;
+  align-items: center;
+}
+
+.header-icon {
+  margin-right: 8px;
+  --mdc-icon-size: 20px;
+}
+
+/* Actions buttons tiles (reload list) */
+.tile-button {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tile-button:hover {
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.04);
+}
+
+.tile-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+  background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
+  color: var(--primary-color);
+}
+
+.tile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-name {
+  font-weight: 500;
+  color: var(--primary-text-color);
+}
+
+.tile-state {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+}
+
+/* Spinning keyframes class trigger (for API load updates) */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Glassmorphism loading overlay visible during updates */
+.loading-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(var(--rgb-card-background-color, 255, 255, 255), 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10 !important;
+  border-radius: var(--ha-card-border-radius, 12px) !important;
+}
+
+.loading-overlay ha-icon {
+  --mdc-icon-size: 32px;
+  color: var(--primary-color) !important;
+}
+
+/* Dialog/Modal Glassmorphic Overlay */
+.dialog-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* Dialog Card container matching Lovelace themes */
+.dialog-card {
+  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color))) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--divider-color) !important;
+  width: 90% !important;
+  max-width: 480px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-sizing: border-box !important;
+}
+
+/* Dialog Header with calendar source color context */
+.dialog-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  padding: 20px 24px !important;
+  border-bottom: 1px solid var(--divider-color) !important;
+  gap: 16px !important;
+}
+
+.dialog-header-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+/* Badge for source calendar entity name */
+.dialog-calendar-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  border-radius: 12px !important;
+  width: fit-content !important;
+}
+
+.dialog-calendar-badge ha-icon {
+  --mdc-icon-size: 14px !important;
+}
+
+.dialog-title {
+  margin: 0 !important;
+  font-size: 1.35rem !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  color: var(--primary-text-color) !important;
+}
+
+/* Close action button in top corner */
+.dialog-close-button {
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  color: var(--secondary-text-color) !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dialog-close-button:hover {
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08) !important;
+  color: var(--primary-text-color) !important;
+}
+
+.dialog-close-button ha-icon {
+  --mdc-icon-size: 20px !important;
+}
+
+/* Dialog Body containing modular feature rows */
+.dialog-body {
+  padding: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  overflow-y: auto !important;
+}
+
+/* Individual feature rows */
+.dialog-feature-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+}
+
+.feature-icon {
+  --mdc-icon-size: 20px !important;
+  color: var(--secondary-text-color) !important;
+  flex-shrink: 0 !important;
+  margin-top: 1px !important;
+}
+
+.feature-content {
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  color: var(--primary-text-color) !important;
+  flex-grow: 1 !important;
+  word-break: break-word !important;
+}
+
+/* Clickable locations links mapping */
+.feature-link {
+  color: var(--primary-color) !important;
+  text-decoration: none !important;
+}
+
+.feature-link:hover {
+  text-decoration: underline !important;
+}
+
+/* Attendees lists layouts */
+.attendees-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.attendee-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: var(--secondary-background-color) !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--divider-color) !important;
+}
+
+.attendee-name {
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+}
+
+.attendee-status {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.attendee-status ha-icon {
+  --mdc-icon-size: 16px !important;
+}
+
+.attendee-status.status-accepted {
+  color: var(--success-color, #4caf50) !important;
+}
+
+.attendee-status.status-declined {
+  color: var(--error-color, #f44336) !important;
+}
+
+.attendee-status.status-tentative {
+  color: var(--warning-color, #ff9800) !important;
+}
+
+.attendee-status.status-unknown {
+  color: var(--secondary-text-color) !important;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

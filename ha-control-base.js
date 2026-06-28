@@ -37,6 +37,93 @@ export class HAControlBase extends LitElement {
     this._translationsLoaded = false;
   }
 
+  _getWatchedEntities(config) {
+    if (this._watchedEntities) return this._watchedEntities;
+
+    const entities = new Set();
+    if (this.stateObj?.entity_id) {
+      entities.add(this.stateObj.entity_id);
+    }
+    if (!config) return Array.from(entities);
+
+    const entityRegex = /(?:^|['"/\s(\[{])([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)(?:$|['"/\s)\]}])/g;
+
+    const scanObject = (obj) => {
+      if (!obj) return;
+      if (typeof obj === 'string') {
+        let match;
+        entityRegex.lastIndex = 0;
+        while ((match = entityRegex.exec(obj)) !== null) {
+          const parts = match[1].split('.');
+          if (parts.length === 2 && /^(light|switch|sensor|binary_sensor|input_select|input_number|input_text|input_boolean|media_player|climate|vacuum|timer|weather|todo|person|device_tracker|group|automation|script|scene|notify|number|select|update|button)$/.test(parts[0])) {
+            entities.add(match[1]);
+          }
+        }
+      } else if (Array.isArray(obj)) {
+        obj.forEach(scanObject);
+      } else if (typeof obj === 'object') {
+        Object.keys(obj).forEach(key => {
+          if (key === 'entity' && typeof obj[key] === 'string') {
+            entities.add(obj[key]);
+          } else {
+            scanObject(obj[key]);
+          }
+        });
+      }
+    };
+
+    scanObject(config);
+    this._watchedEntities = Array.from(entities);
+    return this._watchedEntities;
+  }
+
+  /**
+   * Optimizes card updates by filtering rendering cycles.
+   * Compares states of watched entities inside configuration settings to allow changes.
+   * Supports optional console debug tracking by setting `window.haControlsDebug = true`,
+   * adding `?ha_debug` query flag to the browser URL, or configuring `debug: true` in card configuration.
+   * 
+   * @param {Map<string, any>} changedProps - Reactive properties modified in this cycle
+   * @returns {boolean} True if the control should update and re-render, false otherwise
+   */
+  shouldUpdate(changedProps) {
+    // If any property other than 'hass' changed, we must update
+    const hasOtherChanges = Array.from(changedProps.keys()).some(key => key !== 'hass');
+    if (hasOtherChanges) {
+      if (changedProps.has('config') || changedProps.has('stateObj')) {
+        this._watchedEntities = null;
+      }
+      return true;
+    }
+
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.hass || !this.config) return true;
+
+      const watched = this._getWatchedEntities(this.config);
+      let hasChanges = false;
+      
+      const debugEnabled = window.haControlsDebug || window.location?.search?.includes('ha_debug') || this.config?.debug;
+
+      for (const entityId of watched) {
+        const stateObj = this.hass.states[entityId];
+        const oldStateObj = oldHass.states[entityId];
+        if (oldStateObj !== stateObj) {
+          if (debugEnabled) {
+            console.log(`[HAControlBase:${this.localName || this.constructor.name}] State changed for watched entity '${entityId}': '${oldStateObj?.state}' -> '${stateObj?.state}'`);
+          }
+          hasChanges = true;
+          break;
+        }
+      }
+      if (!hasChanges && watched.length > 0 && debugEnabled) {
+        console.debug(`[HAControlBase:${this.localName || this.constructor.name}] Skipping update. Watched entities:`, watched);
+      }
+      return hasChanges;
+    }
+    return true;
+  }
+
   /**
    * Returns the path to the translation files directory.
    * Override in subclasses to point to the local translations folder.

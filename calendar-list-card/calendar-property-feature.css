@@ -1,0 +1,32 @@
+/* ==========================================================================
+   CALENDAR PROPERTY FEATURE STYLESHEET
+   Styles for alignment of the optional icon and text value.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.calendar-property-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.property-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  --mdc-icon-size: 14px;
+}
+
+.property-value {
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

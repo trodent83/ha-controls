@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.0";
+﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -50,38 +50,7 @@ class VacuumSelectCard extends HAControlBase {
     return document.createElement("vacuum-select-card-editor"); 
   }
 
-  /**
-   * Controls when the element should re-render to optimize dashboard performance.
-   * Re-renders on config updates or only when entities listed in the config state object change.
-   * 
-   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
-   * @returns {boolean} True if the card should re-render, false otherwise
-   */
-  shouldUpdate(changedProps) {
-    if (changedProps.has('config')) {
-      return true;
-    }
 
-    if (changedProps.has('hass')) {
-      const oldHass = changedProps.get('hass');
-      if (!oldHass || !this.hass || !this.config) return true;
-
-      if (oldHass.states[this.config.vacuum_entity] !== this.hass.states[this.config.vacuum_entity]) return true;
-      if (oldHass.states[this.config.output_entity] !== this.hass.states[this.config.output_entity]) return true;
-      
-      if (this.config.currently_cleaning_entity && 
-          oldHass.states[this.config.currently_cleaning_entity] !== this.hass.states[this.config.currently_cleaning_entity]) return true;
-          
-      if (this.config.readonly_entity && 
-          oldHass.states[this.config.readonly_entity] !== this.hass.states[this.config.readonly_entity]) return true;
-
-      if (this.config.mark_active_room && 
-          oldHass.states[this.config.mark_active_room] !== this.hass.states[this.config.mark_active_room]) return true;
-
-      return false;
-    }
-    return true;
-  }
 
   /**
    * Renders the custom card's HTML template.
@@ -146,7 +115,7 @@ class VacuumSelectCard extends HAControlBase {
             let animationClass = '';
             let animationStyle = '';
             if (showActiveCleaning) {
-                const markingAnimation = this.config.mark_animation || 'none';
+                const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
                 animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
                 const bgColor = this.config.mark_animation_background;
                 const fgColor = this.config.mark_animation_foreground;

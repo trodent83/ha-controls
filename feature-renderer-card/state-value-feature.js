@@ -1,10 +1,10 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.0";
+﻿import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.3";
 
 /**
  * StateValueFeature
@@ -67,7 +67,7 @@ class StateValueFeature extends HAControlThresholdBase {
       color: "",
       font_size: "",
       font_weight: "normal",
-      text_align: "left",
+      text_align: "center",
       thresholds: []
     };
   }
@@ -114,17 +114,27 @@ class StateValueFeature extends HAControlThresholdBase {
       color: ${featureColor};
       font-size: ${this.config.font_size || 'inherit'};
       font-weight: ${this.config.font_weight || 'normal'};
-      text-align: ${this.config.text_align || 'left'};
+      text-align: ${this.config.text_align || 'center'};
     `;
 
     const prefix = this.config.prefix || '';
     const suffix = this.config.suffix || '';
 
+    // Prevent double-rendering units if the formatted displayValue already contains the unit/suffix
+    let finalSuffix = suffix;
+    if (suffix && displayValue && typeof displayValue === 'string') {
+      const cleanDisplay = displayValue.trim();
+      const cleanSuffix = suffix.trim();
+      if (cleanDisplay.endsWith(cleanSuffix)) {
+        finalSuffix = suffix.replace(cleanSuffix, '').trimEnd();
+      }
+    }
+
     return html`
       ${this.renderStyle('state-value-feature.css')}
       ${this.renderStyle('shared-animations.css')}
       <div class="state-value-container ${matchedAnimClass}" style="${style}">
-        ${prefix}${displayValue}${suffix}
+        ${prefix}${displayValue}${finalSuffix}
       </div>
     `;
   }

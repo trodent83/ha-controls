@@ -14,6 +14,7 @@ ha-card {
 
 /* Individual entity items buttons */
 .btn {
+  width: 100%;
   height: auto;
   min-height: 48px;
   display: flex;
@@ -27,6 +28,7 @@ ha-card {
   min-width: 60px;
 }
 
+
 /* Active click states overlay */
 .btn:active {
   background: rgba(var(--rgb-primary-text-color), 0.1);
@@ -38,6 +40,13 @@ ha-card {
   opacity: 0.4;
   filter: grayscale(1);
   pointer-events: none;
+}
+
+/* Disabled button styling */
+.btn.is-disabled {
+  pointer-events: none;
+  opacity: 0.4;
+  filter: grayscale(1);
 }
 
 /* Informational parameters labels block */
@@ -176,14 +185,42 @@ ha-icon {
 /* Auto fill remaining horizontal width for rows items */
 .content-container.layout-row .multi-state-entity {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 /* Full width sizing for columns items */
 .content-container.layout-column .multi-state-entity {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
-/* Padding around inline features renderers */
+/* Padding around inline features renderers with centering layout */
 .features-container {
   padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+feature-renderer-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+feature-renderer-card > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
 }

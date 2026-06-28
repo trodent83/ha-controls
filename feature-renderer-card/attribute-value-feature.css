@@ -3,6 +3,11 @@
    Styles for rendering dynamic attribute text values in custom controls.
    ========================================================================== */
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .attribute-value-container {
   display: inline-block;
   width: 100%;
