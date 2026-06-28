@@ -235,6 +235,7 @@
 .container.edit-mode .room-block {
     cursor: move;
     opacity: 0.8;
+    transition: none !important;
 }
 
 .container.edit-mode .room-block:hover {

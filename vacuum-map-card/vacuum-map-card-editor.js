@@ -346,6 +346,102 @@ class VacuumMapCardEditor extends HAControlBase {
     this._fireConfigChanged();
   }
 
+  _autoExtractLayout() {
+    const vacuumId = this._config?.vacuum_entity;
+    if (!vacuumId) {
+      alert("Please configure a Vacuum Entity first.");
+      return;
+    }
+    
+    const parts = vacuumId.split('.');
+    if (parts.length < 2) return;
+    const vacuumName = parts[1];
+    const cameraEntityId = `camera.${vacuumName}_map`;
+    
+    const cameraState = this.hass.states[cameraEntityId];
+    if (!cameraState) {
+      alert(`Could not find the map camera entity "${cameraEntityId}" in Home Assistant. Please make sure the camera entity is enabled.`);
+      return;
+    }
+    
+    const cameraRooms = cameraState.attributes.rooms;
+    if (!cameraRooms || typeof cameraRooms !== 'object' || Object.keys(cameraRooms).length === 0) {
+      alert("No room coordinate data found on the camera entity. Make sure the map has loaded and rooms are defined.");
+      return;
+    }
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    
+    const roomCoordinates = [];
+    
+    for (const [id, room] of Object.entries(cameraRooms)) {
+      const x0 = room.x0 !== undefined ? room.x0 : room.x;
+      const y0 = room.y0 !== undefined ? room.y0 : room.y;
+      const x1 = room.x1 !== undefined ? room.x1 : room.x;
+      const y1 = room.y1 !== undefined ? room.y1 : room.y;
+      
+      if (x0 === undefined || y0 === undefined || x1 === undefined || y1 === undefined) continue;
+      
+      minX = Math.min(minX, x0, x1);
+      maxX = Math.max(maxX, x0, x1);
+      minY = Math.min(minY, y0, y1);
+      maxY = Math.max(maxY, y0, y1);
+      
+      roomCoordinates.push({
+        id,
+        x0,
+        y0,
+        x1,
+        y1,
+        label: room.name,
+        icon: room.icon
+      });
+    }
+    
+    if (roomCoordinates.length === 0 || minX === Infinity || maxX === -Infinity || minY === Infinity || maxY === -Infinity) {
+      alert("No valid room outline coordinates found on the camera entity.");
+      return;
+    }
+    
+    const width = maxX - minX || 1;
+    const height = maxY - minY || 1;
+    
+    const rooms = { ...(this._config.rooms || {}) };
+    
+    roomCoordinates.forEach(room => {
+      const wVal = ((room.x1 - room.x0) / width) * 100;
+      const hVal = ((room.y1 - room.y0) / height) * 100;
+      const xVal = ((room.x0 - minX) / width) * 100;
+      const yVal = ((maxY - room.y1) / height) * 100;
+      
+      const current = rooms[room.id] || {};
+      
+      const w = Math.max(5, Math.min(100, Math.round(wVal)));
+      const h = Math.max(5, Math.min(100, Math.round(hVal)));
+      const x = Math.max(0, Math.min(100 - w, Math.round(xVal)));
+      const y = Math.max(0, Math.min(100 - h, Math.round(yVal)));
+      
+      rooms[room.id] = {
+        ...current,
+        x,
+        y,
+        w,
+        h
+      };
+    });
+    
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    
+    this._fireConfigChanged();
+    alert(`Successfully extracted coordinates for ${roomCoordinates.length} rooms!`);
+  }
+
   _addCustomRoom() {
     const id = this._newRoomId?.trim();
     const label = this._newRoomLabel?.trim();
@@ -404,6 +500,11 @@ class VacuumMapCardEditor extends HAControlBase {
       [prop]: val
     };
     
+    if (rooms[id].x === undefined) rooms[id].x = 10;
+    if (rooms[id].y === undefined) rooms[id].y = 10;
+    if (rooms[id].w === undefined) rooms[id].w = 15;
+    if (rooms[id].h === undefined) rooms[id].h = 15;
+    
     this._config = {
       ...this._config,
       rooms
@@ -452,6 +553,47 @@ class VacuumMapCardEditor extends HAControlBase {
    */
   render() {
     if (!this.hass || !this._config) return html``;
+
+    const vacuumId = this._config?.vacuum_entity;
+    const vacuum = vacuumId ? this.hass.states[vacuumId] : null;
+    const currentMap = vacuum?.attributes?.selected_map;
+    const allRooms = vacuum?.attributes?.rooms?.[currentMap] || [];
+
+    const combinedRoomsMap = new Map();
+
+    // 1. Add all rooms from vacuum state attributes
+    allRooms.forEach(room => {
+      const roomIdStr = room.id.toString();
+      combinedRoomsMap.set(roomIdStr, {
+        id: roomIdStr,
+        name: room.name,
+        icon: room.icon || 'mdi:door',
+        x: 10,
+        y: 10,
+        w: 15,
+        h: 15
+      });
+    });
+
+    // 2. Merge/override with config rooms (and add manually configured custom rooms)
+    if (this._config.rooms && typeof this._config.rooms === 'object') {
+      for (const [id, r] of Object.entries(this._config.rooms)) {
+        const roomIdStr = id.toString();
+        const existing = combinedRoomsMap.get(roomIdStr) || {};
+        combinedRoomsMap.set(roomIdStr, {
+          ...existing,
+          ...r,
+          id: roomIdStr
+        });
+      }
+    }
+
+    const rooms = Array.from(combinedRoomsMap.values());
+
+    let vacuumName = '';
+    if (vacuumId && vacuumId.includes('.')) {
+      vacuumName = vacuumId.split('.')[1];
+    }
 
     return html`
       ${this.renderStyle('vacuum-map-card-editor.css')}
@@ -514,17 +656,32 @@ class VacuumMapCardEditor extends HAControlBase {
             </ha-button>
           </div>
 
-          <!-- Configured Rooms List -->
-          <div class="editor-section-title">Configured Rooms (${Object.keys(this._config.rooms || {}).length})</div>
+          <!-- Configured/Discovered Rooms List -->
+          <div class="editor-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Rooms Layout & Settings (${rooms.length})</span>
+            <ha-button @click=${this._autoExtractLayout} outlined style="--mdc-theme-primary: var(--primary-color);">
+              <ha-icon icon="mdi:auto-upload" slot="icon"></ha-icon>
+              Auto-Extract Layout
+            </ha-button>
+          </div>
           <div class="rooms-list">
-            ${Object.entries(this._config.rooms || {}).map(([id, room]) => {
+            ${rooms.map((room) => {
+              const id = room.id;
               const isExpanded = this._expandedRoomId === id;
+
+              // Resolve HA Name Entity and current value
+              const nameEntityId = vacuumName ? `select.${vacuumName}_room_${id}_name` : '';
+              const nameStateObj = nameEntityId ? this.hass.states[nameEntityId] : null;
+              const haName = nameStateObj && nameStateObj.state !== 'unknown' && nameStateObj.state !== 'unavailable' ? nameStateObj.state : '';
+              const defaultName = room.name || `Room ${id}`;
+              const displayName = room.label || haName || defaultName;
+
               return html`
                 <div class="room-card">
                   <div class="room-card-header" @click=${() => this._toggleExpandRoom(id)}>
                     <div class="room-card-header-title">
                       <ha-icon .icon=${room.icon || 'mdi:door'}></ha-icon>
-                      <span>${room.label || `Room ${id}`} (ID: ${id})</span>
+                      <span>${displayName} (ID: ${id})</span>
                     </div>
                     <div class="room-card-header-actions">
                       <ha-icon .icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>
@@ -533,17 +690,60 @@ class VacuumMapCardEditor extends HAControlBase {
                   
                   ${isExpanded ? html`
                     <div class="room-card-body">
+                      <!-- HA Renaming select (if select entity exists) -->
+                      ${nameStateObj ? html`
+                        <div class="input-row" style="margin-bottom: 12px;">
+                          ${nameStateObj.attributes.options && nameStateObj.attributes.options.length > 0 ? html`
+                            <ha-select
+                              label="Home Assistant Room Name (select.*_name)"
+                              .value=${nameStateObj.state}
+                              @closed=${(e) => {
+                                e.stopPropagation();
+                                const target = e.target;
+                                if (target.value !== undefined && target.value !== nameStateObj.state) {
+                                  this.hass.callService('select', 'select_option', {
+                                    entity_id: nameEntityId,
+                                    option: target.value
+                                  });
+                                }
+                              }}
+                              fixedMenuPosition
+                              naturalMenuWidth
+                              style="width: 100%;"
+                            >
+                              ${nameStateObj.attributes.options.map(opt => html`
+                                <ha-list-item .value=${opt}>${opt}</ha-list-item>
+                              `)}
+                            </ha-select>
+                          ` : html`
+                            <ha-textfield
+                              label="Home Assistant Room Name (select.*_name)"
+                              .value=${nameStateObj.state || ''}
+                              @change=${(e) => {
+                                this.hass.callService('select', 'select_option', {
+                                  entity_id: nameEntityId,
+                                  option: e.target.value
+                                });
+                              }}
+                              style="width: 100%;"
+                            ></ha-textfield>
+                          `}
+                        </div>
+                      ` : ''}
+
                       <div class="input-row">
                         <ha-textfield
-                          label="Label / Name"
+                          label="Display Name Override (Local)"
                           .value=${room.label || ''}
                           @change=${(e) => this._updateRoomProp(id, 'label', e.target.value)}
                         ></ha-textfield>
-                        <ha-textfield
-                          label="Icon"
+                        
+                        <ha-icon-picker
+                          label="Icon Override"
                           .value=${room.icon || ''}
-                          @change=${(e) => this._updateRoomProp(id, 'icon', e.target.value)}
-                        ></ha-textfield>
+                          .hass=${this.hass}
+                          @value-changed=${(e) => this._updateRoomProp(id, 'icon', e.detail.value)}
+                        ></ha-icon-picker>
                       </div>
                       
                       <div class="input-row">
@@ -596,7 +796,7 @@ class VacuumMapCardEditor extends HAControlBase {
                         
                         <ha-button @click=${(e) => this._deleteRoom(e, id)} class="danger-button" outlined>
                           <ha-icon icon="mdi:trash-can-outline" slot="icon"></ha-icon>
-                          Delete Room
+                          Delete Room Config
                         </ha-button>
                       </div>
                     </div>

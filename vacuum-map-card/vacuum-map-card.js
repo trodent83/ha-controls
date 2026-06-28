@@ -51,7 +51,20 @@ class VacuumMapCard extends HAControlBase {
     return document.createElement("vacuum-map-card-editor"); 
   }
 
-
+  _getRoomName(roomId, defaultName) {
+    const vacuumId = this.config.vacuum_entity;
+    if (vacuumId) {
+      const parts = vacuumId.split('.');
+      if (parts.length > 1) {
+        const nameEntityId = `select.${parts[1]}_room_${roomId}_name`;
+        const stateObj = this.hass.states[nameEntityId];
+        if (stateObj && stateObj.state && stateObj.state !== 'unknown' && stateObj.state !== 'unavailable') {
+          return stateObj.state;
+        }
+      }
+    }
+    return defaultName;
+  }
 
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
@@ -80,7 +93,7 @@ class VacuumMapCard extends HAControlBase {
         if (!r.disabled) {
           configRooms.push({
             id: isNaN(id) ? id : parseFloat(id),
-            name: r.label || `Room ${id}`,
+            name: r.label || this._getRoomName(id, `Room ${id}`),
             icon: r.icon || 'mdi:door',
             ...r
           });
@@ -104,7 +117,7 @@ class VacuumMapCard extends HAControlBase {
       if (!this.config.rooms?.[room.id]?.disabled && !combinedRoomsMap.has(roomIdStr)) {
         combinedRoomsMap.set(roomIdStr, {
           id: room.id,
-          name: room.name,
+          name: this._getRoomName(room.id, room.name),
           icon: room.icon || 'mdi:door'
         });
       }
@@ -240,7 +253,8 @@ class VacuumMapCard extends HAControlBase {
     
     e.stopPropagation();
     
-    const blockEl = e.currentTarget;
+    const blockEl = e.target.closest('.room-block');
+    if (!blockEl) return;
     const mapContainer = this.shadowRoot.querySelector('.map-container');
     const rect = mapContainer.getBoundingClientRect();
     
@@ -286,7 +300,9 @@ class VacuumMapCard extends HAControlBase {
         detail: {
           roomId: roomId,
           x: finalX,
-          y: finalY
+          y: finalY,
+          w: w,
+          h: h
         },
         bubbles: true,
         composed: true
@@ -306,7 +322,8 @@ class VacuumMapCard extends HAControlBase {
     e.stopPropagation();
     e.preventDefault();
     
-    const blockEl = e.currentTarget.closest('.room-block');
+    const blockEl = e.target.closest('.room-block');
+    if (!blockEl) return;
     const mapContainer = this.shadowRoot.querySelector('.map-container');
     const rect = mapContainer.getBoundingClientRect();
     
@@ -351,6 +368,8 @@ class VacuumMapCard extends HAControlBase {
       const event = new CustomEvent("room-layout-changed", {
         detail: {
           roomId: roomId,
+          x: x,
+          y: y,
           w: finalW,
           h: finalH
         },
