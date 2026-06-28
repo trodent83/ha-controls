@@ -12,11 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added support for extracting coordinates directly from the room's geometry `outline` points array attribute as a fallback.
   - Added layout transformation actions (**Flip H**, **Flip V**, and **Rotate 90°** clockwise) in the editor toolbar to instantly align room overlay configurations.
   - Integrated Home Assistant room name entities (`select.*_room_*_name`) to display and dynamically update room names globally directly from the card editor dropdown.
-  - Replaced the text icon configuration input with Home Assistant's built-in visual `<ha-icon-picker>` search select dialog.
-  - Added numeric coordinates/sizes input fields in the editor expanded panel, firing updates on `@input` to enable real-time resizing and positioning feedback.
-  - Added robust validation to filter out `NaN` values, ignoring incomplete user typing values to prevent text inputs from resetting while typing.
-  - Prevented drag-and-resize layout lag on the map display by disabling room block transitions dynamically when edit mode is active.
-  - Bumped loader to version `1.3.4` to force cache-busting.
+  - Added a premium 8-directional edge (top, bottom, left, right) and corner (NW, NE, SW, SE) visual dragging and resizing system directly on the live map preview block element.
+  - Expanded resize hover edges to 16px and corner node hit targets to 26px to provide easy, high-comfort touch and mouse targeting.
+  - Replaced the deprecated `<ha-textfield>` element with standard `<ha-input>` elements in the visual editor configurations repository-wide.
+  - Rearranged the coordinates layout grid in the editor panel to a spacious 2-column layout to prevent fields from collapsing.
+  - Bumped loader to version `1.3.8` to force cache-busting.
 
 ## [1.2.11] - 2026-06-27
 

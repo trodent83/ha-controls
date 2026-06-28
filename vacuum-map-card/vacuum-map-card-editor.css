@@ -77,7 +77,7 @@
   align-items: center;
 }
 
-.input-row ha-textfield {
+.input-row ha-input {
   flex: 1;
 }
 

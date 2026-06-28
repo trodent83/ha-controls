@@ -772,17 +772,17 @@ class VacuumMapCardEditor extends HAControlBase {
           <div class="add-room-card">
             <div class="editor-section-title" style="margin-top: 0px;">Add New Custom Room</div>
             <div class="input-row">
-              <ha-textfield
+              <ha-input
                 label="Room ID (number)"
                 type="number"
                 .value=${this._newRoomId || ''}
                 @input=${(e) => { this._newRoomId = e.target.value; }}
-              ></ha-textfield>
-              <ha-textfield
+              ></ha-input>
+              <ha-input
                 label="Room Name"
                 .value=${this._newRoomLabel || ''}
                 @input=${(e) => { this._newRoomLabel = e.target.value; }}
-              ></ha-textfield>
+              ></ha-input>
             </div>
             <ha-button @click=${this._addCustomRoom} outlined style="align-self: flex-end;">
               <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
@@ -864,7 +864,7 @@ class VacuumMapCardEditor extends HAControlBase {
                               `)}
                             </ha-select>
                           ` : html`
-                            <ha-textfield
+                            <ha-input
                               label="Home Assistant Room Name (select.*_name)"
                               .value=${nameStateObj.state || ''}
                               @change=${(e) => {
@@ -874,17 +874,17 @@ class VacuumMapCardEditor extends HAControlBase {
                                 });
                               }}
                               style="width: 100%;"
-                            ></ha-textfield>
+                            ></ha-input>
                           `}
                         </div>
                       ` : ''}
 
                       <div class="input-row">
-                        <ha-textfield
+                        <ha-input
                           label="Display Name Override (Local)"
                           .value=${room.label || ''}
                           @change=${(e) => this._updateRoomProp(id, 'label', e.target.value)}
-                        ></ha-textfield>
+                        ></ha-input>
                         
                         <ha-icon-picker
                           label="Icon Override"
@@ -895,43 +895,43 @@ class VacuumMapCardEditor extends HAControlBase {
                       </div>
                       
                       <div class="input-row">
-                        <ha-textfield
+                        <ha-input
                           label="Color (Hex / CSS)"
                           .value=${room.color || ''}
                           @change=${(e) => this._updateRoomProp(id, 'color', e.target.value)}
-                        ></ha-textfield>
-                        <ha-textfield
+                        ></ha-input>
+                        <ha-input
                           label="Active Animation"
                           .value=${room.animation || 'none'}
                           @change=${(e) => this._updateRoomProp(id, 'animation', e.target.value)}
-                        ></ha-textfield>
+                        ></ha-input>
                       </div>
 
                       <div class="coordinates-grid">
-                        <ha-textfield
+                        <ha-input
                           label="X (%)"
                           type="number"
-                          .value=${(room.x !== undefined ? room.x : 0).toString()}
+                          .value=${(room.x ?? 0).toString()}
                           @input=${(e) => this._updateRoomProp(id, 'x', parseFloat(e.target.value))}
-                        ></ha-textfield>
-                        <ha-textfield
+                        ></ha-input>
+                        <ha-input
                           label="Y (%)"
                           type="number"
-                          .value=${(room.y !== undefined ? room.y : 0).toString()}
+                          .value=${(room.y ?? 0).toString()}
                           @input=${(e) => this._updateRoomProp(id, 'y', parseFloat(e.target.value))}
-                        ></ha-textfield>
-                        <ha-textfield
+                        ></ha-input>
+                        <ha-input
                           label="W (%)"
                           type="number"
-                          .value=${(room.w !== undefined ? room.w : 15).toString()}
+                          .value=${(room.w ?? 15).toString()}
                           @input=${(e) => this._updateRoomProp(id, 'w', parseFloat(e.target.value))}
-                        ></ha-textfield>
-                        <ha-textfield
+                        ></ha-input>
+                        <ha-input
                           label="H (%)"
                           type="number"
-                          .value=${(room.h !== undefined ? room.h : 15).toString()}
+                          .value=${(room.h ?? 15).toString()}
                           @input=${(e) => this._updateRoomProp(id, 'h', parseFloat(e.target.value))}
-                        ></ha-textfield>
+                        ></ha-input>
                       </div>
 
                       <div class="input-row" style="justify-content: space-between; margin-top: 8px;">

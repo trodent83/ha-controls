@@ -250,43 +250,43 @@
     pointer-events: auto;
 }
 
-/* Edges */
+/* Edges (Double the hover width to 16px for easy selection, inset edges to prevent overlap) */
 .room-block.selected .resize-handle.top {
-    top: -4px;
-    left: 4px;
-    right: 4px;
-    height: 8px;
+    top: -8px;
+    left: 8px;
+    right: 8px;
+    height: 16px;
     cursor: n-resize;
 }
 .room-block.selected .resize-handle.bottom {
-    bottom: -4px;
-    left: 4px;
-    right: 4px;
-    height: 8px;
+    bottom: -8px;
+    left: 8px;
+    right: 8px;
+    height: 16px;
     cursor: s-resize;
 }
 .room-block.selected .resize-handle.left {
-    left: -4px;
-    top: 4px;
-    bottom: 4px;
-    width: 8px;
+    left: -8px;
+    top: 8px;
+    bottom: 8px;
+    width: 16px;
     cursor: w-resize;
 }
 .room-block.selected .resize-handle.right {
-    right: -4px;
-    top: 4px;
-    bottom: 4px;
-    width: 8px;
+    right: -8px;
+    top: 8px;
+    bottom: 8px;
+    width: 16px;
     cursor: e-resize;
 }
 
-/* Corners with visual indicator nodes */
+/* Corners (visual nodes) */
 .room-block.selected .resize-handle.top-left,
 .room-block.selected .resize-handle.top-right,
 .room-block.selected .resize-handle.bottom-left,
 .room-block.selected .resize-handle.bottom-right {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     background: var(--primary-color, #03a9f4);
     border: 1.5px solid white;
     border-radius: 50%;
@@ -294,24 +294,38 @@
 }
 
 .room-block.selected .resize-handle.top-left {
-    top: -5px;
-    left: -5px;
+    top: -6px;
+    left: -6px;
     cursor: nwse-resize;
 }
 .room-block.selected .resize-handle.top-right {
-    top: -5px;
-    right: -5px;
+    top: -6px;
+    right: -6px;
     cursor: nesw-resize;
 }
 .room-block.selected .resize-handle.bottom-left {
-    bottom: -5px;
-    left: -5px;
+    bottom: -6px;
+    left: -6px;
     cursor: nesw-resize;
 }
 .room-block.selected .resize-handle.bottom-right {
-    bottom: -5px;
-    right: -5px;
+    bottom: -6px;
+    right: -6px;
     cursor: nwse-resize;
+}
+
+/* Corners hit target expansion (adds invisible 26px target box) */
+.room-block.selected .resize-handle.top-left::after,
+.room-block.selected .resize-handle.top-right::after,
+.room-block.selected .resize-handle.bottom-left::after,
+.room-block.selected .resize-handle.bottom-right::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 26px;
+    height: 26px;
+    background: transparent;
 }
 
 /* Delete handle positioned in the top-right corner */
