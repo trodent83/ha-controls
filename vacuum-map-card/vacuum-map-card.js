@@ -197,10 +197,17 @@ class VacuumMapCard extends HAControlBase {
                   <div class="delete-handle" @click="${(e) => this._handleDeleteClick(e, room.id)}">
                     <ha-icon .icon=${'mdi:close'}></ha-icon>
                   </div>
-                  <div class="resize-handle" 
-                       @mousedown="${(e) => this._handleResizeMouseDown(e, room.id)}"
-                       @touchstart="${(e) => this._handleResizeMouseDown(e, room.id)}">
-                  </div>
+                  ${isSelected ? html`
+                    <div class="resize-handle top" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'n')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'n')}"></div>
+                    <div class="resize-handle bottom" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 's')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 's')}"></div>
+                    <div class="resize-handle left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'w')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'w')}"></div>
+                    <div class="resize-handle right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'e')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'e')}"></div>
+                    
+                    <div class="resize-handle top-left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'nw')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'nw')}"></div>
+                    <div class="resize-handle top-right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'ne')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'ne')}"></div>
+                    <div class="resize-handle bottom-left" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'sw')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'sw')}"></div>
+                    <div class="resize-handle bottom-right" @mousedown="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'se')}" @touchstart="${(e) => this._handleEdgeResizeMouseDown(e, room.id, 'se')}"></div>
+                  ` : ''}
                 ` : ''}
               </div>
             `;
@@ -321,7 +328,7 @@ class VacuumMapCard extends HAControlBase {
     window.addEventListener('touchend', handleMouseUp);
   }
 
-  _handleResizeMouseDown(e, roomId) {
+  _handleEdgeResizeMouseDown(e, roomId, direction) {
     if (!this.config.edit_mode) return;
     
     e.stopPropagation();
@@ -341,11 +348,13 @@ class VacuumMapCard extends HAControlBase {
     const rawW = parseFloat(customConfig.w);
     const rawH = parseFloat(customConfig.h);
     
-    const x = !isNaN(rawX) ? rawX : 0;
-    const y = !isNaN(rawY) ? rawY : 0;
+    const startX = !isNaN(rawX) ? rawX : 0;
+    const startY = !isNaN(rawY) ? rawY : 0;
     const startW = !isNaN(rawW) ? rawW : 15;
     const startH = !isNaN(rawH) ? rawH : 15;
     
+    let finalX = startX;
+    let finalY = startY;
     let finalW = startW;
     let finalH = startH;
     
@@ -359,12 +368,44 @@ class VacuumMapCard extends HAControlBase {
       const pctDeltaX = (deltaX / rect.width) * 100;
       const pctDeltaY = (deltaY / rect.height) * 100;
       
-      finalW = Math.round(startW + pctDeltaX);
-      finalH = Math.round(startH + pctDeltaY);
+      // Calculate adjustments based on direction
+      // Top resize
+      if (direction.includes('n')) {
+        const potentialY = startY + pctDeltaY;
+        const potentialH = startH - pctDeltaY;
+        if (potentialH >= 2 && potentialY >= 0) {
+          finalY = Math.round(potentialY);
+          finalH = Math.round(potentialH);
+        }
+      }
+      // Bottom resize
+      if (direction.includes('s')) {
+        const potentialH = startH + pctDeltaY;
+        if (potentialH >= 2) {
+          finalH = Math.round(potentialH);
+          finalH = Math.max(2, Math.min(100 - finalY, finalH));
+        }
+      }
+      // Left resize
+      if (direction.includes('w')) {
+        const potentialX = startX + pctDeltaX;
+        const potentialW = startW - pctDeltaX;
+        if (potentialW >= 2 && potentialX >= 0) {
+          finalX = Math.round(potentialX);
+          finalW = Math.round(potentialW);
+        }
+      }
+      // Right resize
+      if (direction.includes('e')) {
+        const potentialW = startW + pctDeltaX;
+        if (potentialW >= 2) {
+          finalW = Math.round(potentialW);
+          finalW = Math.max(2, Math.min(100 - finalX, finalW));
+        }
+      }
       
-      finalW = Math.max(2, Math.min(100 - x, finalW));
-      finalH = Math.max(2, Math.min(100 - y, finalH));
-      
+      blockEl.style.left = `${finalX}%`;
+      blockEl.style.top = `${finalY}%`;
       blockEl.style.width = `${finalW}%`;
       blockEl.style.height = `${finalH}%`;
     };
@@ -378,8 +419,8 @@ class VacuumMapCard extends HAControlBase {
       const event = new CustomEvent("room-layout-changed", {
         detail: {
           roomId: roomId,
-          x: x,
-          y: y,
+          x: finalX,
+          y: finalY,
           w: finalW,
           h: finalH
         },

@@ -242,32 +242,76 @@
     opacity: 1.0;
 }
 
-/* Grab resize handle positioned in the bottom-right corner */
-.room-block .resize-handle {
+/* Grab resize handles positioned along edges and corners */
+.room-block.selected .resize-handle {
     position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 14px;
-    height: 14px;
-    cursor: se-resize;
-    background: var(--primary-color, #03a9f4);
-    border-top-left-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: -1px -1px 3px rgba(0,0,0,0.3);
-    z-index: 10;
+    background: transparent;
+    z-index: 15;
     pointer-events: auto;
 }
 
-.room-block .resize-handle::after {
-    content: "";
-    width: 5px;
-    height: 5px;
-    border-right: 1.5px solid white;
-    border-bottom: 1.5px solid white;
-    margin-right: 2px;
-    margin-top: 2px;
+/* Edges */
+.room-block.selected .resize-handle.top {
+    top: -4px;
+    left: 4px;
+    right: 4px;
+    height: 8px;
+    cursor: n-resize;
+}
+.room-block.selected .resize-handle.bottom {
+    bottom: -4px;
+    left: 4px;
+    right: 4px;
+    height: 8px;
+    cursor: s-resize;
+}
+.room-block.selected .resize-handle.left {
+    left: -4px;
+    top: 4px;
+    bottom: 4px;
+    width: 8px;
+    cursor: w-resize;
+}
+.room-block.selected .resize-handle.right {
+    right: -4px;
+    top: 4px;
+    bottom: 4px;
+    width: 8px;
+    cursor: e-resize;
+}
+
+/* Corners with visual indicator nodes */
+.room-block.selected .resize-handle.top-left,
+.room-block.selected .resize-handle.top-right,
+.room-block.selected .resize-handle.bottom-left,
+.room-block.selected .resize-handle.bottom-right {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color, #03a9f4);
+    border: 1.5px solid white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.room-block.selected .resize-handle.top-left {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+}
+.room-block.selected .resize-handle.top-right {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+}
+.room-block.selected .resize-handle.bottom-left {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+}
+.room-block.selected .resize-handle.bottom-right {
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
 }
 
 /* Delete handle positioned in the top-right corner */
