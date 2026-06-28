@@ -950,6 +950,53 @@ class VacuumMapCardEditor extends HAControlBase {
                         ></ha-input>
                       </div>
 
+                      <div class="editor-section-title" style="margin-top: 12px; font-size: 12px;">
+                        Extra Shapes / Segments (e.g. L-shape)
+                      </div>
+                      
+                      ${(room.shapes || []).map((shape, idx) => html`
+                        <div class="shapes-row" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center; width: 100%;">
+                          <ha-input
+                            label="X (%)"
+                            type="number"
+                            style="flex: 1;"
+                            .value=${(shape.x ?? 0).toString()}
+                            @input=${(e) => this._updateShapeProp(id, idx, 'x', parseFloat(e.target.value))}
+                          ></ha-input>
+                          <ha-input
+                            label="Y (%)"
+                            type="number"
+                            style="flex: 1;"
+                            .value=${(shape.y ?? 0).toString()}
+                            @input=${(e) => this._updateShapeProp(id, idx, 'y', parseFloat(e.target.value))}
+                          ></ha-input>
+                          <ha-input
+                            label="W (%)"
+                            type="number"
+                            style="flex: 1;"
+                            .value=${(shape.w ?? 15).toString()}
+                            @input=${(e) => this._updateShapeProp(id, idx, 'w', parseFloat(e.target.value))}
+                          ></ha-input>
+                          <ha-input
+                            label="H (%)"
+                            type="number"
+                            style="flex: 1;"
+                            .value=${(shape.h ?? 15).toString()}
+                            @input=${(e) => this._updateShapeProp(id, idx, 'h', parseFloat(e.target.value))}
+                          ></ha-input>
+                          <ha-button @click=${() => this._deleteShape(id, idx)} class="danger-button" outlined style="--mdc-theme-primary: var(--error-color); margin-top: 4px;">
+                            <ha-icon icon="mdi:close"></ha-icon>
+                          </ha-button>
+                        </div>
+                      `)}
+                      
+                      <div class="input-row" style="margin-top: 4px; margin-bottom: 8px;">
+                        <ha-button @click=${() => this._addShape(id)} outlined>
+                          <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
+                          Add Shape Segment
+                        </ha-button>
+                      </div>
+
                       <div class="input-row" style="justify-content: space-between; margin-top: 8px;">
                         <ha-formfield label="Disable Room">
                           <ha-switch
@@ -983,6 +1030,69 @@ class VacuumMapCardEditor extends HAControlBase {
         </ha-button>
       </div>
     `;
+  }
+
+  _updateShapeProp(roomId, idx, prop, val) {
+    if (!this._config) return;
+    const rooms = { ...(this._config.rooms || {}) };
+    const room = rooms[roomId] || {};
+    const shapes = Array.isArray(room.shapes) ? [...room.shapes] : [];
+    if (shapes[idx]) {
+      shapes[idx] = {
+        ...shapes[idx],
+        [prop]: val
+      };
+      rooms[roomId] = {
+        ...room,
+        shapes
+      };
+      this._config = {
+        ...this._config,
+        rooms
+      };
+      this._fireConfigChanged();
+    }
+  }
+
+  _addShape(roomId) {
+    if (!this._config) return;
+    const rooms = { ...(this._config.rooms || {}) };
+    const room = rooms[roomId] || {};
+    const shapes = Array.isArray(room.shapes) ? [...room.shapes] : [];
+    const defaultX = Math.round((room.x !== undefined ? room.x : 0) + (room.w !== undefined ? room.w : 15));
+    const defaultY = room.y !== undefined ? room.y : 0;
+    shapes.push({
+      x: defaultX < 90 ? defaultX : 50,
+      y: defaultY,
+      w: room.w !== undefined ? room.w : 15,
+      h: room.h !== undefined ? room.h : 15
+    });
+    rooms[roomId] = {
+      ...room,
+      shapes
+    };
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    this._fireConfigChanged();
+  }
+
+  _deleteShape(roomId, idx) {
+    if (!this._config) return;
+    const rooms = { ...(this._config.rooms || {}) };
+    const room = rooms[roomId] || {};
+    const shapes = Array.isArray(room.shapes) ? [...room.shapes] : [];
+    shapes.splice(idx, 1);
+    rooms[roomId] = {
+      ...room,
+      shapes
+    };
+    this._config = {
+      ...this._config,
+      rooms
+    };
+    this._fireConfigChanged();
   }
 
   _valueChanged(ev) {
