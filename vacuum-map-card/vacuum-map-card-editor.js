@@ -407,54 +407,77 @@ class VacuumMapCardEditor extends HAControlBase {
     const roomCoordinates = [];
     
     for (const [id, room] of Object.entries(cameraRooms)) {
-      let x0 = undefined;
-      let y0 = undefined;
-      let x1 = undefined;
-      let y1 = undefined;
+      let rects = [];
       
       // Try to parse room boundary coordinates from outline points array (highest accuracy)
       if (room.outline && Array.isArray(room.outline) && room.outline.length > 0) {
-        let rx0 = Infinity, ry0 = Infinity, rx1 = -Infinity, ry1 = -Infinity;
-        room.outline.forEach(p => {
-          if (Array.isArray(p) && p.length >= 2) {
-            rx0 = Math.min(rx0, p[0]);
-            rx1 = Math.max(rx1, p[0]);
-            ry0 = Math.min(ry0, p[1]);
-            ry1 = Math.max(ry1, p[1]);
+        const poly = room.outline.filter(p => Array.isArray(p) && p.length >= 2);
+        if (poly.length >= 3) {
+          // Get unique X and Y coordinates to form grid segments
+          const xs = Array.from(new Set(poly.map(p => p[0]))).sort((a, b) => a - b);
+          const ys = Array.from(new Set(poly.map(p => p[1]))).sort((a, b) => a - b);
+          
+          const isPointInPolygon = (px, py, polygon) => {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+              const xi = polygon[i][0], yi = polygon[i][1];
+              const xj = polygon[j][0], yj = polygon[j][1];
+              const intersect = ((yi > py) !== (yj > py))
+                  && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+              if (intersect) inside = !inside;
+            }
+            return inside;
+          };
+
+          // Generate grid cells inside the room boundary polygon
+          const cells = [];
+          for (let i = 0; i < xs.length - 1; i++) {
+            for (let j = 0; j < ys.length - 1; j++) {
+              const cx = (xs[i] + xs[i + 1]) / 2;
+              const cy = (ys[j] + ys[j + 1]) / 2;
+              if (isPointInPolygon(cx, cy, poly)) {
+                cells.push({
+                  x0: xs[i],
+                  y0: ys[j],
+                  x1: xs[i + 1],
+                  y1: ys[j + 1],
+                  area: (xs[i + 1] - xs[i]) * (ys[j + 1] - ys[j])
+                });
+              }
+            }
           }
-        });
-        if (rx0 !== Infinity) {
-          x0 = rx0;
-          x1 = rx1;
-          y0 = ry0;
-          y1 = ry1;
+          
+          if (cells.length > 0) {
+            cells.sort((a, b) => b.area - a.area);
+            rects = cells;
+          }
         }
       }
       
       // Fallback to direct x0, y0, x1, y1 properties if outline parsing is unavailable
-      if (x0 === undefined) {
-        x0 = room.x0 !== undefined ? room.x0 : room.x;
-        y0 = room.y0 !== undefined ? room.y0 : room.y;
-        x1 = room.x1 !== undefined ? room.x1 : room.x;
-        y1 = room.y1 !== undefined ? room.y1 : room.y;
+      if (rects.length === 0) {
+        const x0 = room.x0 !== undefined ? room.x0 : room.x;
+        const y0 = room.y0 !== undefined ? room.y0 : room.y;
+        const x1 = room.x1 !== undefined ? room.x1 : room.x;
+        const y1 = room.y1 !== undefined ? room.y1 : room.y;
+        if (x0 !== undefined && y0 !== undefined && x1 !== undefined && y1 !== undefined &&
+            !isNaN(x0) && !isNaN(y0) && !isNaN(x1) && !isNaN(y1)) {
+          rects.push({ x0, y0, x1, y1 });
+        }
       }
       
-      if (x0 === undefined || y0 === undefined || x1 === undefined || y1 === undefined ||
-          isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
-        continue;
-      }
+      if (rects.length === 0) continue;
       
-      minX = Math.min(minX, x0, x1);
-      maxX = Math.max(maxX, x0, x1);
-      minY = Math.min(minY, y0, y1);
-      maxY = Math.max(maxY, y0, y1);
+      rects.forEach(r => {
+        minX = Math.min(minX, r.x0, r.x1);
+        maxX = Math.max(maxX, r.x0, r.x1);
+        minY = Math.min(minY, r.y0, r.y1);
+        maxY = Math.max(maxY, r.y0, r.y1);
+      });
       
       roomCoordinates.push({
         id,
-        x0,
-        y0,
-        x1,
-        y1,
+        rects,
         label: room.name,
         icon: room.icon
       });
@@ -472,10 +495,13 @@ class VacuumMapCardEditor extends HAControlBase {
     const rooms = { ...(this._config.rooms || {}) };
     
     roomCoordinates.forEach(room => {
-      const wVal = ((room.x1 - room.x0) / width) * 100;
-      const hVal = ((room.y1 - room.y0) / height) * 100;
-      const xVal = ((room.x0 - minX) / width) * 100;
-      const yVal = ((maxY - room.y1) / height) * 100;
+      const rawRects = room.rects;
+      const main = rawRects[0];
+      
+      const wVal = ((main.x1 - main.x0) / width) * 100;
+      const hVal = ((main.y1 - main.y0) / height) * 100;
+      const xVal = ((main.x0 - minX) / width) * 100;
+      const yVal = ((maxY - main.y1) / height) * 100;
       
       const current = rooms[room.id] || {};
       
@@ -484,7 +510,6 @@ class VacuumMapCardEditor extends HAControlBase {
       let x = Math.round(xVal);
       let y = Math.round(yVal);
       
-      // Fallback defaults to prevent NaN issues if calculation goes out of bounds
       if (isNaN(w) || w <= 0) w = 15;
       if (isNaN(h) || h <= 0) h = 15;
       if (isNaN(x) || x < 0) x = 10;
@@ -495,13 +520,43 @@ class VacuumMapCardEditor extends HAControlBase {
       x = Math.max(0, Math.min(100 - w, x));
       y = Math.max(0, Math.min(100 - h, y));
       
-      rooms[room.id] = {
+      const extraShapes = [];
+      for (let i = 1; i < rawRects.length; i++) {
+        const extra = rawRects[i];
+        const ewVal = ((extra.x1 - extra.x0) / width) * 100;
+        const ehVal = ((extra.y1 - extra.y0) / height) * 100;
+        const exVal = ((extra.x0 - minX) / width) * 100;
+        const eyVal = ((maxY - extra.y1) / height) * 100;
+        
+        let ew = Math.round(ewVal);
+        let eh = Math.round(ehVal);
+        let ex = Math.round(exVal);
+        let ey = Math.round(eyVal);
+        
+        if (!isNaN(ew) && ew > 0 && !isNaN(eh) && eh > 0 && !isNaN(ex) && ex >= 0 && !isNaN(ey) && ey >= 0) {
+          extraShapes.push({
+            x: Math.max(0, Math.min(100 - ew, ex)),
+            y: Math.max(0, Math.min(100 - eh, ey)),
+            w: Math.max(2, Math.min(100, ew)),
+            h: Math.max(2, Math.min(100, eh))
+          });
+        }
+      }
+      
+      const nextRoom = {
         ...current,
         x,
         y,
         w,
         h
       };
+      if (extraShapes.length > 0) {
+        nextRoom.shapes = extraShapes;
+      } else {
+        delete nextRoom.shapes;
+      }
+      
+      rooms[room.id] = nextRoom;
     });
     
     this._config = {
