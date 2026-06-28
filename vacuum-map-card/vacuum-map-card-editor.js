@@ -1010,38 +1010,40 @@ class VacuumMapCardEditor extends HAControlBase {
                       </div>
                       
                       ${(room.shapes || []).map((shape, idx) => html`
-                        <div class="shapes-row" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center; width: 100%;">
-                          <ha-input
-                            label="X (%)"
-                            type="number"
-                            style="flex: 1;"
-                            .value=${(shape.x ?? 0).toString()}
-                            @input=${(e) => this._updateShapeProp(id, idx, 'x', parseFloat(e.target.value))}
-                          ></ha-input>
-                          <ha-input
-                            label="Y (%)"
-                            type="number"
-                            style="flex: 1;"
-                            .value=${(shape.y ?? 0).toString()}
-                            @input=${(e) => this._updateShapeProp(id, idx, 'y', parseFloat(e.target.value))}
-                          ></ha-input>
-                          <ha-input
-                            label="W (%)"
-                            type="number"
-                            style="flex: 1;"
-                            .value=${(shape.w ?? 15).toString()}
-                            @input=${(e) => this._updateShapeProp(id, idx, 'w', parseFloat(e.target.value))}
-                          ></ha-input>
-                          <ha-input
-                            label="H (%)"
-                            type="number"
-                            style="flex: 1;"
-                            .value=${(shape.h ?? 15).toString()}
-                            @input=${(e) => this._updateShapeProp(id, idx, 'h', parseFloat(e.target.value))}
-                          ></ha-input>
-                          <ha-button @click=${() => this._deleteShape(id, idx)} class="danger-button" outlined style="--mdc-theme-primary: var(--error-color); margin-top: 4px;">
-                            <ha-icon icon="mdi:close"></ha-icon>
-                          </ha-button>
+                        <div class="shape-segment-card" style="border: 1px solid var(--divider-color); border-radius: 6px; padding: 8px; margin-bottom: 10px; background: rgba(255, 255, 255, 0.02);">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 500; font-size: 11px; color: var(--secondary-text-color);">Segment #${idx + 1}</span>
+                            <ha-button @click=${() => this._deleteShape(id, idx)} class="danger-button" outlined style="--mdc-theme-primary: var(--error-color); --mdc-icon-button-size: 28px;">
+                              <ha-icon icon="mdi:close" style="--mdc-icon-size: 16px;"></ha-icon>
+                              Remove
+                            </ha-button>
+                          </div>
+                          <div class="coordinates-grid">
+                            <ha-input
+                              label="X (%)"
+                              type="number"
+                              .value=${(shape.x ?? 0).toString()}
+                              @input=${(e) => this._updateShapeProp(id, idx, 'x', parseFloat(e.target.value))}
+                            ></ha-input>
+                            <ha-input
+                              label="Y (%)"
+                              type="number"
+                              .value=${(shape.y ?? 0).toString()}
+                              @input=${(e) => this._updateShapeProp(id, idx, 'y', parseFloat(e.target.value))}
+                            ></ha-input>
+                            <ha-input
+                              label="W (%)"
+                              type="number"
+                              .value=${(shape.w ?? 15).toString()}
+                              @input=${(e) => this._updateShapeProp(id, idx, 'w', parseFloat(e.target.value))}
+                            ></ha-input>
+                            <ha-input
+                              label="H (%)"
+                              type="number"
+                              .value=${(shape.h ?? 15).toString()}
+                              @input=${(e) => this._updateShapeProp(id, idx, 'h', parseFloat(e.target.value))}
+                            ></ha-input>
+                          </div>
                         </div>
                       `)}
                       

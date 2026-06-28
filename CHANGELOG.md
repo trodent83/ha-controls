@@ -17,9 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Disabled and visual-dimmed the "Select All" toggle button in edit mode to prevent altering active cleaning queues while editing room coordinates.
   - Removed visual drag-resizing handles from map overlay blocks to simplify placement. Room overlay sizing is configured exclusively via the card editor's numeric text input fields.
   - Added support for configuring L-shaped or custom rooms using multiple layout shape segments (`shapes: [{x, y, w, h}]`) in the YAML settings, shifting all segments in lockstep when the room block is dragged.
-  - Implemented a shape management interface inside the room configuration accordion tabs, allowing users to add, edit coordinates, and delete extra shape segments visually.
+  - Implemented a shape management interface inside the room configuration accordion tabs, allowing users to add, edit coordinates (aligned in a spacious 2x2 grid layout), and delete extra shape segments visually.
   - Upgraded the **Auto-Extract** tool to automatically decompose multi-vertex polygon outlines (like L-shapes) from map cameras into multiple grid-checked rectangular segments, saving them directly as extra room shapes.
-  - Bumped loader to version `1.3.15` to force cache-busting.
+  - Bumped loader to version `1.3.16` to force cache-busting.
 
 ## [1.2.11] - 2026-06-27
 
