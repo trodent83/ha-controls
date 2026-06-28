@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.3.0] - 2026-06-28
 
+### Changed
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Replaced the active rotating animation on the Dehumidify mode button with a custom smooth bouncing animation (`bounce`).
+  - Replaced the active pulsing animation on the Heating mode button with a slow-blinking opacity animation (`blink-slow`).
+  - Bumped loader to version `1.0.13` to force cache-busting.
+
 ### Added
 - **Vacuum Map Card (`vacuum-map-card`)**:
   - Implemented automatic layout coordinates extraction from Home Assistant map camera entities (`camera.*_map*`), parsing absolute coordinates and mapping them to 0-100% card percentage boundaries.

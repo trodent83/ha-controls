@@ -236,6 +236,18 @@ ha-card {
   --mdc-icon-size: 14px;
 }
 
+/* Bouncing effect for active dehumidifier state */
+.mode-btn.active.bounce ha-icon {
+  animation: bounce-loop 1.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Slow blinking effect for active heating state */
+.mode-btn.active.blink-slow ha-icon {
+  animation: blink-slow-loop 3s ease-in-out infinite;
+  will-change: opacity;
+}
+
 /* ==========================================================================
    ANIMATIONS DEFINITIONS
    ========================================================================== */
@@ -247,6 +259,16 @@ ha-card {
 @keyframes pulse-loop {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+@keyframes bounce-loop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes blink-slow-loop {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 @keyframes pulse-timer {

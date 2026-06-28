@@ -1,4 +1,4 @@
-﻿import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -344,7 +344,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
         label: isRadiatorUnavailable ? `${this._localize('heating_mode')} (Offline)` : this._localize('heating_mode'), 
         icon: isRadiatorUnavailable ? "mdi:cloud-off-outline" : "mdi:fire", 
         color: "orange", 
-        anim: "pulse",
+        anim: this.config.heating_animation || "pulse",
         disabled: isRadiatorUnavailable
       },
       { 
@@ -352,7 +352,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
         label: isDehumidifierUnavailable ? `${this._localize('dehumidify_mode')} (Offline)` : this._localize('dehumidify_mode'), 
         icon: isDehumidifierUnavailable ? "mdi:cloud-off-outline" : "mdi:water-percent", 
         color: "blue", 
-        anim: "rotating",
+        anim: this.config.dehumidifier_animation || "rotating",
         disabled: isDehumidifierUnavailable
       }
     ];

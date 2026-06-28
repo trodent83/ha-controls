@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -61,7 +61,9 @@ class RadiatorControlCardEditor extends HAControlBase {
       "select_entity",
       "timer_entity",
       "timer_hold_action",
-      "temperature_thresholds"
+      "temperature_thresholds",
+      "heating_animation",
+      "dehumidifier_animation"
     ];
     this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
@@ -125,6 +127,8 @@ class RadiatorControlCardEditor extends HAControlBase {
     if (this._config.timer_entity !== undefined) cleaned.timer_entity = this._config.timer_entity;
     if (this._config.timer_hold_action !== undefined) cleaned.timer_hold_action = this._config.timer_hold_action;
     if (this._config.temperature_thresholds !== undefined) cleaned.temperature_thresholds = this._config.temperature_thresholds;
+    if (this._config.heating_animation !== undefined) cleaned.heating_animation = this._config.heating_animation;
+    if (this._config.dehumidifier_animation !== undefined) cleaned.dehumidifier_animation = this._config.dehumidifier_animation;
 
     this._config = cleaned;
     this._fireConfigChanged();
