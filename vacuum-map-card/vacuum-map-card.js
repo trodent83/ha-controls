@@ -262,10 +262,15 @@ class VacuumMapCard extends HAControlBase {
     const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
     
     const customConfig = this.config.rooms?.[roomId] || {};
-    const startX = customConfig.x !== undefined ? parseFloat(customConfig.x) : 0;
-    const startY = customConfig.y !== undefined ? parseFloat(customConfig.y) : 0;
-    const w = customConfig.w !== undefined ? parseFloat(customConfig.w) : 15;
-    const h = customConfig.h !== undefined ? parseFloat(customConfig.h) : 15;
+    const rawX = parseFloat(customConfig.x);
+    const rawY = parseFloat(customConfig.y);
+    const rawW = parseFloat(customConfig.w);
+    const rawH = parseFloat(customConfig.h);
+    
+    const startX = !isNaN(rawX) ? rawX : 0;
+    const startY = !isNaN(rawY) ? rawY : 0;
+    const w = !isNaN(rawW) ? rawW : 15;
+    const h = !isNaN(rawH) ? rawH : 15;
     
     let finalX = startX;
     let finalY = startY;
@@ -331,10 +336,15 @@ class VacuumMapCard extends HAControlBase {
     const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
     
     const customConfig = this.config.rooms?.[roomId] || {};
-    const x = customConfig.x !== undefined ? parseFloat(customConfig.x) : 0;
-    const y = customConfig.y !== undefined ? parseFloat(customConfig.y) : 0;
-    const startW = customConfig.w !== undefined ? parseFloat(customConfig.w) : 15;
-    const startH = customConfig.h !== undefined ? parseFloat(customConfig.h) : 15;
+    const rawX = parseFloat(customConfig.x);
+    const rawY = parseFloat(customConfig.y);
+    const rawW = parseFloat(customConfig.w);
+    const rawH = parseFloat(customConfig.h);
+    
+    const x = !isNaN(rawX) ? rawX : 0;
+    const y = !isNaN(rawY) ? rawY : 0;
+    const startW = !isNaN(rawW) ? rawW : 15;
+    const startH = !isNaN(rawH) ? rawH : 15;
     
     let finalW = startW;
     let finalH = startH;

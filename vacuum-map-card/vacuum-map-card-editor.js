@@ -321,12 +321,17 @@ class VacuumMapCardEditor extends HAControlBase {
       delete rooms[roomId];
     } else {
       const current = rooms[roomId] || {};
+      const newX = (x !== undefined && !isNaN(x)) ? x : current.x;
+      const newY = (y !== undefined && !isNaN(y)) ? y : current.y;
+      const newW = (w !== undefined && !isNaN(w)) ? w : current.w;
+      const newH = (h !== undefined && !isNaN(h)) ? h : current.h;
+      
       rooms[roomId] = {
         ...current,
-        ...(x !== undefined ? { x } : {}),
-        ...(y !== undefined ? { y } : {}),
-        ...(w !== undefined ? { w } : {}),
-        ...(h !== undefined ? { h } : {})
+        ...(newX !== undefined ? { x: newX } : {}),
+        ...(newY !== undefined ? { y: newY } : {}),
+        ...(newW !== undefined ? { w: newW } : {}),
+        ...(newH !== undefined ? { h: newH } : {})
       };
     }
     
@@ -356,17 +361,25 @@ class VacuumMapCardEditor extends HAControlBase {
     const parts = vacuumId.split('.');
     if (parts.length < 2) return;
     const vacuumName = parts[1];
-    const cameraEntityId = `camera.${vacuumName}_map`;
     
-    const cameraState = this.hass.states[cameraEntityId];
-    if (!cameraState) {
-      alert(`Could not find the map camera entity "${cameraEntityId}" in Home Assistant. Please make sure the camera entity is enabled.`);
-      return;
+    // Find all matching camera entities (e.g. current map camera and saved maps cameras)
+    const cameraPrefix = `camera.${vacuumName}_map`;
+    const cameraEntities = Object.keys(this.hass.states).filter(id => id.startsWith(cameraPrefix));
+    
+    let cameraRooms = null;
+    let selectedCameraId = '';
+    
+    for (const camId of cameraEntities) {
+      const camState = this.hass.states[camId];
+      if (camState && camState.attributes.rooms && Object.keys(camState.attributes.rooms).length > 0) {
+        cameraRooms = camState.attributes.rooms;
+        selectedCameraId = camId;
+        break;
+      }
     }
     
-    const cameraRooms = cameraState.attributes.rooms;
-    if (!cameraRooms || typeof cameraRooms !== 'object' || Object.keys(cameraRooms).length === 0) {
-      alert("No room coordinate data found on the camera entity. Make sure the map has loaded and rooms are defined.");
+    if (!cameraRooms) {
+      alert(`Could not find any map camera entity starting with "${cameraPrefix}" containing room coordinates in Home Assistant. Please make sure map data is loaded.`);
       return;
     }
 
@@ -378,12 +391,42 @@ class VacuumMapCardEditor extends HAControlBase {
     const roomCoordinates = [];
     
     for (const [id, room] of Object.entries(cameraRooms)) {
-      const x0 = room.x0 !== undefined ? room.x0 : room.x;
-      const y0 = room.y0 !== undefined ? room.y0 : room.y;
-      const x1 = room.x1 !== undefined ? room.x1 : room.x;
-      const y1 = room.y1 !== undefined ? room.y1 : room.y;
+      let x0 = undefined;
+      let y0 = undefined;
+      let x1 = undefined;
+      let y1 = undefined;
       
-      if (x0 === undefined || y0 === undefined || x1 === undefined || y1 === undefined) continue;
+      // Try to parse room boundary coordinates from outline points array (highest accuracy)
+      if (room.outline && Array.isArray(room.outline) && room.outline.length > 0) {
+        let rx0 = Infinity, ry0 = Infinity, rx1 = -Infinity, ry1 = -Infinity;
+        room.outline.forEach(p => {
+          if (Array.isArray(p) && p.length >= 2) {
+            rx0 = Math.min(rx0, p[0]);
+            rx1 = Math.max(rx1, p[0]);
+            ry0 = Math.min(ry0, p[1]);
+            ry1 = Math.max(ry1, p[1]);
+          }
+        });
+        if (rx0 !== Infinity) {
+          x0 = rx0;
+          x1 = rx1;
+          y0 = ry0;
+          y1 = ry1;
+        }
+      }
+      
+      // Fallback to direct x0, y0, x1, y1 properties if outline parsing is unavailable
+      if (x0 === undefined) {
+        x0 = room.x0 !== undefined ? room.x0 : room.x;
+        y0 = room.y0 !== undefined ? room.y0 : room.y;
+        x1 = room.x1 !== undefined ? room.x1 : room.x;
+        y1 = room.y1 !== undefined ? room.y1 : room.y;
+      }
+      
+      if (x0 === undefined || y0 === undefined || x1 === undefined || y1 === undefined ||
+          isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
+        continue;
+      }
       
       minX = Math.min(minX, x0, x1);
       maxX = Math.max(maxX, x0, x1);
@@ -401,7 +444,8 @@ class VacuumMapCardEditor extends HAControlBase {
       });
     }
     
-    if (roomCoordinates.length === 0 || minX === Infinity || maxX === -Infinity || minY === Infinity || maxY === -Infinity) {
+    if (roomCoordinates.length === 0 || minX === Infinity || maxX === -Infinity || minY === Infinity || maxY === -Infinity ||
+        isNaN(minX) || isNaN(maxX) || isNaN(minY) || isNaN(maxY)) {
       alert("No valid room outline coordinates found on the camera entity.");
       return;
     }
@@ -419,10 +463,21 @@ class VacuumMapCardEditor extends HAControlBase {
       
       const current = rooms[room.id] || {};
       
-      const w = Math.max(5, Math.min(100, Math.round(wVal)));
-      const h = Math.max(5, Math.min(100, Math.round(hVal)));
-      const x = Math.max(0, Math.min(100 - w, Math.round(xVal)));
-      const y = Math.max(0, Math.min(100 - h, Math.round(yVal)));
+      let w = Math.round(wVal);
+      let h = Math.round(hVal);
+      let x = Math.round(xVal);
+      let y = Math.round(yVal);
+      
+      // Fallback defaults to prevent NaN issues if calculation goes out of bounds
+      if (isNaN(w) || w <= 0) w = 15;
+      if (isNaN(h) || h <= 0) h = 15;
+      if (isNaN(x) || x < 0) x = 10;
+      if (isNaN(y) || y < 0) y = 10;
+      
+      w = Math.max(5, Math.min(100, w));
+      h = Math.max(5, Math.min(100, h));
+      x = Math.max(0, Math.min(100 - w, x));
+      y = Math.max(0, Math.min(100 - h, y));
       
       rooms[room.id] = {
         ...current,
@@ -439,7 +494,7 @@ class VacuumMapCardEditor extends HAControlBase {
     };
     
     this._fireConfigChanged();
-    alert(`Successfully extracted coordinates for ${roomCoordinates.length} rooms!`);
+    alert(`Successfully extracted coordinates for ${roomCoordinates.length} rooms from camera "${selectedCameraId}"!`);
   }
 
   _addCustomRoom() {
