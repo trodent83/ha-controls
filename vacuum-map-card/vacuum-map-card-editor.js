@@ -619,14 +619,15 @@ class VacuumMapCardEditor extends HAControlBase {
 
   _updateRoomProp(id, prop, value) {
     if (!this._config) return;
-    const rooms = { ...(this._config.rooms || {}) };
-    const current = rooms[id] || {};
     
     let val = value;
     if (prop === 'x' || prop === 'y' || prop === 'w' || prop === 'h') {
-      if (isNaN(val)) val = 0;
+      if (isNaN(val)) return; // Skip updating during empty/incomplete input typing
       val = Math.max(0, Math.min(100, val));
     }
+    
+    const rooms = { ...(this._config.rooms || {}) };
+    const current = rooms[id] || {};
     
     rooms[id] = {
       ...current,
@@ -910,26 +911,26 @@ class VacuumMapCardEditor extends HAControlBase {
                         <ha-textfield
                           label="X (%)"
                           type="number"
-                          .value=${room.x !== undefined ? room.x : 0}
-                          @change=${(e) => this._updateRoomProp(id, 'x', parseFloat(e.target.value))}
+                          .value=${(room.x !== undefined ? room.x : 0).toString()}
+                          @input=${(e) => this._updateRoomProp(id, 'x', parseFloat(e.target.value))}
                         ></ha-textfield>
                         <ha-textfield
                           label="Y (%)"
                           type="number"
-                          .value=${room.y !== undefined ? room.y : 0}
-                          @change=${(e) => this._updateRoomProp(id, 'y', parseFloat(e.target.value))}
+                          .value=${(room.y !== undefined ? room.y : 0).toString()}
+                          @input=${(e) => this._updateRoomProp(id, 'y', parseFloat(e.target.value))}
                         ></ha-textfield>
                         <ha-textfield
                           label="W (%)"
                           type="number"
-                          .value=${room.w !== undefined ? room.w : 15}
-                          @change=${(e) => this._updateRoomProp(id, 'w', parseFloat(e.target.value))}
+                          .value=${(room.w !== undefined ? room.w : 15).toString()}
+                          @input=${(e) => this._updateRoomProp(id, 'w', parseFloat(e.target.value))}
                         ></ha-textfield>
                         <ha-textfield
                           label="H (%)"
                           type="number"
-                          .value=${room.h !== undefined ? room.h : 15}
-                          @change=${(e) => this._updateRoomProp(id, 'h', parseFloat(e.target.value))}
+                          .value=${(room.h !== undefined ? room.h : 15).toString()}
+                          @input=${(e) => this._updateRoomProp(id, 'h', parseFloat(e.target.value))}
                         ></ha-textfield>
                       </div>
 
