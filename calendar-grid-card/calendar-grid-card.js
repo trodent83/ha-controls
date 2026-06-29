@@ -329,14 +329,25 @@ class CalendarGridCard extends HAControlBase {
     }
   }
 
-  /**
-   * Reloads calendar data matching the current dates coordinate.
-   * 
-   * @private
-   */
-  _refresh() {
+  async _refresh() {
+    this._fetching = true;
+    this.requestUpdate();
+
+    const entities = (this.config.entities || (this.config.entity ? [this.config.entity] : []))
+      .map(e => (typeof e === 'object' ? e.entity : e));
+      
+    if (entities.length > 0) {
+      try {
+        await this.hass.callService("homeassistant", "update_entity", {
+          entity_id: entities
+        });
+      } catch (e) {
+        console.error("Error updating calendar entities", e);
+      }
+    }
+
     const { start, end } = this._getViewDateRange();
-    this._fetchEvents(start, end);
+    await this._fetchEvents(start, end);
   }
 
   /**

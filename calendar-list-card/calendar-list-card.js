@@ -250,11 +250,22 @@ class CalendarListCard extends HAControlBase {
     }
   }
 
-  /**
-   * Manual refresh command.
-   */
-  _refresh() {
-    this._fetchEvents();
+  async _refresh() {
+    this._fetching = true;
+    this.requestUpdate();
+
+    const entities = this._getEntities();
+    if (entities.length > 0) {
+      try {
+        await this.hass.callService("homeassistant", "update_entity", {
+          entity_id: entities
+        });
+      } catch (e) {
+        console.error("Error updating calendar entities", e);
+      }
+    }
+
+    await this._fetchEvents();
   }
 
   /**
