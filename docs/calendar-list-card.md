@@ -20,6 +20,7 @@ Below is the complete configuration schema for the card. Define these fields in 
 | `max_items` | number | No | — | Maximum total number of events to show in the list. |
 | `show_refresh_button` | boolean | No | `false` | Displays a refresh icon button in the header bar. |
 | `show_finished_events` | boolean | No | `true` | When set to `false`, events that have already ended will be hidden. |
+| `start_date` | string | No | — | Optional custom ISO start date string (e.g. `YYYY-MM-DD`). Allows querying events from a specific date rather than always starting from the current system date. |
 | `show_due_date` | boolean | No | `true` | Displays the start date of each event. |
 | `show_description` | boolean | No | `false` | Displays the event description text (if available). |
 | `show_due_in_days` | boolean | No | `true` | Displays the relative day count (e.g. "Tomorrow", "In 5 days"). |

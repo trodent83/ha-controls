@@ -253,6 +253,20 @@ class CalendarGridCard extends HAControlBase {
         return { start: startView, end: endView };
     }
 
+    if (this.config.month_start === 'today' || this.config.rolling_month) {
+        const startView = new Date(this._currentDate);
+        const dayOfWeek = startView.getDay();
+        const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
+        startView.setDate(startView.getDate() - diff);
+        startView.setHours(0, 0, 0, 0);
+
+        const endView = new Date(startView);
+        endView.setDate(endView.getDate() + 34); // 5 weeks (35 days total)
+        endView.setHours(23, 59, 59, 999);
+
+        return { start: startView, end: endView };
+    }
+
     const year = this._currentDate.getFullYear();
     const month = this._currentDate.getMonth();
     
@@ -450,6 +464,10 @@ class CalendarGridCard extends HAControlBase {
         const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
         const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
         monthName = this._localize('cgc.card.week_of', { start: startDateStr, end: endDateStr });
+    } else if (view === 'month' && (this.config.month_start === 'today' || this.config.rolling_month)) {
+        const startMonthName = start.toLocaleString(lang, { month: 'short' });
+        const endMonthName = end.toLocaleString(lang, { month: 'short', year: 'numeric' });
+        monthName = `${startMonthName} - ${endMonthName}`;
     } else {
         monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
     }
