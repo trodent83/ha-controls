@@ -36,6 +36,9 @@ class WeatherGridCard extends HAControlBase {
     return document.createElement("weather-grid-card-editor");
   }
 
+  get translationPath() { return "/local/ha-controls/weather-grid-card/translations"; }
+  get translationVersion() { return VERSION; }
+
   constructor() {
     super();
     this._forecast = null;

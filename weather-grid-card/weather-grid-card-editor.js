@@ -26,6 +26,9 @@ class WeatherGridCardEditor extends HAControlBase {
     this._activeTab = 'general';
   }
 
+  get translationPath() { return "/local/ha-controls/weather-grid-card/translations"; }
+  get translationVersion() { return VERSION; }
+
   setConfig(config) {
     this._config = {
       max_days: 7,
