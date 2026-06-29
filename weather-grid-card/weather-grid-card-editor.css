@@ -1,0 +1,27 @@
+/* ==========================================================================
+   WEATHER GRID CARD EDITOR STYLESHEET
+   Styles for card configuration visual editor panel.
+   ========================================================================== */
+
+:host {
+  display: block;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-start;
+}
+
+ha-button {
+  cursor: pointer;
+}
+
+ha-button.warning {
+  --mdc-theme-primary: var(--error-color, #f44336) !important;
+}
+
+ha-icon {
+  --mdc-icon-size: 18px;
+}

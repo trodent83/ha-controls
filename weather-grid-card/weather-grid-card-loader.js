@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 // Name of this loader module script
 const SCRIPT_NAME = "weather-grid-card-loader.js";
@@ -14,5 +14,8 @@ const SCRIPT_NAME = "weather-grid-card-loader.js";
 // Initialize unified control loader
 const loader = new HAControlLoader(SCRIPT_NAME, VERSION);
 
-// Register custom weather-grid-card
-loader.registerCard("weather-grid-card", "weather-grid-card.js");
+// Dynamically load stylesheets and scripts needed by the control
+loader.loadModules(
+  ["weather-grid-card.css", "weather-grid-card-editor.css"],
+  ["weather-grid-card.js", "weather-grid-card-editor.js"]
+);
