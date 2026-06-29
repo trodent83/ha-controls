@@ -7,11 +7,45 @@
   display: block;
 }
 
+/* Tab navigation container */
+.ha-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+  margin-bottom: 16px;
+}
+
+/* Individual tab button */
+.ha-tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--secondary-text-color);
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease, color 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hover state */
+.ha-tab:hover {
+  color: var(--primary-text-color);
+}
+
+/* Active tab */
+.ha-tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+/* Editor utility actions */
 .editor-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-top: 24px;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  border-top: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+  padding-top: 16px;
 }
 
 ha-button {
@@ -23,5 +57,5 @@ ha-button.warning {
 }
 
 ha-icon {
-  --mdc-icon-size: 18px;
+  --mdc-icon-size: 16px;
 }

@@ -8,7 +8,7 @@ const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
 
 /**
  * WeatherGridCardEditor
- * Visual configuration editor for WeatherGridCard.
+ * Visual configuration editor for WeatherGridCard with tab navigation support.
  * 
  * @extends HAControlBase
  */
@@ -16,8 +16,14 @@ class WeatherGridCardEditor extends HAControlBase {
   static get properties() {
     return {
       ...super.properties,
-      _config: { type: Object }
+      _config: { type: Object },
+      _activeTab: { type: String }
     };
+  }
+
+  constructor() {
+    super();
+    this._activeTab = 'general';
   }
 
   setConfig(config) {
@@ -89,7 +95,7 @@ class WeatherGridCardEditor extends HAControlBase {
   render() {
     if (!this.hass || !this._config) return html``;
 
-    const schema = [
+    const generalSchema = [
       { name: "entity", label: 'Weather Entity', selector: { entity: { domain: "weather" } } },
       { name: "name", label: 'Custom Title', selector: { text: {} } },
       {
@@ -103,7 +109,10 @@ class WeatherGridCardEditor extends HAControlBase {
             ]
           }
         }
-      },
+      }
+    ];
+
+    const layoutSchema = [
       { name: "max_days", label: 'Max Forecast Days', selector: { number: { min: 1, max: 15, mode: "box" } } },
       { name: "warning_entity", label: 'Warning Entity (Optional)', selector: { entity: {} } }
     ];
@@ -112,14 +121,39 @@ class WeatherGridCardEditor extends HAControlBase {
       ${this.renderStyle('weather-grid-card-editor.css')}
       ${this.renderConfigValidationWarning()}
 
+      <div class="ha-tabs">
+        <div 
+          class="ha-tab ${this._activeTab === 'general' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'general'; }}
+        >
+          General
+        </div>
+        <div 
+          class="ha-tab ${this._activeTab === 'layout' ? 'active' : ''}" 
+          @click=${() => { this._activeTab = 'layout'; }}
+        >
+          Layout
+        </div>
+      </div>
+
       <div style="margin-top: 16px;">
-        <ha-form
-          .hass=${this.hass}
-          .data=${this._config}
-          .schema=${schema}
-          .computeLabel=${(s) => s.label || s.name}
-          @value-changed=${this._valueChanged}
-        ></ha-form>
+        ${this._activeTab === 'general' ? html`
+          <ha-form
+            .hass=${this.hass}
+            .data=${this._config}
+            .schema=${generalSchema}
+            .computeLabel=${(s) => s.label || s.name}
+            @value-changed=${this._valueChanged}
+          ></ha-form>
+        ` : html`
+          <ha-form
+            .hass=${this.hass}
+            .data=${this._config}
+            .schema=${layoutSchema}
+            .computeLabel=${(s) => s.label || s.name}
+            @value-changed=${this._valueChanged}
+          ></ha-form>
+        `}
       </div>
 
       <div class="editor-actions">

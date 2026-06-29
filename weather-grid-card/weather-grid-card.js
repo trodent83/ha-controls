@@ -95,26 +95,46 @@ class WeatherGridCard extends HAControlBase {
       this._forecast = stateObj.attributes.forecast;
     }
 
-    // Step 2: Try fetching via new service call system
+    // Step 2: Try fetching via new service call system using WebSocket
     try {
-      const dailyResponse = await this.hass.callService("weather", "get_forecasts", {
-        entity_id: entityId,
-        type: "daily"
-      }, undefined, true);
-      if (dailyResponse && dailyResponse[entityId]) {
-        this._forecast = dailyResponse[entityId].forecast;
+      const dailyResponse = await this.hass.callWS({
+        type: "call_service",
+        domain: "weather",
+        service: "get_forecasts",
+        service_data: {
+          entity_id: entityId,
+          type: "daily"
+        },
+        return_response: true
+      });
+      if (dailyResponse) {
+        if (dailyResponse[entityId]) {
+          this._forecast = dailyResponse[entityId].forecast;
+        } else if (dailyResponse.response && dailyResponse.response[entityId]) {
+          this._forecast = dailyResponse.response[entityId].forecast;
+        }
       }
     } catch (e) {
       console.warn("Could not fetch daily weather forecast via service call.", e);
     }
 
     try {
-      const hourlyResponse = await this.hass.callService("weather", "get_forecasts", {
-        entity_id: entityId,
-        type: "hourly"
-      }, undefined, true);
-      if (hourlyResponse && hourlyResponse[entityId]) {
-        this._hourlyForecast = hourlyResponse[entityId].forecast;
+      const hourlyResponse = await this.hass.callWS({
+        type: "call_service",
+        domain: "weather",
+        service: "get_forecasts",
+        service_data: {
+          entity_id: entityId,
+          type: "hourly"
+        },
+        return_response: true
+      });
+      if (hourlyResponse) {
+        if (hourlyResponse[entityId]) {
+          this._hourlyForecast = hourlyResponse[entityId].forecast;
+        } else if (hourlyResponse.response && hourlyResponse.response[entityId]) {
+          this._hourlyForecast = hourlyResponse.response[entityId].forecast;
+        }
       }
     } catch (e) {
       console.warn("Could not fetch hourly weather forecast via service call.", e);
@@ -173,6 +193,30 @@ class WeatherGridCard extends HAControlBase {
   }
 
   /**
+   * Resolves HSL color dynamically depending on the weather condition.
+   */
+  _getConditionColor(cond) {
+    const map = {
+      "clear-night": "var(--state-weather-clear-night-color, #7986cb)", // Indigo-ish
+      "cloudy": "var(--state-weather-cloudy-color, #90a4ae)", // Blue-gray
+      "fog": "var(--state-weather-fog-color, #b0bec5)",
+      "hail": "var(--state-weather-hail-color, #80deea)", // Pale teal
+      "lightning": "var(--state-weather-lightning-color, #fdd835)", // Yellow
+      "lightning-rainy": "var(--state-weather-lightning-rainy-color, #ffb300)", // Amber
+      "partlycloudy": "var(--state-weather-partlycloudy-color, #b0bec5)", // Light gray
+      "pouring": "var(--state-weather-pouring-color, #0288d1)", // Darker blue
+      "rainy": "var(--state-weather-rainy-color, #29b6f6)", // Sky blue
+      "snowy": "var(--state-weather-snowy-color, #e0f7fa)", // Icy white
+      "snowy-rainy": "var(--state-weather-snowy-rainy-color, #80deea)",
+      "sunny": "var(--state-weather-sunny-color, #ffb300)", // Yellow-orange
+      "windy": "var(--state-weather-windy-color, #4db6ac)", // Teal-gray
+      "windy-variant": "var(--state-weather-windy-variant-color, #80cbc4)",
+      "exceptional": "var(--state-weather-exceptional-color, #e57373)" // Coral red
+    };
+    return map[cond?.toLowerCase()] || "var(--primary-color, #ff9800)";
+  }
+
+  /**
    * Formats condition ID string for display label.
    */
   _getConditionLabel(cond) {
@@ -200,29 +244,39 @@ class WeatherGridCard extends HAControlBase {
   }
 
   /**
-   * Renders summary/compact navigation mode block.
+   * Renders summary/compact forecast block matching multi-state-card layout.
+   * Renders the next 5 days.
    */
   _renderSummary(stateObj) {
-    const temp = stateObj.attributes.temperature;
-    const cond = stateObj.state;
-    const condIcon = this._getConditionIcon(cond);
-    const condLabel = this._getConditionLabel(cond);
+    const forecastDays = this._forecast ? this._forecast.slice(0, 5) : [];
+    const locale = this.hass.locale || { language: 'en' };
 
     return html`
       ${this.renderStyle('weather-grid-card.css')}
       <ha-card class="summary-card" @click="${this._navigate}">
-        <div class="summary-main">
-          <div class="summary-left">
-            <ha-icon .icon="${condIcon}" class="summary-icon"></ha-icon>
-            <div class="summary-meta">
-              <span class="summary-title">${this.config.name || stateObj.attributes.friendly_name}</span>
-              <span class="summary-state">${condLabel}</span>
-            </div>
-          </div>
-          <div class="summary-right">
-            <span class="summary-temp">${temp}°C</span>
-            <ha-icon icon="mdi:chevron-right" class="summary-chevron"></ha-icon>
-          </div>
+        <div class="content-container layout-row">
+          ${forecastDays.length === 0 ? html`
+            <div class="empty-text">Loading forecast...</div>
+          ` : forecastDays.map((day) => {
+            const date = new Date(day.datetime);
+            const dayName = date.toLocaleDateString(locale.language, { weekday: 'short' });
+            const icon = this._getConditionIcon(day.condition);
+            const iconColor = this._getConditionColor(day.condition);
+            
+            return html`
+              <div class="multi-state-entity">
+                <div class="btn">
+                  <ha-icon .icon="${icon}" style="color: ${iconColor};"></ha-icon>
+                  <div class="info-container">
+                    <span class="label">${dayName}</span>
+                    <div class="value-container">
+                      <span class="value-text">${day.temperature}°</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })}
         </div>
       </ha-card>
     `;
@@ -265,14 +319,14 @@ class WeatherGridCard extends HAControlBase {
               const dayName = date.toLocaleDateString(locale.language, { weekday: 'long' });
               const dateStr = date.toLocaleDateString(locale.language, { month: 'short', day: 'numeric' });
               const icon = this._getConditionIcon(day.condition);
-              const label = this._getConditionLabel(day.condition);
+              const iconColor = this._getConditionColor(day.condition);
 
               return html`
                 <div class="grid-cell" @click="${() => this._openDetails(day)}">
                   <div class="cell-day">${dayName}</div>
                   <div class="cell-date">${dateStr}</div>
-                  <ha-icon .icon="${icon}" class="cell-icon"></ha-icon>
-                  <div class="cell-label">${label}</div>
+                  <ha-icon .icon="${icon}" class="cell-icon" style="color: ${iconColor};"></ha-icon>
+                  <div class="cell-label">${this._getConditionLabel(day.condition)}</div>
                   <div class="cell-temps">
                     <span class="temp-high">${day.temperature}°</span>
                     ${day.templow !== undefined ? html`<span class="temp-low">${day.templow}°</span>` : ''}
@@ -313,6 +367,7 @@ class WeatherGridCard extends HAControlBase {
     const date = new Date(day.datetime);
     const dayTitle = date.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric' });
     const condIcon = this._getConditionIcon(day.condition);
+    const condColor = this._getConditionColor(day.condition);
     const condLabel = this._getConditionLabel(day.condition);
 
     // Filter hourly forecast mapping to the selected day boundaries
@@ -337,7 +392,7 @@ class WeatherGridCard extends HAControlBase {
           <div class="dialog-body">
             <!-- Big Status Block -->
             <div class="details-top">
-              <ha-icon .icon="${condIcon}" class="details-big-icon"></ha-icon>
+              <ha-icon .icon="${condIcon}" class="details-big-icon" style="color: ${condColor};"></ha-icon>
               <div class="details-main-temps">
                 <span class="details-high">${day.temperature}°C</span>
                 ${day.templow !== undefined ? html`<span class="details-low">/ ${day.templow}°C</span>` : ''}
@@ -419,7 +474,7 @@ class WeatherGridCard extends HAControlBase {
                   return html`
                     <div class="hourly-slot">
                       <span class="slot-time">${timeLabel}</span>
-                      <ha-icon .icon="${hourIcon}" class="slot-icon"></ha-icon>
+                      <ha-icon .icon="${hourIcon}" class="slot-icon" style="color: ${this._getConditionColor(hour.condition)};"></ha-icon>
                       <span class="slot-temp">${hour.temperature}°</span>
                       ${hour.precipitation_probability ? html`<span class="slot-rain">${hour.precipitation_probability}%</span>` : ''}
                     </div>
