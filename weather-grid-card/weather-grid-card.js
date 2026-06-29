@@ -67,19 +67,89 @@ class WeatherGridCard extends HAControlBase {
   }
 
   /**
+  connectedCallback() {
+    super.connectedCallback();
+    this._subscribeForecasts();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unsubscribeForecasts();
+  }
+
+  _unsubscribeForecasts() {
+    if (this._dailySub) {
+      this._dailySub.then(unsub => unsub()).catch(() => {});
+      this._dailySub = null;
+    }
+    if (this._hourlySub) {
+      this._hourlySub.then(unsub => unsub()).catch(() => {});
+      this._hourlySub = null;
+    }
+  }
+
+  async _subscribeForecasts() {
+    this._unsubscribeForecasts();
+    if (!this.hass || !this.config?.entity) return;
+    const entityId = this.config.entity;
+
+    try {
+      this._dailySub = this.hass.connection.subscribeMessage(
+        (update) => {
+          if (update && update.forecast) {
+            this._forecast = update.forecast;
+            this.requestUpdate();
+          }
+        },
+        {
+          type: "weather/subscribe_forecast",
+          entity_id: entityId,
+          forecast_type: "daily"
+        }
+      );
+    } catch (e) {
+      console.warn("Could not subscribe to daily forecast. Falling back to service call.", e);
+      this._fetchForecasts();
+    }
+
+    try {
+      this._hourlySub = this.hass.connection.subscribeMessage(
+        (update) => {
+          if (update && update.forecast) {
+            this._hourlyForecast = update.forecast;
+            this.requestUpdate();
+          }
+        },
+        {
+          type: "weather/subscribe_forecast",
+          entity_id: entityId,
+          forecast_type: "hourly"
+        }
+      );
+    } catch (e) {
+      console.warn("Could not subscribe to hourly forecast.", e);
+    }
+  }
+
+  /**
    * Lifecycle hook to fetch forecast data when entities update.
    */
   updated(changedProperties) {
     super.updated(changedProperties);
-    if (changedProperties.has("hass") || changedProperties.has("config")) {
+    if (changedProperties.has("config")) {
+      this._subscribeForecasts();
+    } else if (changedProperties.has("hass")) {
       const oldHass = changedProperties.get("hass");
       const entityId = this.config?.entity;
       if (entityId) {
         const oldState = oldHass?.states[entityId];
         const newState = this.hass.states[entityId];
-        // Fetch only if entity ID changed, state changed, or we haven't fetched yet
         if (!oldState || oldState.state !== newState?.state || oldState.last_updated !== newState?.last_updated || !this._forecast) {
-          this._fetchForecasts();
+          if (!this._dailySub) {
+            this._subscribeForecasts();
+          } else {
+            this._fetchForecasts();
+          }
         }
       }
     }
@@ -92,10 +162,19 @@ class WeatherGridCard extends HAControlBase {
     if (!this.hass || !this.config?.entity) return;
     const entityId = this.config.entity;
     
-    // Step 1: Read legacy/attribute forecast as fallback
+    // Step 1: Read legacy/attribute forecast as fallbacks
     const stateObj = this.hass.states[entityId];
-    if (stateObj && stateObj.attributes.forecast) {
-      this._forecast = stateObj.attributes.forecast;
+    if (stateObj) {
+      if (stateObj.attributes.forecast) {
+        this._forecast = stateObj.attributes.forecast;
+      }
+      if (stateObj.attributes.hourly_forecast) {
+        this._hourlyForecast = stateObj.attributes.hourly_forecast;
+      } else if (stateObj.attributes.forecast_hourly) {
+        this._hourlyForecast = stateObj.attributes.forecast_hourly;
+      } else if (stateObj.attributes.hourly) {
+        this._hourlyForecast = stateObj.attributes.hourly;
+      }
     }
 
     // Step 2: Try fetching via new service call system using WebSocket
@@ -184,18 +263,6 @@ class WeatherGridCard extends HAControlBase {
     return null;
   }
 
-  /**
-   * Navigates Home Assistant router instantly to the forecast page.
-   */
-  _navigate() {
-    const path = "/eg-dashboard/weather-forecast";
-    window.history.pushState(null, "", path);
-    const event = new Event("location-changed", {
-      bubbles: true,
-      composed: true
-    });
-    window.dispatchEvent(event);
-  }
 
   /**
    * Resolves Material Design weather icon mapping.
@@ -282,7 +349,7 @@ class WeatherGridCard extends HAControlBase {
 
     return html`
       ${this.renderStyle('weather-grid-card.css')}
-      <ha-card class="summary-card" @click="${this._navigate}">
+      <ha-card class="summary-card">
         <div class="content-container layout-row">
           ${forecastDays.length === 0 ? html`
             <div class="empty-text">Loading forecast...</div>
@@ -293,7 +360,7 @@ class WeatherGridCard extends HAControlBase {
             const iconColor = this._getConditionColor(day.condition);
             
             return html`
-              <div class="multi-state-entity">
+              <div class="multi-state-entity" @click="${() => this._openDetails(day)}">
                 <div class="btn">
                   <ha-icon .icon="${icon}" style="color: ${iconColor};"></ha-icon>
                   <div class="info-container">
@@ -307,6 +374,9 @@ class WeatherGridCard extends HAControlBase {
             `;
           })}
         </div>
+
+        <!-- Detailed Day Popup Dialog -->
+        ${this._selectedDay ? this._renderDetailsDialog(locale) : ''}
       </ha-card>
     `;
   }

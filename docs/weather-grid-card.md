@@ -1,6 +1,6 @@
 # ☀️ Weather Grid Card
 
-`weather-grid-card` displays weather forecasts in a clean daily grid layout. It supports daily and hourly forecast resolution (falling back to dynamic Home Assistant service calls), custom forecast lengths, warning alerts integration, and a premium click details dialog overlay.
+`weather-grid-card` displays weather forecasts in a clean daily grid layout. It integrates WebSocket real-time subscription managers (`subscribe_forecast`) for daily and hourly formats, supports legacy state attribute fallbacks, custom forecast lengths, warning alerts integration, and a premium click details dialog overlay.
 
 ---
 
@@ -15,9 +15,25 @@ Below are the configuration parameters for the card. Define these fields in your
 | `type` | string | **Yes** | — | Must be `custom:weather-grid-card`. |
 | `entity` | string | **Yes** | — | The entity ID of the weather forecast sensor (e.g. `weather.forecast_home`). |
 | `name` | string | No | Friendly Name | Custom header title override for the summary or grid headers. |
-| `mode` | string | No | `grid` | Renders either `grid` (full daily columns layout) or `summary` (compact card triggering navigation on tap). |
+| `mode` | string | No | `grid` | Renders either `grid` (full daily columns layout) or `summary` (compact 5-day horizontal forecast bar). |
 | `max_days` | number | No | `7` | The maximum number of forecast days to display in the grid columns. |
 | `warning_entity` | string | No | — | Optional entity ID containing weather warnings (e.g., severe weather sensors). Displays a highlighted banner alert at the top of the card if active. |
+
+---
+
+## 🔍 Detailed Dialog Popup Overlay
+Clicking on any day cell in either **grid** or **summary** mode opens a details dialog modal overlay with:
+* Large condition icon (colored by weather condition state).
+* Temperatures (high and low).
+* Parameters grid (precipitation amount, rain chance percentage, humidity, wind speed, barometric pressure, and UV index).
+* **Hourly Forecast Timeline**: Horizontally scrollable row containing hourly weather slots for the clicked calendar day, resolving local offsets automatically.
+
+---
+
+## 🛠️ Card Visual Editor
+The visual configuration editor leverages tabbed panels:
+* **General Tab**: Manage weather entity selection, card title override, and layout mode (grid vs summary).
+* **Layout Tab**: Manage forecast day limits (`max_days`) and optional severe warnings sensor.
 
 ---
 
@@ -31,7 +47,7 @@ name: "Home Weather"
 mode: summary
 ```
 
-### Full Grid Forecast Card (Forecast Page)
+### Full Grid Forecast Card
 ```yaml
 type: custom:weather-grid-card
 entity: weather.forecast_home
