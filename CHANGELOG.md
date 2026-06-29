@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-06-29
+
+### Added
+- **Weather Grid Card (`weather-grid-card`)**:
+  - Created a brand new custom weather component supporting summary/grid modes.
+  - Implemented summary mode which links directly to `/eg-dashboard/weather-forecast` for clean voice/dashboard navigation.
+  - Implemented grid mode which lists daily forecasts and highlights weather condition icons and max/min temperatures.
+  - Added support for opening a detailed dialog popup on day cell clicks, resolving apparent temperature ranges, humidity, wind speed, pressure, UV index, and precipitation.
+  - Programmed a horizontal scrollable hourly timeline inside the day cell popup.
+  - Added severe weather warning alerts via `warning_entity` configuration right at the top of the card.
+  - Added support for forecast lengths limitations via `max_days`.
+
 ## [1.3.1] - 2026-06-29
 
 ### Added

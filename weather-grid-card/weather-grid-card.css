@@ -1,0 +1,436 @@
+/* ==========================================================================
+   WEATHER GRID CARD STYLESHEET
+   Styles for daily weather forecast grid, summary mode, and detailed popups.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   1. SUMMARY / COMPACT VIEW MODE
+   -------------------------------------------------------------------------- */
+.summary-card {
+  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color)));
+  border-radius: var(--ha-card-border-radius, 12px);
+  border: 1px solid var(--divider-color, rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08));
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.02);
+}
+
+.summary-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-icon {
+  --mdc-icon-size: 32px;
+  color: var(--primary-color);
+}
+
+.summary-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--primary-text-color);
+}
+
+.summary-state {
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+}
+
+.summary-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-temp {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary-text-color);
+}
+
+.summary-chevron {
+  --mdc-icon-size: 20px;
+  color: var(--secondary-text-color);
+}
+
+/* --------------------------------------------------------------------------
+   2. DETAILED GRID VIEW MODE
+   -------------------------------------------------------------------------- */
+.grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Severe Alert Warning Banner */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: rgba(var(--rgb-error-color, 244, 67, 54), 0.12);
+  border: 1px solid var(--error-color, #f44336);
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: var(--error-color, #f44336);
+  animation: pulseWarning 2s infinite ease-in-out;
+}
+
+@keyframes pulseWarning {
+  0% { box-shadow: 0 0 0 0 rgba(var(--rgb-error-color, 244, 67, 54), 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(var(--rgb-error-color, 244, 67, 54), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--rgb-error-color, 244, 67, 54), 0); }
+}
+
+.warning-icon {
+  --mdc-icon-size: 24px;
+  flex-shrink: 0;
+}
+
+.warning-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Grid layout alignment */
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+/* Day grid cards */
+.grid-cell {
+  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color)));
+  border-radius: var(--ha-card-border-radius, 12px);
+  border: 1px solid var(--divider-color, rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08));
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.grid-cell:hover {
+  transform: scale(1.04) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.cell-day {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-text-color);
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.cell-date {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  margin-top: 2px;
+}
+
+.cell-icon {
+  --mdc-icon-size: 32px;
+  color: var(--primary-color);
+  margin: 12px 0;
+}
+
+.cell-label {
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  text-align: center;
+  margin-bottom: 8px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.cell-temps {
+  display: flex;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.temp-high {
+  color: var(--primary-text-color);
+}
+
+.temp-low {
+  color: var(--secondary-text-color);
+}
+
+.empty-text {
+  text-align: center;
+  color: var(--secondary-text-color);
+  padding: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   3. DETAILS POPUP MODAL DIALOG
+   -------------------------------------------------------------------------- */
+.dialog-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.dialog-card {
+  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color))) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--divider-color) !important;
+  width: 90% !important;
+  max-width: 480px !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-sizing: border-box !important;
+}
+
+.dialog-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  padding: 20px 24px !important;
+  border-bottom: 1px solid var(--divider-color) !important;
+}
+
+.dialog-header-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.dialog-title {
+  margin: 0 !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--primary-text-color) !important;
+}
+
+.dialog-subtitle {
+  font-size: 0.85rem !important;
+  color: var(--secondary-text-color) !important;
+}
+
+.dialog-close-button {
+  cursor: pointer !important;
+  padding: 6px !important;
+  border-radius: 50% !important;
+  color: var(--secondary-text-color) !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dialog-close-button:hover {
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08) !important;
+  color: var(--primary-text-color) !important;
+}
+
+.dialog-close-button ha-icon {
+  --mdc-icon-size: 20px !important;
+}
+
+.dialog-body {
+  padding: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* Big Condition Top Block */
+.details-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+  padding: 8px 0 !important;
+}
+
+.details-big-icon {
+  --mdc-icon-size: 56px !important;
+  color: var(--primary-color) !important;
+}
+
+.details-main-temps {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+}
+
+.details-high {
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  color: var(--primary-text-color) !important;
+}
+
+.details-low {
+  font-size: 1.2rem !important;
+  color: var(--secondary-text-color) !important;
+}
+
+/* Parameters Grid */
+.parameters-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+}
+
+.param-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.02) !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--divider-color) !important;
+}
+
+.param-icon {
+  --mdc-icon-size: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+.param-rain { color: #2196f3 !important; }
+.param-probability { color: #00bcd4 !important; }
+.param-humidity { color: #3f51b5 !important; }
+.param-wind { color: #607d8b !important; }
+.param-pressure { color: #9c27b0 !important; }
+.param-uv { color: #ff9800 !important; }
+
+.param-meta {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.param-value {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: var(--primary-text-color) !important;
+}
+
+.param-label {
+  font-size: 0.75rem !important;
+  color: var(--secondary-text-color) !important;
+}
+
+/* Hourly Timeline Scroll Row */
+.hourly-header {
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  color: var(--primary-color) !important;
+  letter-spacing: 0.8px !important;
+  margin-top: 8px !important;
+}
+
+.hourly-timeline {
+  display: flex !important;
+  gap: 16px !important;
+  overflow-x: auto !important;
+  padding: 8px 4px 12px 4px !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.hourly-timeline::-webkit-scrollbar {
+  height: 6px !important;
+}
+
+.hourly-timeline::-webkit-scrollbar-thumb {
+  background-color: var(--divider-color) !important;
+  border-radius: 3px !important;
+}
+
+.hourly-slot {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.01) !important;
+  border: 1px solid var(--divider-color) !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  min-width: 60px !important;
+  flex-shrink: 0 !important;
+}
+
+.slot-time {
+  font-size: 0.7rem !important;
+  color: var(--secondary-text-color) !important;
+}
+
+.slot-icon {
+  --mdc-icon-size: 20px !important;
+  color: var(--primary-color) !important;
+}
+
+.slot-temp {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: var(--primary-text-color) !important;
+}
+
+.slot-rain {
+  font-size: 0.65rem !important;
+  color: #2196f3 !important;
+  font-weight: 600 !important;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
