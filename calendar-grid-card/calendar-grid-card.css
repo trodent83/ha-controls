@@ -322,8 +322,8 @@ ha-card {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    width: var(--fit-popup-overlay-width, 100vw) !important;
+    height: var(--fit-popup-overlay-height, 100vh) !important;
     background-color: rgba(0, 0, 0, 0.45) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
@@ -332,6 +332,8 @@ ha-card {
     justify-content: center !important;
     z-index: 10000 !important;
     animation: fadeIn 0.25s ease-out forwards;
+    transform: scale(var(--fit-layout-scale, 1)) !important;
+    transform-origin: top left !important;
 }
 
 /* Dialog Card container matching Lovelace themes */
@@ -509,10 +511,10 @@ ha-card {
 @keyframes scaleUp {
     from {
         opacity: 0;
-        transform: scale(calc(var(--fit-layout-scale, 1) * 0.92));
+        transform: scale(0.92);
     }
     to {
         opacity: 1;
-        transform: scale(var(--fit-layout-scale, 1));
+        transform: scale(1);
     }
 }

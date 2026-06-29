@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2026-06-29
+
+### Changed
+- **All Popup Cards**:
+  - Implemented dynamic unscaled dimensions expansion (via `--fit-popup-overlay-width/height` and `--fit-popup-max-width/height` CSS custom properties) to prevent the inner card layout/context from squishing on small displays before scaling.
+  - Positioned and scaled the `.dialog-overlay` from `top left` to visual full screen (`100vw/vh`), giving internal flex layouts the maximum virtual viewport width/height to organize texts and grids cleanly.
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Dynamically computed and set popup unscaled max-width/max-height and overlay size variables on both host element and `document.documentElement` root.
+  - Bumped loader version to `1.1.11`.
+- **Weather Grid Card (`weather-grid-card`)**:
+  - Reset `.dialog-card` scaling keyframes to transition to `1.0` scale inside the portaled dynamic overlay scale transform.
+  - Bumped loader version to `1.1.7`.
+- **Calendar Grid Card (`calendar-grid-card`)**:
+  - Reset `.dialog-card` scaling keyframes to transition to `1.0` scale inside the portaled dynamic overlay scale transform.
+  - Bumped loader version to `0.4.52`.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Reset `.dialog-card` scaling keyframes to transition to `1.0` scale inside the portaled dynamic overlay scale transform.
+  - Bumped loader version to `1.0.22`.
+
 ## [1.4.1] - 2026-06-29
 
 ### Changed

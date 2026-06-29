@@ -54,8 +54,8 @@
   left: 50%;
   transform: translate(-50%, -50%) scale(var(--fit-layout-scale, 1));
   z-index: 1001;
-  max-width: 92vw;
-  max-height: 92vh;
+  max-width: var(--fit-popup-max-width, 92vw);
+  max-height: var(--fit-popup-max-height, 92vh);
   box-sizing: border-box;
   display: flex;
   justify-content: center;

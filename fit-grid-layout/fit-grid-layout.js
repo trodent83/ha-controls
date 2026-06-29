@@ -273,6 +273,21 @@ class FitGridLayout extends HAControlBase {
     this.style.setProperty('--fit-layout-scale', `${scale}`);
     document.documentElement.style.setProperty('--fit-layout-scale', `${scale}`);
 
+    const popupMaxWidth = `${Math.min(920, availableWidth * 0.92 / scale)}px`;
+    const popupMaxHeight = `${Math.min(800, availableHeight * 0.92 / scale)}px`;
+    const overlayWidth = `${100 / scale}vw`;
+    const overlayHeight = `${100 / scale}vh`;
+
+    this.style.setProperty('--fit-popup-max-width', popupMaxWidth);
+    this.style.setProperty('--fit-popup-max-height', popupMaxHeight);
+    this.style.setProperty('--fit-popup-overlay-width', overlayWidth);
+    this.style.setProperty('--fit-popup-overlay-height', overlayHeight);
+
+    document.documentElement.style.setProperty('--fit-popup-max-width', popupMaxWidth);
+    document.documentElement.style.setProperty('--fit-popup-max-height', popupMaxHeight);
+    document.documentElement.style.setProperty('--fit-popup-overlay-width', overlayWidth);
+    document.documentElement.style.setProperty('--fit-popup-overlay-height', overlayHeight);
+
     // 5. Apply scale transforms and size corrections
     if (scale < 1.0) {
       container.style.width = `${availableWidth / scale}px`;
