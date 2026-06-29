@@ -100,7 +100,7 @@ class WeatherGridCard extends HAControlBase {
       const dailyResponse = await this.hass.callService("weather", "get_forecasts", {
         entity_id: entityId,
         type: "daily"
-      });
+      }, undefined, true);
       if (dailyResponse && dailyResponse[entityId]) {
         this._forecast = dailyResponse[entityId].forecast;
       }
@@ -112,7 +112,7 @@ class WeatherGridCard extends HAControlBase {
       const hourlyResponse = await this.hass.callService("weather", "get_forecasts", {
         entity_id: entityId,
         type: "hourly"
-      });
+      }, undefined, true);
       if (hourlyResponse && hourlyResponse[entityId]) {
         this._hourlyForecast = hourlyResponse[entityId].forecast;
       }
@@ -210,7 +210,7 @@ class WeatherGridCard extends HAControlBase {
 
     return html`
       ${this.renderStyle('weather-grid-card.css')}
-      <div class="summary-card" @click="${this._navigate}">
+      <ha-card class="summary-card" @click="${this._navigate}">
         <div class="summary-main">
           <div class="summary-left">
             <ha-icon .icon="${condIcon}" class="summary-icon"></ha-icon>
@@ -224,7 +224,7 @@ class WeatherGridCard extends HAControlBase {
             <ha-icon icon="mdi:chevron-right" class="summary-chevron"></ha-icon>
           </div>
         </div>
-      </div>
+      </ha-card>
     `;
   }
 
@@ -238,44 +238,54 @@ class WeatherGridCard extends HAControlBase {
 
     return html`
       ${this.renderStyle('weather-grid-card.css')}
-      <div class="grid-wrapper">
-        <!-- Optional Warning Banner -->
-        ${warning ? html`
-          <div class="warning-banner">
-            <ha-icon icon="mdi:alert-decagram" class="warning-icon"></ha-icon>
-            <span class="warning-text">${warning}</span>
+      <ha-card class="grid-card">
+        <!-- Header Info -->
+        <div class="header-container">
+          <div class="title-area">
+            <ha-icon class="title-icon" icon="mdi:weather-partly-cloudy"></ha-icon>
+            <span>${this.config.name || stateObj.attributes.friendly_name || "Weather Forecast"}</span>
           </div>
-        ` : ''}
-
-        <!-- Daily Forecast Grid -->
-        <div class="forecast-grid">
-          ${forecastDays.length === 0 ? html`
-            <div class="empty-text">No forecast data available.</div>
-          ` : forecastDays.map((day) => {
-            const date = new Date(day.datetime);
-            const dayName = date.toLocaleDateString(locale.language, { weekday: 'long' });
-            const dateStr = date.toLocaleDateString(locale.language, { month: 'short', day: 'numeric' });
-            const icon = this._getConditionIcon(day.condition);
-            const label = this._getConditionLabel(day.condition);
-
-            return html`
-              <div class="grid-cell" @click="${() => this._openDetails(day)}">
-                <div class="cell-day">${dayName}</div>
-                <div class="cell-date">${dateStr}</div>
-                <ha-icon .icon="${icon}" class="cell-icon"></ha-icon>
-                <div class="cell-label">${label}</div>
-                <div class="cell-temps">
-                  <span class="temp-high">${day.temperature}°</span>
-                  ${day.templow !== undefined ? html`<span class="temp-low">${day.templow}°</span>` : ''}
-                </div>
-              </div>
-            `;
-          })}
         </div>
 
-        <!-- Detailed Day Popup Dialog -->
-        ${this._selectedDay ? this._renderDetailsDialog(locale) : ''}
-      </div>
+        <div class="grid-wrapper">
+          <!-- Optional Warning Banner -->
+          ${warning ? html`
+            <div class="warning-banner">
+              <ha-icon icon="mdi:alert-decagram" class="warning-icon"></ha-icon>
+              <span class="warning-text">${warning}</span>
+            </div>
+          ` : ''}
+
+          <!-- Daily Forecast Grid -->
+          <div class="forecast-grid">
+            ${forecastDays.length === 0 ? html`
+              <div class="empty-text">No forecast data available.</div>
+            ` : forecastDays.map((day) => {
+              const date = new Date(day.datetime);
+              const dayName = date.toLocaleDateString(locale.language, { weekday: 'long' });
+              const dateStr = date.toLocaleDateString(locale.language, { month: 'short', day: 'numeric' });
+              const icon = this._getConditionIcon(day.condition);
+              const label = this._getConditionLabel(day.condition);
+
+              return html`
+                <div class="grid-cell" @click="${() => this._openDetails(day)}">
+                  <div class="cell-day">${dayName}</div>
+                  <div class="cell-date">${dateStr}</div>
+                  <ha-icon .icon="${icon}" class="cell-icon"></ha-icon>
+                  <div class="cell-label">${label}</div>
+                  <div class="cell-temps">
+                    <span class="temp-high">${day.temperature}°</span>
+                    ${day.templow !== undefined ? html`<span class="temp-low">${day.templow}°</span>` : ''}
+                  </div>
+                </div>
+              `;
+            })}
+          </div>
+
+          <!-- Detailed Day Popup Dialog -->
+          ${this._selectedDay ? this._renderDetailsDialog(locale) : ''}
+        </div>
+      </ha-card>
     `;
   }
 

@@ -1,6 +1,8 @@
 /* ==========================================================================
    WEATHER GRID CARD STYLESHEET
-   Styles for daily weather forecast grid, summary mode, and detailed popups.
+   Supports responsive grid layouts, custom HSL hover/active states, 
+   glassmorphic overlay modals, and premium day select popups.
+   Matches the look and feel of other dashboard controls (e.g. radiator control).
    ========================================================================== */
 
 :host {
@@ -9,28 +11,44 @@
 }
 
 /* --------------------------------------------------------------------------
-   1. SUMMARY / COMPACT VIEW MODE
+   1. GLOBAL HA-CARD BASE COMPLIANCE
    -------------------------------------------------------------------------- */
-.summary-card {
-  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color)));
-  border-radius: var(--ha-card-border-radius, 12px);
-  border: 1px solid var(--divider-color, rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08));
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-  box-sizing: border-box;
+ha-card {
+  border-radius: var(--ha-card-border-radius, 12px) !important;
+  overflow: hidden !important;
+  background: var(--ha-card-background, var(--card-background-color, rgba(20, 24, 28, 0.9))) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.05)) !important;
+  box-shadow: var(--ha-card-box-shadow, 0 4px 16px rgba(0, 0, 0, 0.25)) !important;
+  transition: all 0.3s ease !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.02);
+/* --------------------------------------------------------------------------
+   2. SUMMARY / COMPACT VIEW MODE
+   -------------------------------------------------------------------------- */
+ha-card.summary-card {
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+ha-card.summary-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) !important;
+  background-color: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.02) !important;
 }
 
 .summary-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .summary-left {
@@ -40,8 +58,8 @@
 }
 
 .summary-icon {
-  --mdc-icon-size: 32px;
-  color: var(--primary-color);
+  --mdc-icon-size: 28px;
+  color: var(--primary-color, var(--state-weather-sunny-color, #ff9800));
 }
 
 .summary-meta {
@@ -51,12 +69,12 @@
 
 .summary-title {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 13px;
   color: var(--primary-text-color);
 }
 
 .summary-state {
-  font-size: 0.8rem;
+  font-size: 11px;
   color: var(--secondary-text-color);
 }
 
@@ -67,23 +85,52 @@
 }
 
 .summary-temp {
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--primary-text-color);
 }
 
 .summary-chevron {
-  --mdc-icon-size: 20px;
+  --mdc-icon-size: 18px;
   color: var(--secondary-text-color);
 }
 
 /* --------------------------------------------------------------------------
-   2. DETAILED GRID VIEW MODE
+   3. DETAILED GRID VIEW MODE
    -------------------------------------------------------------------------- */
+ha-card.grid-card {
+  padding: 16px !important;
+  gap: 16px !important;
+}
+
+/* Header Section */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-text-color);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.title-icon {
+  --mdc-icon-size: 20px;
+  color: var(--secondary-text-color);
+}
+
+/* Inner Layout Wrap */
 .grid-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  width: 100%;
 }
 
 /* Severe Alert Warning Banner */
@@ -91,90 +138,97 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: rgba(var(--rgb-error-color, 244, 67, 54), 0.12);
-  border: 1px solid var(--error-color, #f44336);
-  padding: 12px 16px;
-  border-radius: 12px;
+  background-color: rgba(var(--rgb-error-color, 244, 67, 54), 0.1);
+  border: 1px solid rgba(var(--rgb-error-color, 244, 67, 54), 0.3);
+  padding: 10px 14px;
+  border-radius: 8px;
   color: var(--error-color, #f44336);
-  animation: pulseWarning 2s infinite ease-in-out;
+  animation: pulseWarning 2.5s infinite ease-in-out;
 }
 
 @keyframes pulseWarning {
-  0% { box-shadow: 0 0 0 0 rgba(var(--rgb-error-color, 244, 67, 54), 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(var(--rgb-error-color, 244, 67, 54), 0); }
+  0% { box-shadow: 0 0 0 0 rgba(var(--rgb-error-color, 244, 67, 54), 0.3); }
+  70% { box-shadow: 0 0 0 4px rgba(var(--rgb-error-color, 244, 67, 54), 0); }
   100% { box-shadow: 0 0 0 0 rgba(var(--rgb-error-color, 244, 67, 54), 0); }
 }
 
 .warning-icon {
-  --mdc-icon-size: 24px;
+  --mdc-icon-size: 20px;
   flex-shrink: 0;
 }
 
 .warning-text {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 12px;
 }
 
-/* Grid layout alignment */
+/* Daily Grid Alignment */
 .forecast-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 8px;
+  width: 100%;
 }
 
-/* Day grid cards */
+/* Day cell grid cards - styled matching radiator-control-card mode buttons */
 .grid-cell {
-  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color)));
-  border-radius: var(--ha-card-border-radius, 12px);
-  border: 1px solid var(--divider-color, rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08));
-  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 12px 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05);
+  color: var(--secondary-text-color);
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
   box-sizing: border-box;
 }
 
 .grid-cell:hover {
-  transform: scale(1.04) translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary-color);
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.08);
+  color: var(--primary-text-color);
+  border-color: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cell-day {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 11px;
   color: var(--primary-text-color);
   text-align: center;
   text-transform: capitalize;
 }
 
 .cell-date {
-  font-size: 0.75rem;
-  color: var(--secondary-text-color);
-  margin-top: 2px;
+  font-size: 9px;
+  opacity: 0.6;
+  margin-top: 1px;
 }
 
 .cell-icon {
-  --mdc-icon-size: 32px;
-  color: var(--primary-color);
-  margin: 12px 0;
+  --mdc-icon-size: 26px;
+  color: var(--primary-color, var(--state-weather-sunny-color, #ff9800));
+  margin: 10px 0;
 }
 
 .cell-label {
-  font-size: 0.75rem;
-  color: var(--secondary-text-color);
+  font-size: 9px;
+  opacity: 0.8;
   text-align: center;
-  margin-bottom: 8px;
-  height: 14px;
+  margin-bottom: 6px;
+  height: 12px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 90%;
 }
 
 .cell-temps {
   display: flex;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -184,16 +238,18 @@
 
 .temp-low {
   color: var(--secondary-text-color);
+  opacity: 0.6;
 }
 
 .empty-text {
   text-align: center;
   color: var(--secondary-text-color);
-  padding: 24px;
+  padding: 16px;
+  font-size: 12px;
 }
 
 /* --------------------------------------------------------------------------
-   3. DETAILS POPUP MODAL DIALOG
+   4. DETAILS POPUP MODAL DIALOG
    -------------------------------------------------------------------------- */
 .dialog-overlay {
   position: fixed !important;
@@ -201,7 +257,7 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  background-color: rgba(0, 0, 0, 0.45) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   display: flex !important;
@@ -212,13 +268,13 @@
 }
 
 .dialog-card {
-  background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color))) !important;
+  background: var(--ha-card-background, var(--card-background-color, rgba(20, 24, 28, 0.95))) !important;
   border-radius: 16px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
-  border: 1px solid var(--divider-color) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.08)) !important;
   width: 90% !important;
-  max-width: 480px !important;
-  max-height: 85vh !important;
+  max-width: 440px !important;
+  max-height: 80vh !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;
@@ -230,31 +286,31 @@
   display: flex !important;
   justify-content: space-between !important;
   align-items: flex-start !important;
-  padding: 20px 24px !important;
-  border-bottom: 1px solid var(--divider-color) !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid var(--divider-color, rgba(255, 255, 255, 0.05)) !important;
 }
 
 .dialog-header-text {
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
+  gap: 2px !important;
 }
 
 .dialog-title {
   margin: 0 !important;
-  font-size: 1.25rem !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
   color: var(--primary-text-color) !important;
 }
 
 .dialog-subtitle {
-  font-size: 0.85rem !important;
+  font-size: 11px !important;
   color: var(--secondary-text-color) !important;
 }
 
 .dialog-close-button {
   cursor: pointer !important;
-  padding: 6px !important;
+  padding: 4px !important;
   border-radius: 50% !important;
   color: var(--secondary-text-color) !important;
   transition: background-color 0.2s ease, color 0.2s ease !important;
@@ -264,19 +320,19 @@
 }
 
 .dialog-close-button:hover {
-  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
   color: var(--primary-text-color) !important;
 }
 
 .dialog-close-button ha-icon {
-  --mdc-icon-size: 20px !important;
+  --mdc-icon-size: 18px !important;
 }
 
 .dialog-body {
-  padding: 24px !important;
+  padding: 20px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 20px !important;
+  gap: 16px !important;
 }
 
 /* Big Condition Top Block */
@@ -284,29 +340,29 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 16px !important;
-  padding: 8px 0 !important;
+  gap: 12px !important;
+  padding: 4px 0 !important;
 }
 
 .details-big-icon {
-  --mdc-icon-size: 56px !important;
-  color: var(--primary-color) !important;
+  --mdc-icon-size: 48px !important;
+  color: var(--primary-color, var(--state-weather-sunny-color, #ff9800)) !important;
 }
 
 .details-main-temps {
   display: flex !important;
   align-items: baseline !important;
-  gap: 6px !important;
+  gap: 4px !important;
 }
 
 .details-high {
-  font-size: 2rem !important;
+  font-size: 26px !important;
   font-weight: 600 !important;
   color: var(--primary-text-color) !important;
 }
 
 .details-low {
-  font-size: 1.2rem !important;
+  font-size: 16px !important;
   color: var(--secondary-text-color) !important;
 }
 
@@ -314,21 +370,21 @@
 .parameters-grid {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
-  gap: 12px !important;
+  gap: 8px !important;
 }
 
 .param-item {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.02) !important;
-  padding: 10px 14px !important;
-  border-radius: 10px !important;
-  border: 1px solid var(--divider-color) !important;
+  gap: 10px !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
 .param-icon {
-  --mdc-icon-size: 20px !important;
+  --mdc-icon-size: 18px !important;
   flex-shrink: 0 !important;
 }
 
@@ -345,75 +401,77 @@
 }
 
 .param-value {
-  font-size: 0.9rem !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   color: var(--primary-text-color) !important;
 }
 
 .param-label {
-  font-size: 0.75rem !important;
+  font-size: 10px !important;
   color: var(--secondary-text-color) !important;
+  opacity: 0.7;
 }
 
 /* Hourly Timeline Scroll Row */
 .hourly-header {
-  font-size: 0.9rem !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  text-transform: uppercase;
-  color: var(--primary-color) !important;
+  text-transform: uppercase !important;
+  color: var(--primary-color, var(--state-weather-sunny-color, #ff9800)) !important;
   letter-spacing: 0.8px !important;
-  margin-top: 8px !important;
+  margin-top: 4px !important;
 }
 
 .hourly-timeline {
   display: flex !important;
-  gap: 16px !important;
+  gap: 10px !important;
   overflow-x: auto !important;
-  padding: 8px 4px 12px 4px !important;
+  padding: 4px 2px 8px 2px !important;
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
 .hourly-timeline::-webkit-scrollbar {
-  height: 6px !important;
+  height: 4px !important;
 }
 
 .hourly-timeline::-webkit-scrollbar-thumb {
-  background-color: var(--divider-color) !important;
-  border-radius: 3px !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 2px !important;
 }
 
 .hourly-slot {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 6px !important;
-  background-color: rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.01) !important;
-  border: 1px solid var(--divider-color) !important;
-  padding: 8px 12px !important;
-  border-radius: 8px !important;
-  min-width: 60px !important;
+  gap: 4px !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  min-width: 50px !important;
   flex-shrink: 0 !important;
 }
 
 .slot-time {
-  font-size: 0.7rem !important;
+  font-size: 9px !important;
   color: var(--secondary-text-color) !important;
+  opacity: 0.6;
 }
 
 .slot-icon {
-  --mdc-icon-size: 20px !important;
-  color: var(--primary-color) !important;
+  --mdc-icon-size: 18px !important;
+  color: var(--primary-color, var(--state-weather-sunny-color, #ff9800)) !important;
 }
 
 .slot-temp {
-  font-size: 0.85rem !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: var(--primary-text-color) !important;
 }
 
 .slot-rain {
-  font-size: 0.65rem !important;
+  font-size: 8px !important;
   color: #2196f3 !important;
   font-weight: 600 !important;
 }
@@ -427,7 +485,7 @@
 @keyframes scaleUp {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
