@@ -78,6 +78,7 @@ class WeatherGridCard extends HAControlBase {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsubscribeForecasts();
+    this._closeDetails();
   }
 
   _unsubscribeForecasts() {
@@ -164,6 +165,19 @@ class WeatherGridCard extends HAControlBase {
             this._subscribeForecasts();
           }
         }
+      }
+
+      // Update portal dialog hass if open
+      const dialog = document.getElementById("weather-grid-card-dialog-instance");
+      if (dialog) {
+        dialog.hass = this.hass;
+      }
+    }
+
+    if (changedProperties.has("_hourlyForecast")) {
+      const dialog = document.getElementById("weather-grid-card-dialog-instance");
+      if (dialog) {
+        dialog.hourlyForecast = this._hourlyForecast;
       }
     }
   }
@@ -388,8 +402,6 @@ class WeatherGridCard extends HAControlBase {
           })}
         </div>
       </ha-card>
-      <!-- Detailed Day Popup Dialog -->
-      ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
     `;
   }
 
@@ -448,8 +460,6 @@ class WeatherGridCard extends HAControlBase {
           </div>
         </div>
       </ha-card>
-      <!-- Detailed Day Popup Dialog -->
-      ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
     `;
   }
 
@@ -458,7 +468,24 @@ class WeatherGridCard extends HAControlBase {
    */
   _openDetails(day) {
     this._selectedDay = day;
-    this.requestUpdate();
+    
+    // Clean up any existing dialog first
+    this._closeDetails();
+    
+    const locale = this.hass.locale || { language: 'en' };
+    const dialog = document.createElement("weather-grid-card-dialog");
+    dialog.id = "weather-grid-card-dialog-instance";
+    dialog.hass = this.hass;
+    dialog.day = day;
+    dialog.hourlyForecast = this._hourlyForecast;
+    dialog.locale = locale;
+    dialog.entityId = this.config.entity;
+    
+    dialog.addEventListener("close-dialog", () => {
+      this._closeDetails();
+    });
+    
+    document.body.appendChild(dialog);
   }
 
   /**
@@ -466,47 +493,134 @@ class WeatherGridCard extends HAControlBase {
    */
   _closeDetails() {
     this._selectedDay = null;
-    this.requestUpdate();
+    const existing = document.getElementById("weather-grid-card-dialog-instance");
+    if (existing) {
+      existing.remove();
+    }
+  }
+}
+
+/**
+ * WeatherGridCardDialog
+ * Dialog custom element to display detailed weather forecasts at 1:1 scale appended directly to document.body,
+ * avoiding container scaling and clipping constraints.
+ */
+class WeatherGridCardDialog extends HAControlBase {
+  static get properties() {
+    return {
+      ...super.properties,
+      day: { type: Object },
+      hourlyForecast: { type: Array },
+      locale: { type: Object },
+      entityId: { type: String }
+    };
   }
 
-  /**
-   * Renders modular detailed weather popup modal overlay.
-   */
-  _renderDetailsDialog(stateObj, locale) {
-    const day = this._selectedDay;
+  get translationPath() { return "/local/ha-controls/weather-grid-card/translations"; }
+  get translationVersion() { return VERSION; }
+
+  _getConditionIcon(cond) {
+    const map = {
+      "clear-night": "mdi:weather-night",
+      "cloudy": "mdi:weather-cloudy",
+      "fog": "mdi:weather-fog",
+      "hail": "mdi:weather-hail",
+      "lightning": "mdi:weather-lightning",
+      "lightning-rainy": "mdi:weather-lightning-rainy",
+      "partlycloudy": "mdi:weather-partly-cloudy",
+      "pouring": "mdi:weather-pouring",
+      "rainy": "mdi:weather-rainy",
+      "snowy": "mdi:weather-snowy",
+      "snowy-rainy": "mdi:weather-snowy-rainy",
+      "sunny": "mdi:weather-sunny",
+      "windy": "mdi:weather-windy",
+      "windy-variant": "mdi:weather-windy-variant",
+      "exceptional": "mdi:alert-circle-outline"
+    };
+    return map[cond?.toLowerCase()] || "mdi:weather-sunny";
+  }
+
+  _getConditionColor(cond) {
+    const map = {
+      "clear-night": "var(--state-weather-clear-night-color, #7986cb)",
+      "cloudy": "var(--state-weather-cloudy-color, #90a4ae)",
+      "fog": "var(--state-weather-fog-color, #b0bec5)",
+      "hail": "var(--state-weather-hail-color, #80deea)",
+      "lightning": "var(--state-weather-lightning-color, #fdd835)",
+      "lightning-rainy": "var(--state-weather-lightning-rainy-color, #ffb300)",
+      "partlycloudy": "var(--state-weather-partlycloudy-color, #b0bec5)",
+      "pouring": "var(--state-weather-pouring-color, #0288d1)",
+      "rainy": "var(--state-weather-rainy-color, #29b6f6)",
+      "snowy": "var(--state-weather-snowy-color, #e0f7fa)",
+      "snowy-rainy": "var(--state-weather-snowy-rainy-color, #80deea)",
+      "sunny": "var(--state-weather-sunny-color, #ffb300)",
+      "windy": "var(--state-weather-windy-color, #4db6ac)",
+      "windy-variant": "var(--state-weather-windy-variant-color, #80cbc4)",
+      "exceptional": "var(--state-weather-exceptional-color, #e57373)"
+    };
+    return map[cond?.toLowerCase()] || "var(--primary-color, #ff9800)";
+  }
+
+  _getConditionLabel(cond) {
+    if (!cond) return "";
+    return cond.replace("-", " ").replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+  }
+
+  _getYYYYMMDD(dt) {
+    if (!dt) return "";
+    if (typeof dt === "string") return dt.substring(0, 10);
+    try {
+      const d = new Date(dt);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dayVal = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dayVal}`;
+    } catch (e) {
+      return "";
+    }
+  }
+
+  _close() {
+    this.dispatchEvent(new CustomEvent("close-dialog", { bubbles: true, composed: true }));
+  }
+
+  render() {
+    if (!this.hass || !this.day || !this.entityId) return html``;
+    const stateObj = this.hass.states[this.entityId];
+    if (!stateObj) return html``;
+
+    const day = this.day;
     const date = new Date(day.datetime);
-    const dayTitle = date.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric' });
+    const dayTitle = date.toLocaleDateString(this.locale?.language || 'en', { weekday: 'long', month: 'long', day: 'numeric' });
     const condIcon = this._getConditionIcon(day.condition);
     const condColor = this._getConditionColor(day.condition);
     const condLabel = this._getConditionLabel(day.condition);
 
-    // Get units dynamically from entity attributes, falling back to standard values
     const tempUnit = stateObj.attributes.temperature_unit || "°C";
     const windSpeedUnit = stateObj.attributes.wind_speed_unit || "km/h";
     const precipUnit = stateObj.attributes.precipitation_unit || "mm";
     const pressureUnit = stateObj.attributes.pressure_unit || "hPa";
 
-    // Filter hourly forecast mapping to the selected day boundaries
     const targetDateStr = this._getYYYYMMDD(day.datetime);
-    const dayHours = this._hourlyForecast ? this._hourlyForecast.filter(hour => {
+    const dayHours = this.hourlyForecast ? this.hourlyForecast.filter(hour => {
       return this._getYYYYMMDD(hour.datetime) === targetDateStr;
     }) : [];
 
     return html`
-      <div class="dialog-overlay" @click="${this._closeDetails}">
+      ${this.renderStyle('weather-grid-card.css')}
+      <div class="dialog-overlay" @click="${this._close}">
         <div class="dialog-card" @click="${(e) => e.stopPropagation()}">
           <div class="dialog-header">
             <div class="dialog-header-text">
               <h2 class="dialog-title">${dayTitle}</h2>
               <span class="dialog-subtitle">${condLabel}</span>
             </div>
-            <div class="dialog-close-button" @click="${this._closeDetails}">
+            <div class="dialog-close-button" @click="${this._close}">
               <ha-icon icon="mdi:close"></ha-icon>
             </div>
           </div>
 
           <div class="dialog-body">
-            <!-- Big Status Block -->
             <div class="details-top">
               <ha-icon .icon="${condIcon}" class="details-big-icon" style="color: ${condColor};"></ha-icon>
               <div class="details-main-temps">
@@ -515,7 +629,6 @@ class WeatherGridCard extends HAControlBase {
               </div>
             </div>
 
-            <!-- Parameters Grid -->
             <div class="parameters-grid">
               ${day.precipitation !== undefined && day.precipitation !== null ? html`
                 <div class="param-item">
@@ -578,13 +691,12 @@ class WeatherGridCard extends HAControlBase {
               ` : ''}
             </div>
 
-            <!-- Hourly Forecast Timeline -->
             ${dayHours.length > 0 ? html`
               <div class="hourly-header">Hourly Forecast</div>
               <div class="hourly-timeline">
                 ${dayHours.map((hour) => {
                   const hourTimeObj = new Date(hour.datetime);
-                  const timeLabel = hourTimeObj.toLocaleTimeString(locale.language, { hour: '2-digit', minute: '2-digit' });
+                  const timeLabel = hourTimeObj.toLocaleTimeString(this.locale?.language || 'en', { hour: '2-digit', minute: '2-digit' });
                   const hourIcon = this._getConditionIcon(hour.condition);
                   
                   return html`
@@ -605,4 +717,5 @@ class WeatherGridCard extends HAControlBase {
   }
 }
 
+customElements.define("weather-grid-card-dialog", WeatherGridCardDialog);
 customElements.define("weather-grid-card", WeatherGridCard);

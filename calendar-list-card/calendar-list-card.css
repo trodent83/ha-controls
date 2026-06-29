@@ -165,8 +165,8 @@ calendar-list-card-row:last-child {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
   border: 1px solid var(--divider-color) !important;
   width: 90% !important;
-  max-width: 480px !important;
-  max-height: 85vh !important;
+  max-width: min(480px, calc(var(--fit-available-width, 100vw) - 32px)) !important;
+  max-height: calc(var(--fit-available-height, 100vh) - 32px) !important;
   overflow-y: auto !important;
   display: flex !important;
   flex-direction: column !important;

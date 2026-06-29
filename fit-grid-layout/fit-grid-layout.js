@@ -230,6 +230,11 @@ class FitGridLayout extends HAControlBase {
 
     if (availableWidth <= 0 || availableHeight <= 0) return;
 
+    this.style.setProperty('--fit-available-width', `${availableWidth}px`);
+    this.style.setProperty('--fit-available-height', `${availableHeight}px`);
+    document.documentElement.style.setProperty('--fit-available-width', `${availableWidth}px`);
+    document.documentElement.style.setProperty('--fit-available-height', `${availableHeight}px`);
+
     // Prevent ResizeObserver loops by skipping if host size hasn't changed since last scale calculation
     if (this._lastWidth === availableWidth && this._lastHeight === availableHeight) {
       return;
