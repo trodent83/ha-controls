@@ -12,11 +12,16 @@ All notable changes to this project will be documented in this file.
   - Introduced the `month_start: today` configuration parameter to support a rolling monthly view. This aligns the monthly grid starting point to the week of the current date and shows a 5-week (35 days) layout.
   - Styled day cells with custom hover highlights and transition animations for enhanced interaction.
   - Updated the month header text to display spanned month ranges (e.g. "Jun - Aug 2026") when the rolling month view is active.
-  - Bumped loader to version `0.4.48` to force cache-busting.
+  - Integrated `homeassistant.update_entity` service triggers into the manual reload action to force remote server updates.
+  - Bumped loader to version `0.4.49` to force cache-busting.
 
 - **Calendar List Card (`calendar-list-card`)**:
   - Added support for the `start_date` configuration parameter, allowing dynamic calendar event list queries starting from a custom ISO date string instead of always defaulting to today.
-  - Bumped loader to version `1.0.16` to force cache-busting.
+  - Added horizontal borders (`border-bottom`) between sequential rows to serve as visual dividers.
+  - Color-coded icons and text for individual property features (time, location, attendees, description, calendar name) with distinct defaults to enhance readability.
+  - Made the `show_due_date` check robust against string `'false'` values.
+  - Integrated `homeassistant.update_entity` service triggers into the manual reload action to force remote server updates.
+  - Bumped loader to version `1.0.19` to force cache-busting.
 
 ## [1.3.0] - 2026-06-28
 

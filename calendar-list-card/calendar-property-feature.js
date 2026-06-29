@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -181,6 +181,23 @@ class CalendarPropertyFeature extends HAControlBase {
         return "";
     }
   }
+  /**
+   * Returns distinct default colors for each property type to enhance readability.
+   * 
+   * @param {string} property - The property key
+   * @returns {string} CSS color code or variable
+   * @private
+   */
+  _getDefaultColor(property) {
+    switch (property) {
+      case "time": return "var(--primary-color)";
+      case "location": return "var(--error-color, #f44336)";
+      case "attendees": return "var(--success-color, #4caf50)";
+      case "description": return "var(--secondary-text-color)";
+      case "calendar_name": return "var(--accent-color, #ff9800)";
+      default: return "var(--secondary-text-color)";
+    }
+  }
 
   /**
    * Renders the calendar property visual block.
@@ -199,7 +216,8 @@ class CalendarPropertyFeature extends HAControlBase {
     const showIcon = this.config.show_icon !== false;
     const iconName = this.config.icon || this._getDefaultIcon(prop);
 
-    const featureColor = this.config.color || this.color || 'var(--secondary-text-color)';
+    const defaultColor = this._getDefaultColor(prop);
+    const featureColor = this.config.color || this.color || defaultColor;
     const iconColor = this.config.icon_color || featureColor;
 
     const style = `

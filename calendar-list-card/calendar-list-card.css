@@ -14,6 +14,15 @@
   padding: 8px;
 }
 
+calendar-list-card-row {
+  display: block;
+  border-bottom: 1px solid var(--divider-color, rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.08));
+}
+
+calendar-list-card-row:last-child {
+  border-bottom: none;
+}
+
 .empty-text {
   padding: 16px;
   text-align: center;
