@@ -42,37 +42,38 @@ ha-card.summary-card:hover {
 }
 
 .content-container {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 4px;
-  gap: 4px;
-  width: 100%;
-  box-sizing: border-box;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  padding: 4px !important;
+  gap: 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .layout-row {
-  flex-direction: row;
+  flex-direction: row !important;
 }
 
 .content-container.layout-row .multi-state-entity {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex: 1 1 0% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  min-width: 0 !important;
 }
 
 .btn {
-  width: 100%;
-  height: auto;
-  min-height: 48px;
-  display: flex;
-  flex-direction: column; 
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-  transition: background 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  min-width: 60px;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 48px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 4px !important;
+  transition: background 0.2s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+  min-width: 0 !important;
 }
 
 .btn:active {

@@ -108,10 +108,14 @@ class WeatherGridCard extends HAControlBase {
         return_response: true
       });
       if (dailyResponse) {
-        if (dailyResponse[entityId]) {
-          this._forecast = dailyResponse[entityId].forecast;
-        } else if (dailyResponse.response && dailyResponse.response[entityId]) {
+        if (dailyResponse.response && dailyResponse.response[entityId]) {
           this._forecast = dailyResponse.response[entityId].forecast;
+        } else if (dailyResponse[entityId]) {
+          this._forecast = dailyResponse[entityId].forecast;
+        } else if (dailyResponse.response && dailyResponse.response.forecast) {
+          this._forecast = dailyResponse.response.forecast;
+        } else if (dailyResponse.forecast) {
+          this._forecast = dailyResponse.forecast;
         }
       }
     } catch (e) {
@@ -130,14 +134,36 @@ class WeatherGridCard extends HAControlBase {
         return_response: true
       });
       if (hourlyResponse) {
-        if (hourlyResponse[entityId]) {
-          this._hourlyForecast = hourlyResponse[entityId].forecast;
-        } else if (hourlyResponse.response && hourlyResponse.response[entityId]) {
+        if (hourlyResponse.response && hourlyResponse.response[entityId]) {
           this._hourlyForecast = hourlyResponse.response[entityId].forecast;
+        } else if (hourlyResponse[entityId]) {
+          this._hourlyForecast = hourlyResponse[entityId].forecast;
+        } else if (hourlyResponse.response && hourlyResponse.response.forecast) {
+          this._hourlyForecast = hourlyResponse.response.forecast;
+        } else if (hourlyResponse.forecast) {
+          this._hourlyForecast = hourlyResponse.forecast;
         }
       }
     } catch (e) {
       console.warn("Could not fetch hourly weather forecast via service call.", e);
+    }
+  }
+
+  /**
+   * Helper to resolve the YYYY-MM-DD date string format.
+   * Immunizes date matching comparisons against timezone shifts.
+   */
+  _getYYYYMMDD(dt) {
+    if (!dt) return "";
+    if (typeof dt === "string") return dt.substring(0, 10);
+    try {
+      const d = new Date(dt);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dayVal = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dayVal}`;
+    } catch (e) {
+      return "";
     }
   }
 
@@ -371,9 +397,9 @@ class WeatherGridCard extends HAControlBase {
     const condLabel = this._getConditionLabel(day.condition);
 
     // Filter hourly forecast mapping to the selected day boundaries
-    const targetDateStr = date.toDateString();
+    const targetDateStr = this._getYYYYMMDD(day.datetime);
     const dayHours = this._hourlyForecast ? this._hourlyForecast.filter(hour => {
-      return new Date(hour.datetime).toDateString() === targetDateStr;
+      return this._getYYYYMMDD(hour.datetime) === targetDateStr;
     }) : [];
 
     return html`
