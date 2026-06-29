@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -164,7 +164,7 @@ class CalendarListCardRow extends HAControlBase {
 
     return html`
       <div class="event-row ${showColorBadges ? 'has-badge' : ''}" style="${badgeColorStyle}" @click="${this._rowClicked}">
-        ${this.config.show_due_date !== false ? (dateParts ? html`
+        ${(this.config.show_due_date !== false && this.config.show_due_date !== 'false') ? (dateParts ? html`
             <div class="event-date" style="${dateStyle}">
                 <div class="weekday">${dateParts.weekday}</div>
                 <div class="day">${dateParts.day}</div>
