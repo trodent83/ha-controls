@@ -387,10 +387,9 @@ class WeatherGridCard extends HAControlBase {
             `;
           })}
         </div>
-
-        <!-- Detailed Day Popup Dialog -->
-        ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
       </ha-card>
+      <!-- Detailed Day Popup Dialog -->
+      ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
     `;
   }
 
@@ -447,11 +446,10 @@ class WeatherGridCard extends HAControlBase {
               `;
             })}
           </div>
-
-          <!-- Detailed Day Popup Dialog -->
-          ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
         </div>
       </ha-card>
+      <!-- Detailed Day Popup Dialog -->
+      ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
     `;
   }
 
