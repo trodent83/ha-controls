@@ -713,6 +713,8 @@ class CalendarGridCard extends HAControlBase {
       const locale = this.hass.locale || { language: 'en' };
       const dateLabel = day.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
       
+      const popupConfig = this.config.popup_config || {};
+
       this.dispatchEvent(new CustomEvent("show-grid-popup", {
         detail: {
           heading: dateLabel,
@@ -745,7 +747,8 @@ class CalendarGridCard extends HAControlBase {
                 type: "custom:calendar-property-feature",
                 property: "attendees"
               }
-            ]
+            ],
+            ...popupConfig
           }
         },
         bubbles: true,

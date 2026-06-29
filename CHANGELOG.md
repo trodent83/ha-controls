@@ -8,10 +8,11 @@ All notable changes to this project will be documented in this file.
 - **Calendar Grid Card (`calendar-grid-card`)**:
   - Implemented clickable day cells to execute tap actions.
   - Added a default `day_tap_action` of type `popup` that dispatches the `show-grid-popup` custom event to open a detailed list popup of events scheduled on the clicked day.
+  - Added the `popup_config` configuration parameter, letting users customize the list-card displayed inside day click popups directly from dashboard configurations.
   - Introduced the `month_start: today` configuration parameter to support a rolling monthly view. This aligns the monthly grid starting point to the week of the current date and shows a 5-week (35 days) layout.
   - Styled day cells with custom hover highlights and transition animations for enhanced interaction.
   - Updated the month header text to display spanned month ranges (e.g. "Jun - Aug 2026") when the rolling month view is active.
-  - Bumped loader to version `0.4.47` to force cache-busting.
+  - Bumped loader to version `0.4.48` to force cache-busting.
 
 - **Calendar List Card (`calendar-list-card`)**:
   - Added support for the `start_date` configuration parameter, allowing dynamic calendar event list queries starting from a custom ISO date string instead of always defaulting to today.
