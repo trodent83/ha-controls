@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
 /**
@@ -198,8 +198,8 @@ class CalendarListCard extends HAControlBase {
    * @returns {Object} Start/end Date parameters
    */
   _getFetchRange() {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0); // Start of today
+    const start = this.config.start_date ? new Date(this.config.start_date) : new Date();
+    start.setHours(0, 0, 0, 0); // Start of target/today day
 
     const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : 7;
     const end = new Date(start);

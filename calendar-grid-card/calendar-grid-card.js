@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
@@ -528,7 +528,9 @@ class CalendarGridCard extends HAControlBase {
                 }
 
                 return html`
-                    <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" style="${cellStyle.join(';')}">
+                    <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" 
+                         style="${cellStyle.join(';')}"
+                         @click=${() => this._onDayClick(day)}>
                         <div class="day-number">${day.getDate()}</div>
                         <div class="events-container">
                             ${dayEvents.map(event => {
@@ -678,6 +680,73 @@ class CalendarGridCard extends HAControlBase {
    * @param {CustomEvent} e - Click details containing event data model
    * @private
    */
+  /**
+   * Handles clicks on a day cell to display a detailed popup.
+   * 
+   * @param {Date} day - Clicked day Date object
+   * @private
+   */
+  _onDayClick(day) {
+    const action = this.config.day_tap_action || { action: 'popup' };
+    if (action.action === 'none') return;
+    
+    if (action.action === 'popup') {
+      const dateStr = day.toISOString().split('T')[0];
+      const locale = this.hass.locale || { language: 'en' };
+      const dateLabel = day.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      
+      this.dispatchEvent(new CustomEvent("show-grid-popup", {
+        detail: {
+          heading: dateLabel,
+          body: {
+            type: "custom:calendar-list-card",
+            entities: this.config.entities,
+            start_date: dateStr,
+            max_days: 1,
+            show_description: true,
+            show_due_in_days: false,
+            show_refresh_button: false,
+            show_source: true,
+            show_finished_events: true,
+            show_grouping_headers: false,
+            separator_mode: 'day',
+            features: [
+              {
+                type: "custom:calendar-property-feature",
+                property: "time"
+              },
+              {
+                type: "custom:calendar-property-feature",
+                property: "location"
+              },
+              {
+                type: "custom:calendar-property-feature",
+                property: "description"
+              },
+              {
+                type: "custom:calendar-property-feature",
+                property: "attendees"
+              }
+            ]
+          }
+        },
+        bubbles: true,
+        composed: true
+      }));
+    } else {
+      this.dispatchEvent(new CustomEvent("hass-action", {
+        detail: {
+          config: {
+            tap_action: action
+          },
+          action: 'tap'
+        },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
+
   _onEventClick(e) {
       this._selectedEvent = e.detail.event;
   }

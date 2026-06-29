@@ -152,6 +152,12 @@ ha-card {
     min-width: 0; /* Prevents overflow issues */
     min-height: 0;
     overflow: hidden;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.day-cell:hover {
+    background-color: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.04);
 }
 
 /* Background overlay color for days outside active viewing month */
