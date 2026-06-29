@@ -45,6 +45,7 @@ class WeatherGridCard extends HAControlBase {
     this._hourlyForecast = null;
     this._fetching = false;
     this._selectedDay = null;
+    this._useSubscription = true;
   }
 
   /**
@@ -67,6 +68,8 @@ class WeatherGridCard extends HAControlBase {
   }
 
   /**
+   * Lifecycle hook when card is added to DOM.
+   */
   connectedCallback() {
     super.connectedCallback();
     this._subscribeForecasts();
@@ -93,8 +96,10 @@ class WeatherGridCard extends HAControlBase {
     if (!this.hass || !this.config?.entity) return;
     const entityId = this.config.entity;
 
+    this._useSubscription = true;
+
     try {
-      this._dailySub = this.hass.connection.subscribeMessage(
+      const dailySubPromise = this.hass.connection.subscribeMessage(
         (update) => {
           if (update && update.forecast) {
             this._forecast = update.forecast;
@@ -107,13 +112,18 @@ class WeatherGridCard extends HAControlBase {
           forecast_type: "daily"
         }
       );
+      this._dailySub = dailySubPromise;
+      await dailySubPromise;
     } catch (e) {
       console.warn("Could not subscribe to daily forecast. Falling back to service call.", e);
+      this._dailySub = null;
+      this._useSubscription = false;
       this._fetchForecasts();
+      return;
     }
 
     try {
-      this._hourlySub = this.hass.connection.subscribeMessage(
+      const hourlySubPromise = this.hass.connection.subscribeMessage(
         (update) => {
           if (update && update.forecast) {
             this._hourlyForecast = update.forecast;
@@ -126,8 +136,11 @@ class WeatherGridCard extends HAControlBase {
           forecast_type: "hourly"
         }
       );
+      this._hourlySub = hourlySubPromise;
+      await hourlySubPromise;
     } catch (e) {
       console.warn("Could not subscribe to hourly forecast.", e);
+      this._hourlySub = null;
     }
   }
 
@@ -145,10 +158,10 @@ class WeatherGridCard extends HAControlBase {
         const oldState = oldHass?.states[entityId];
         const newState = this.hass.states[entityId];
         if (!oldState || oldState.state !== newState?.state || oldState.last_updated !== newState?.last_updated || !this._forecast) {
-          if (!this._dailySub) {
-            this._subscribeForecasts();
-          } else {
+          if (this._useSubscription === false) {
             this._fetchForecasts();
+          } else if (!this._dailySub && !this._hourlySub) {
+            this._subscribeForecasts();
           }
         }
       }
@@ -376,7 +389,7 @@ class WeatherGridCard extends HAControlBase {
         </div>
 
         <!-- Detailed Day Popup Dialog -->
-        ${this._selectedDay ? this._renderDetailsDialog(locale) : ''}
+        ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
       </ha-card>
     `;
   }
@@ -436,7 +449,7 @@ class WeatherGridCard extends HAControlBase {
           </div>
 
           <!-- Detailed Day Popup Dialog -->
-          ${this._selectedDay ? this._renderDetailsDialog(locale) : ''}
+          ${this._selectedDay ? this._renderDetailsDialog(stateObj, locale) : ''}
         </div>
       </ha-card>
     `;
@@ -461,13 +474,19 @@ class WeatherGridCard extends HAControlBase {
   /**
    * Renders modular detailed weather popup modal overlay.
    */
-  _renderDetailsDialog(locale) {
+  _renderDetailsDialog(stateObj, locale) {
     const day = this._selectedDay;
     const date = new Date(day.datetime);
     const dayTitle = date.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric' });
     const condIcon = this._getConditionIcon(day.condition);
     const condColor = this._getConditionColor(day.condition);
     const condLabel = this._getConditionLabel(day.condition);
+
+    // Get units dynamically from entity attributes, falling back to standard values
+    const tempUnit = stateObj.attributes.temperature_unit || "°C";
+    const windSpeedUnit = stateObj.attributes.wind_speed_unit || "km/h";
+    const precipUnit = stateObj.attributes.precipitation_unit || "mm";
+    const pressureUnit = stateObj.attributes.pressure_unit || "hPa";
 
     // Filter hourly forecast mapping to the selected day boundaries
     const targetDateStr = this._getYYYYMMDD(day.datetime);
@@ -493,8 +512,8 @@ class WeatherGridCard extends HAControlBase {
             <div class="details-top">
               <ha-icon .icon="${condIcon}" class="details-big-icon" style="color: ${condColor};"></ha-icon>
               <div class="details-main-temps">
-                <span class="details-high">${day.temperature}°C</span>
-                ${day.templow !== undefined ? html`<span class="details-low">/ ${day.templow}°C</span>` : ''}
+                <span class="details-high">${day.temperature}${tempUnit}</span>
+                ${day.templow !== undefined ? html`<span class="details-low">/ ${day.templow}${tempUnit}</span>` : ''}
               </div>
             </div>
 
@@ -504,7 +523,7 @@ class WeatherGridCard extends HAControlBase {
                 <div class="param-item">
                   <ha-icon icon="mdi:weather-rainy" class="param-icon param-rain"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.precipitation} mm</span>
+                    <span class="param-value">${day.precipitation} ${precipUnit}</span>
                     <span class="param-label">Precipitation</span>
                   </div>
                 </div>
@@ -534,7 +553,7 @@ class WeatherGridCard extends HAControlBase {
                 <div class="param-item">
                   <ha-icon icon="mdi:weather-windy" class="param-icon param-wind"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.wind_speed} km/h</span>
+                    <span class="param-value">${day.wind_speed} ${windSpeedUnit}</span>
                     <span class="param-label">Wind Speed</span>
                   </div>
                 </div>
@@ -544,7 +563,7 @@ class WeatherGridCard extends HAControlBase {
                 <div class="param-item">
                   <ha-icon icon="mdi:gauge" class="param-icon param-pressure"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.pressure} hPa</span>
+                    <span class="param-value">${day.pressure} ${pressureUnit}</span>
                     <span class="param-label">Pressure</span>
                   </div>
                 </div>
@@ -574,7 +593,7 @@ class WeatherGridCard extends HAControlBase {
                     <div class="hourly-slot">
                       <span class="slot-time">${timeLabel}</span>
                       <ha-icon .icon="${hourIcon}" class="slot-icon" style="color: ${this._getConditionColor(hour.condition)};"></ha-icon>
-                      <span class="slot-temp">${hour.temperature}°</span>
+                      <span class="slot-temp">${hour.temperature}${tempUnit}</span>
                       ${hour.precipitation_probability ? html`<span class="slot-rain">${hour.precipitation_probability}%</span>` : ''}
                     </div>
                   `;
