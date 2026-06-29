@@ -120,6 +120,30 @@ tap_action:
 
 ---
 
+## 📐 Viewport Sizing & Scale Propagation
+
+When rendering dashboards on wall-mounted tablets or smaller display panels, `FitGridLayout` automatically scales down using CSS transforms (`transform: scale(...)`) to fit the screen boundaries perfectly. 
+
+To ensure popups remain fully usable and centered on these smaller devices, `FitGridLayout` propagates its exact measured layout dimensions and scale factors using CSS custom properties:
+- `--fit-available-width`: The measured width of the view layout.
+- `--fit-available-height`: The measured height of the view layout.
+- `--fit-layout-scale`: The computed scaling factor (ranging from `0.2` to `1.0`).
+
+### Consuming Scale Variables in Custom Popups
+
+Custom popups and cards (both nested within `FitGridLayout`'s shadow DOM and appended globally via portals to `document.body`) can read these CSS variables to scale and size themselves proportionally:
+
+```css
+.dialog-card {
+  /* Scale the dialog card using the parent layout's scale factor */
+  transform: scale(var(--fit-layout-scale, 1));
+  transform-origin: center;
+}
+```
+This prevents popups from extending beyond the visible screen viewport or becoming squished on wall tablets and phone screens.
+
+---
+
 ## 🎨 Visual Configuration Editor
 
 The card includes a fully integrated Lovelace configuration editor drawer. 

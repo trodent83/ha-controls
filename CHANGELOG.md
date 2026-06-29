@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2026-06-29
+
+### Changed
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Propagated computed viewport-fitting dimensions (`--fit-available-width`, `--fit-available-height`) and scale factor (`--fit-layout-scale`) as CSS custom properties globally on `document.documentElement` and `:host`.
+  - Updated popup window container styles to scale proportionally using the dynamic layout scale factor (`--fit-layout-scale`), preventing popups from rendering oversized on wall tablets or phone displays.
+  - Bumped loader version to `1.1.10`.
+- **Weather Grid Card (`weather-grid-card`)**:
+  - Refactored daily forecast details dialog into a portal-appended custom web component (`WeatherGridCardDialog`) mounted directly to `document.body` to bypass Lovelace scale transform constraints.
+  - Configured weather dialog cards to scale dynamically using the layout's `--fit-layout-scale` variable.
+  - Resolved dynamic weather units (temperature, wind speed, precipitation, pressure) from target entity attributes.
+  - Optimized websocket lifecycle to skip manual forecast service calls when live forecasts subscriptions are active.
+  - Bumped loader version to `1.1.6`.
+- **Calendar Grid Card (`calendar-grid-card`)**:
+  - Scaled day click details dialog cards dynamically using the layout's `--fit-layout-scale` variable.
+  - Bumped loader version to `0.4.51`.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Scaled event list dialog cards dynamically using the layout's `--fit-layout-scale` variable.
+  - Bumped loader version to `1.0.21`.
+
 ## [1.4.0] - 2026-06-29
 
 ### Added

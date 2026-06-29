@@ -270,6 +270,9 @@ class FitGridLayout extends HAControlBase {
     if (scale > 1.0) scale = 1.0;
     if (scale < 0.2) scale = 0.2; // Don't scale down past 20% to keep things legible
 
+    this.style.setProperty('--fit-layout-scale', `${scale}`);
+    document.documentElement.style.setProperty('--fit-layout-scale', `${scale}`);
+
     // 5. Apply scale transforms and size corrections
     if (scale < 1.0) {
       container.style.width = `${availableWidth / scale}px`;
