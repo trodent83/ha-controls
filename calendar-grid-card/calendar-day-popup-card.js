@@ -6,7 +6,7 @@ import "../feature-renderer-card/feature-renderer-card.js?v=0.1.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = "0.4.54";
+const VERSION = "0.4.55";
 
 /**
  * CalendarDayPopupCard
@@ -112,7 +112,7 @@ class CalendarDayPopupCard extends HAControlBase {
 
     const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : 1;
     const end = new Date(start);
-    end.setDate(end.getDate() + maxDays);
+    end.setDate(end.getDate() + maxDays - 1);
     end.setHours(23, 59, 59, 999);
 
     return { start, end };

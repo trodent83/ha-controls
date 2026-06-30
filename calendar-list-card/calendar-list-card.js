@@ -203,7 +203,7 @@ class CalendarListCard extends HAControlBase {
 
     const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : 7;
     const end = new Date(start);
-    end.setDate(end.getDate() + maxDays);
+    end.setDate(end.getDate() + maxDays - 1);
     end.setHours(23, 59, 59, 999); // End of target day
 
     return { start, end };
