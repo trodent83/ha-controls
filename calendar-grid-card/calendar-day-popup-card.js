@@ -1,27 +1,21 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
+import "../feature-renderer-card/feature-renderer-card.js?v=0.1.9";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = "0.4.53";
 
 /**
- * CalendarListCard
- * A custom Home Assistant Lovelace dashboard card that fetches and displays calendar events in a list format,
- * similar to the task list card but specifically designed for calendar schedules.
- * Supports custom date operators, custom features rendering inside event rows, and premium info popup details.
+ * CalendarDayPopupCard
+ * A custom Home Assistant Lovelace card designed to display a single day's calendar events sequentially
+ * inside the calendar-grid-card details popup view.
  * 
  * @extends HAControlBase
  */
-class CalendarListCard extends HAControlBase {
-  /**
-   * Defines reactive properties tracked by LitElement.
-   * 
-   * @static
-   * @returns {Object} LitElement properties definition
-   */
+class CalendarDayPopupCard extends HAControlBase {
   static get properties() {
     return {
       ...super.properties,
@@ -40,61 +34,9 @@ class CalendarListCard extends HAControlBase {
     this._fetchTimer = null;
   }
 
-  /**
-   * Resolves the directory path hosting the translation localizations.
-   * 
-   * @type {string}
-   */
-  get translationPath() { return "/local/ha-controls/calendar-list-card/translations"; }
-
-  /**
-   * Version parameter for translation cache-busting.
-   * 
-   * @type {string}
-   */
+  get translationPath() { return "/local/ha-controls/calendar-grid-card/translations"; }
   get translationVersion() { return VERSION; }
 
-  /**
-   * Creates and returns the configuration editor element for this card.
-   * Home Assistant Lovelace visual editor links to this method.
-   * 
-   * @static
-   * @returns {HTMLElement} The calendar-list-card-editor configuration element
-   */
-  static getConfigElement() {
-    return document.createElement("calendar-list-card-editor");
-  }
-
-  /**
-   * Returns default stub configuration details for this custom card.
-   * Used when users click to add this card to their dashboards.
-   * 
-   * @static
-   * @returns {Object} Stub configuration details
-   */
-  static getStubConfig() {
-    return {
-      entities: [],
-      icon: "mdi:calendar-multiselect",
-      max_days: 7,
-      show_due_date: true,
-      show_due_in_days: true,
-      show_source: true,
-      features: [
-        {
-          type: "custom:calendar-property-feature",
-          property: "time"
-        }
-      ]
-    };
-  }
-
-  /**
-   * Sets the configuration object for the card, setting default configuration options.
-   * 
-   * @param {Object} config - Lovelace configuration schema
-   * @throws {Error} If entity/entities list is missing in configuration schema
-   */
   setConfig(config) {
     if (!config.entity && !config.entities) {
       throw new Error("Please define calendar entity/entities");
@@ -106,7 +48,7 @@ class CalendarListCard extends HAControlBase {
       show_source: false,
       show_refresh_button: false,
       show_finished_events: true,
-      max_days: 7,
+      max_days: 1,
       max_items: '',
       icon: 'mdi:calendar-multiselect',
       default_due_date_color: '',
@@ -123,9 +65,6 @@ class CalendarListCard extends HAControlBase {
     this._checkAndFetch();
   }
 
-  /**
-   * LitElement lifecycle hook. Destroys debounced fetch timers to prevent memory leaks.
-   */
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this._fetchTimer) {
@@ -133,13 +72,6 @@ class CalendarListCard extends HAControlBase {
     }
   }
 
-  /**
-   * Controls when the element should re-render to optimize dashboard performance.
-   * Only returns true if configured entities actually change state or key properties modify.
-   * 
-   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
-   * @returns {boolean} True if the card should re-render, false otherwise
-   */
   shouldUpdate(changedProps) {
     if (changedProps.has('_events') || 
         changedProps.has('_fetching') ||
@@ -148,15 +80,9 @@ class CalendarListCard extends HAControlBase {
         changedProps.has('_strings')) {
       return true;
     }
-
     return super.shouldUpdate(changedProps);
   }
 
-  /**
-   * LitElement lifecycle trigger. Captures calendar updates and triggers debounced item refetches.
-   * 
-   * @param {Map<string, any>} changedProps - Map of properties that changed in this cycle
-   */
   updated(changedProps) {
     super.updated(changedProps);
     if (changedProps.has('hass') || changedProps.has('config')) {
@@ -164,22 +90,11 @@ class CalendarListCard extends HAControlBase {
     }
   }
 
-  /**
-   * Helper parsing entities from configured target entity or custom entities array.
-   * 
-   * @private
-   * @returns {Array<string>} List of calendar entity IDs
-   */
   _getEntities() {
     return (this.config.entities || (this.config.entity ? [this.config.entity] : []))
       .map(e => (typeof e === 'object' ? e.entity : e));
   }
 
-  /**
-   * Schedules a fetch operation. Sets debounced timeouts to avoid thrashing endpoints.
-   * 
-   * @private
-   */
   _checkAndFetch() {
     if (!this.hass || !this.config) return;
 
@@ -191,37 +106,25 @@ class CalendarListCard extends HAControlBase {
     }, 500);
   }
 
-  /**
-   * Calculates calendar start/end range parameters for API querying.
-   * 
-   * @private
-   * @returns {Object} Start/end Date parameters
-   */
   _getFetchRange() {
     const start = this.config.start_date ? new Date(this.config.start_date) : new Date();
-    start.setHours(0, 0, 0, 0); // Start of target/today day
+    start.setHours(0, 0, 0, 0);
 
-    const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : 7;
+    const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : 1;
     const end = new Date(start);
     end.setDate(end.getDate() + maxDays);
-    end.setHours(23, 59, 59, 999); // End of target day
+    end.setHours(23, 59, 59, 999);
 
     return { start, end };
   }
 
-  /**
-   * Queries calendar events, applying filter configurations.
-   * 
-   * @private
-   * @async
-   */
   async _fetchEvents() {
     if (!this.hass || !this.config) return;
 
     this._fetching = true;
     this.requestUpdate();
 
-    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
+    const entities = this._getEntities();
     if (entities.length === 0) {
       this._events = [];
       this._fetching = false;
@@ -268,40 +171,14 @@ class CalendarListCard extends HAControlBase {
     await this._fetchEvents();
   }
 
-  /**
-   * Intercepts event row clicks to set selection.
-   * 
-   * @param {CustomEvent} e - Click details
-   * @private
-   */
-  _onEventClick(e) {
-    this._selectedEvent = e.detail.event;
+  _onEventClick(event) {
+    this._selectedEvent = event;
   }
 
-  /**
-   * Closes details dialog popup.
-   * 
-   * @private
-   */
   _closeDialog() {
     this._selectedEvent = null;
   }
 
-  /**
-   * Evaluates separator conditions between contiguous task group day nodes.
-   * 
-   * @param {Date} lastDate - Date of previous event
-   * @param {Date} currentDate - Date of current event
-   * @private
-   * @returns {boolean} True if a separator boundary should render
-   */
-  /**
-   * Helper utility calculating ISO year and calendar week number for week-separator grouping mode.
-   * 
-   * @param {Date} date - Input date object
-   * @private
-   * @returns {string} Date week sequence string (e.g. '2026-24')
-   */
   _getWeek(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -312,14 +189,6 @@ class CalendarListCard extends HAControlBase {
     return `${year}-${week}`;
   }
 
-  /**
-   * Evaluates separator conditions between contiguous event groups.
-   * 
-   * @param {Date} lastDate - Date of previous event
-   * @param {Date} currentDate - Date of current event
-   * @private
-   * @returns {boolean} True if a separator boundary should render
-   */
   _shouldShowSeparator(lastDate, currentDate) {
     if (!this.config.day_separator_color || !lastDate || !currentDate) {
       return false;
@@ -337,13 +206,6 @@ class CalendarListCard extends HAControlBase {
     return false;
   }
 
-  /**
-   * Generates a smart readable grouping header label (Today, Tomorrow, Yesterday, or full date).
-   * 
-   * @param {Date} date - Event start Date
-   * @private
-   * @returns {string} Group label text
-   */
   _getGroupHeaderLabel(date) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -359,15 +221,123 @@ class CalendarListCard extends HAControlBase {
     return date.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
-  /**
-   * Renders a single detail item inside details popup dialog.
-   * 
-   * @param {Object} feature - Feature metadata layout (type: time, location, etc.)
-   * @param {import('../utilities/calendar/calendar-event-model.js').CalendarEventModel} event - Sourced event details
-   * @param {string} lang - Locale string
-   * @private
-   * @returns {import('lit-html').TemplateResult|string} Detail row HTML template
-   */
+  _formatRowDate(date) {
+    if (!date) return null;
+    const locale = this.hass.locale || { language: 'en' };
+    return {
+      weekday: date.toLocaleDateString(locale.language, { weekday: 'short' }),
+      day: date.toLocaleDateString(locale.language, { day: 'numeric' }),
+      month: date.toLocaleDateString(locale.language, { month: 'short' })
+    };
+  }
+
+  _getRowDiffDays(event) {
+    if (!event || !event.start) return null;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDate = new Date(event.start.getFullYear(), event.start.getMonth(), event.start.getDate());
+    const diffTime = eventDate - today;
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  _getRowDueDateColor(event) {
+    if (!event || !event.start) return undefined;
+
+    const diffDays = this._getRowDiffDays(event);
+    const colors = this.config.due_date_colors;
+    
+    if (colors && colors.length) {
+      const sortedColors = [...colors].sort((a, b) => a.days - b.days);
+      const match = sortedColors.find(rule => {
+        const operator = rule.operator || '<=';
+        const days = parseInt(rule.days);
+        switch (operator) {
+          case '==':
+          case '=': return diffDays === days;
+          case '!=':
+          case '<>': return diffDays !== days;
+          case '<': return diffDays < days;
+          case '<=': return diffDays <= days;
+          case '>': return diffDays > days;
+          case '>=': return diffDays >= days;
+          default: return diffDays <= days;
+        }
+      });
+      if (match) return match.color;
+    }
+    return this.config.default_due_date_color;
+  }
+
+  _renderRow(event, color) {
+    const dateParts = this._formatRowDate(event.start);
+    const dateColor = this._getRowDueDateColor(event);
+    const separatorColor = this.config.date_separator_color || 'transparent';
+    const dateStyle = `${dateColor ? `color: ${dateColor};` : ''} border-right-color: ${separatorColor};`;
+
+    let dueInDaysText = '';
+    const diffDays = this._getRowDiffDays(event);
+
+    if (diffDays !== null) {
+      if (diffDays === 0) dueInDaysText = this._localize('today');
+      else if (diffDays === 1) dueInDaysText = this._localize('tomorrow');
+      else if (diffDays > 1) dueInDaysText = this._localize('due_in_days', { days: diffDays });
+      else if (diffDays === -1) dueInDaysText = this._localize('overdue_by_1_day');
+      else dueInDaysText = this._localize('overdue_by_days', { days: Math.abs(diffDays) });
+    }
+
+    const stateObj = this.hass.states[event.entity_id];
+    const showColorBadges = this.config.show_color_badges !== false;
+    const badgeColorStyle = showColorBadges ? `border-left-color: ${color || 'var(--primary-color)'};` : '';
+
+    return html`
+      <div class="event-row ${showColorBadges ? 'has-badge' : ''}" style="${badgeColorStyle}" @click="${() => this._onEventClick(event)}">
+        ${(this.config.show_due_date !== false && this.config.show_due_date !== 'false') ? (dateParts ? html`
+            <div class="event-date" style="${dateStyle}">
+                <div class="weekday">${dateParts.weekday}</div>
+                <div class="day">${dateParts.day}</div>
+                <div class="month">${dateParts.month}</div>
+            </div>
+        ` : html`<div class="event-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
+        
+        <div class="event-content">
+          <span class="event-name">${event.summary}</span>
+          ${this.config.show_description && event.originEvent.description ? html`
+            <span class="event-description">${event.originEvent.description}</span>
+          ` : ''}
+          ${this.config.show_source ? (() => {
+            const entity = stateObj;
+            if (!entity) return '';
+            const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+            return html`
+              <div class="event-source" style=${style}>
+                <ha-icon icon="${entity.attributes.icon || 'mdi:calendar'}"></ha-icon>
+                <span>${entity.attributes.friendly_name || event.entity_id}</span>
+              </div>`;
+          })() : ''}
+          
+          ${this.config.features && this.config.features.length > 0 ? html`
+            <div class="event-features">
+              ${this.config.features.map(f => html`
+                <feature-renderer-card
+                  .hass=${this.hass}
+                  .config=${f}
+                  .stateObj=${stateObj}
+                  .event=${event}
+                ></feature-renderer-card>
+              `)}
+            </div>
+          ` : ''}
+        </div>
+        
+        ${this.config.show_due_in_days && dueInDaysText ? html`
+            <div class="event-due-in ${this.config.due_in_days_separator_color ? 'separator' : ''}" style="${this.config.due_in_days_separator_color ? `border-left-color: ${this.config.due_in_days_separator_color};` : ''}">
+                ${dueInDaysText}
+            </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   _renderDialogFeature(feature, event, lang) {
     const origin = event.originEvent || {};
     
@@ -486,18 +456,10 @@ class CalendarListCard extends HAControlBase {
     }
   }
 
-  /**
-   * Renders dialog popup wrapper when selectedEvent state is set.
-   * 
-   * @private
-   * @returns {import('lit-html').TemplateResult|string} Popup HTML template
-   */
   _renderEventDialog() {
     if (!this._selectedEvent) return "";
 
     const event = this._selectedEvent;
-    
-    // Find calendar entity configuration to get matching color context
     const entityConf = (this.config.entities || []).find(e => 
       (typeof e === 'object' ? e.entity : e) === event.entity_id
     );
@@ -538,12 +500,6 @@ class CalendarListCard extends HAControlBase {
     `;
   }
 
-  /**
-   * Renders the custom card's HTML template.
-   * 
-   * @protected
-   * @returns {import('lit-html').TemplateResult} The rendered template output
-   */
   render() {
     if (!this.config || !this.hass) return html``;
 
@@ -554,8 +510,7 @@ class CalendarListCard extends HAControlBase {
     }
 
     return html`
-      ${this.renderStyle('calendar-list-card.css')}
-      ${this.renderStyle('calendar-list-card-row.css')}
+      ${this.renderStyle('calendar-day-popup-card.css')}
       <ha-card>
         ${this.config.title ? html`
           <div class="header-row">
@@ -594,14 +549,7 @@ class CalendarListCard extends HAControlBase {
 
               return html`
                 ${dayHeaderHtml}
-                <calendar-list-card-row
-                  .hass=${this.hass}
-                  .config=${this.config}
-                  .event=${event}
-                  .color=${color}
-                  .readonly=${!!this._fetching}
-                  @event-click=${(e) => this._onEventClick(e)}
-                ></calendar-list-card-row>
+                ${this._renderRow(event, color)}
               `;
             })}
             ${events.length === 0 ? html`<div class="event-row empty-text">${this._localize('no_events') || 'No events'}</div>` : ''}
@@ -634,14 +582,14 @@ class CalendarListCard extends HAControlBase {
   }
 }
 
-if (!customElements.get("calendar-list-card")) {
-  customElements.define("calendar-list-card", CalendarListCard);
+if (!customElements.get("calendar-day-popup-card")) {
+  customElements.define("calendar-day-popup-card", CalendarDayPopupCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "calendar-list-card",
-  name: "Calendar List Card",
-  description: "A custom calendar card that displays events sequentially, using the start date in the first column.",
+  type: "calendar-day-popup-card",
+  name: "Calendar Day Popup Card",
+  description: "A custom calendar card optimized to display events for a single day inside grid popups.",
   preview: true
 });

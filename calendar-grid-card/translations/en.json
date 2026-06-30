@@ -54,5 +54,12 @@
   "cgc.editor.feature_time": "Show Time",
   "cgc.editor.feature_location": "Show Location",
   "cgc.editor.feature_description": "Show Description",
-  "cgc.editor.feature_attendees": "Show Attendees"
+  "cgc.editor.feature_attendees": "Show Attendees",
+  "no_events": "No events",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "yesterday": "Yesterday",
+  "due_in_days": "In {days} days",
+  "overdue_by_1_day": "1 day ago",
+  "overdue_by_days": "{days} days ago"
 }
