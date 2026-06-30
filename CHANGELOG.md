@@ -8,12 +8,14 @@ All notable changes to this project will be documented in this file.
 - **Calendar Day Popup Card (`calendar-day-popup-card`)**:
   - Created a dedicated `calendar-day-popup-card` component to render detailed day schedules inside the calendar grid day clicks popup. This isolates the popup list display to avoid layout and style regressions from changes to other lists.
   - Inlined the list row render markup in a single component to simplify resources and registered as a dynamic Custom Card.
+  - Fixed a bug where entity filter config objects were discarded during event loading, ensuring regex filters are correctly applied inside the day popup list.
 
 ### Changed
 - **Calendar Grid Card (`calendar-grid-card`)**:
   - Updated the day click handler to dispatch popups with `custom:calendar-day-popup-card` instead of the generic list card.
+  - Filtered the list of entities passed to the popup card to respect calendar toggles/disabled states selected in the monthly grid sidebar.
   - Added new localized translation strings for today, tomorrow, yesterday, and due-in calculations to prevent 404 translation requests during clicks.
-  - Bumped loader version to `0.4.53`.
+  - Bumped loader version to `0.4.54`.
 - **Calendar List Card (`calendar-list-card`)**:
   - Restored formatting and design parity of `custom:calendar-list-card` with `custom:task-list-card` by applying matching row paddings, margins, sizes, and font-weights.
   - Injected `calendar-list-card-row.css` inside the card's Shadow DOM to compile and apply list-row styles correctly.

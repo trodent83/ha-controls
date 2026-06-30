@@ -6,7 +6,7 @@ import "../feature-renderer-card/feature-renderer-card.js?v=0.1.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = "0.4.53";
+const VERSION = "0.4.54";
 
 /**
  * CalendarDayPopupCard
@@ -124,7 +124,7 @@ class CalendarDayPopupCard extends HAControlBase {
     this._fetching = true;
     this.requestUpdate();
 
-    const entities = this._getEntities();
+    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
     if (entities.length === 0) {
       this._events = [];
       this._fetching = false;

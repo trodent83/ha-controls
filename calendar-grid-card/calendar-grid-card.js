@@ -731,7 +731,10 @@ class CalendarGridCard extends HAControlBase {
           heading: dateLabel,
           body: {
             type: "custom:calendar-day-popup-card",
-            entities: this.config.entities,
+            entities: (this.config.entities || []).filter(e => {
+              const entityId = typeof e === 'object' ? e.entity : e;
+              return !this._disabledCalendars.has(entityId);
+            }),
             start_date: dateStr,
             max_days: 1,
             show_description: true,
