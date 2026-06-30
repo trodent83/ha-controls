@@ -86,35 +86,15 @@ class VacuumMapCard extends HAControlBase {
     
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
 
-    // Merge configuration rooms and state attribute rooms
-    const configRooms = [];
-    if (this.config.rooms && typeof this.config.rooms === 'object') {
-      for (const [id, r] of Object.entries(this.config.rooms)) {
-        if (!r.disabled) {
-          configRooms.push({
-            id: isNaN(id) ? id : parseFloat(id),
-            name: r.label || this._getRoomName(id, `Room ${id}`),
-            icon: r.icon || 'mdi:door',
-            ...r
-          });
-        }
-      }
-    }
-
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
     
     const combinedRoomsMap = new Map();
     
-    // Config rooms have priority
-    configRooms.forEach(room => {
-      combinedRoomsMap.set(room.id.toString(), room);
-    });
-    
-    // Add any missing vacuum state rooms
+    // First, populate with state rooms from vacuum attributes
     allRooms.forEach(room => {
       const roomIdStr = room.id.toString();
-      if (!this.config.rooms?.[room.id]?.disabled && !combinedRoomsMap.has(roomIdStr)) {
+      if (!this.config.rooms?.[room.id]?.disabled) {
         combinedRoomsMap.set(roomIdStr, {
           id: room.id,
           name: this._getRoomName(room.id, room.name),
@@ -122,6 +102,23 @@ class VacuumMapCard extends HAControlBase {
         });
       }
     });
+    
+    // Then, merge config overrides on top, or add manual config-only rooms
+    if (this.config.rooms && typeof this.config.rooms === 'object') {
+      for (const [id, r] of Object.entries(this.config.rooms)) {
+        if (!r.disabled) {
+          const roomIdStr = id.toString();
+          const existing = combinedRoomsMap.get(roomIdStr) || {};
+          combinedRoomsMap.set(roomIdStr, {
+            ...existing,
+            id: isNaN(id) ? id : parseFloat(id),
+            name: r.label || existing.name || this._getRoomName(id, `Room ${id}`),
+            icon: r.icon || existing.icon || 'mdi:door',
+            ...r
+          });
+        }
+      }
+    }
     
     let rooms = Array.from(combinedRoomsMap.values());
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2026-06-30
+
+### Fixed
+- **Vacuum Map Card (`vacuum-map-card`)**:
+  - Fixed a merging bug where default room icons and names from the physical vacuum's map state attributes were lost for rooms configured on the dashboard map grid overlays.
+  - Bumped loader version to `1.3.17`.
+
 ## [1.4.3] - 2026-06-30
 
 ### Added
