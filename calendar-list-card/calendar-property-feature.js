@@ -1,4 +1,5 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -235,7 +236,7 @@ class CalendarPropertyFeature extends HAControlBase {
       ${this.renderStyle('calendar-property-feature.css')}
       <div class="calendar-property-container" style="${style}">
         ${showIcon && iconName ? html`<ha-icon icon="${iconName}" class="property-icon" style="${iconStyle}"></ha-icon>` : ''}
-        <span class="property-value">${prefix}${displayValue}${suffix}</span>
+        <span class="property-value">${prefix}${prop === "description" ? parseHtml(displayValue) : displayValue}${suffix}</span>
       </div>
     `;
   }

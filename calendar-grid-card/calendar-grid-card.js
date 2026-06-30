@@ -1,5 +1,5 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
-
+import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
 /**
@@ -926,7 +926,7 @@ class CalendarGridCard extends HAControlBase {
         return html`
           <div class="dialog-feature-row feature-description">
             <ha-icon icon="mdi:text-long" class="feature-icon"></ha-icon>
-            <div class="feature-content markdown-body">${description}</div>
+            <div class="feature-content markdown-body">${parseHtml(description)}</div>
           </div>
         `;
       }

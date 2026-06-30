@@ -1,4 +1,5 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -90,7 +91,7 @@ class TaskListCardItem extends HAControlBase {
       ${this.renderStyle('task-list-card-item.css')}
       <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
-        ${this.config.show_description && t.description ? html`<span class="task-description">${t.description}</span>` : ''}
+        ${this.config.show_description && t.description ? html`<span class="task-description">${parseHtml(t.description)}</span>` : ''}
         ${this.config.show_source ? (() => {
           const entity = this.hass.states[t.entity_id];
           if (!entity) return '';

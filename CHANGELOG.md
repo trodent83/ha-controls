@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **HTML Formatting Utility (`utilities/html-parser.js`)**:
+  - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
+
+### Changed
+- **Task List Card (`task-list-card`)**:
+  - Integrated the safe HTML parser for task descriptions in `task-list-card-item.js` to render formatting tags.
+  - Bumped loader version to `1.0.31`.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Integrated the safe HTML parser for event descriptions in list dialog popups, row lists, and calendar property features.
+  - Bumped loader version to `1.0.25`.
+- **Calendar Grid Card (`calendar-grid-card`)**:
+  - Integrated the safe HTML parser for event descriptions in grid dialog popups.
+  - Bumped loader version to `0.4.56`.
+
 ## [1.4.4] - 2026-06-30
 
 ### Fixed

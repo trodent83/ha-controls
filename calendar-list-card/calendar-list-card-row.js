@@ -1,4 +1,5 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -175,7 +176,7 @@ class CalendarListCardRow extends HAControlBase {
         <div class="event-content">
           <span class="event-name">${this.event.summary}</span>
           ${this.config.show_description && this.event.originEvent.description ? html`
-            <span class="event-description">${this.event.originEvent.description}</span>
+            <span class="event-description">${parseHtml(this.event.originEvent.description)}</span>
           ` : ''}
           ${this.config.show_source ? (() => {
             const entity = stateObj;
