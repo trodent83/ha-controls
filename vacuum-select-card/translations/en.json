@@ -30,5 +30,9 @@
   "animation_class": "Animation Class",
   "disable_room": "Disable Room",
   "unrecognized_settings": "Unrecognized configuration settings: {keys}",
-  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration."
+  "clean_settings_desc": "You can use the Clean button below to sanitize your configuration.",
+  "general": "General",
+  "rooms": "Rooms",
+  "clean": "Clean",
+  "reset": "Reset"
 }

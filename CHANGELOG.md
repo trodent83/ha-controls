@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 
 ### Changed
+- **Vacuum Select Card (`vacuum-select-card`)**:
+  - Added missing translation keys (`general`, `rooms`, `clean`, `reset`) in `en.json` to resolve console warnings in the card config editor.
+  - Bumped loader version to `1.0.23`.
 - **Task List Card (`task-list-card`)**:
   - Integrated the safe HTML parser for task descriptions in `task-list-card-item.js` to render formatting tags.
   - Bumped loader version to `1.0.31`.
