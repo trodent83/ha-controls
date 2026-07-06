@@ -1,4 +1,4 @@
-﻿import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading.
@@ -77,6 +77,28 @@ class StateValueFeature extends HAControlThresholdBase {
    * 
    * @param {Object} config - Raw feature config
    */
+  /**
+   * Evaluates JavaScript expression securely in a local closure scope.
+   * 
+   * @param {string} expr - Expression string
+   * @param {Object} stateObj - Entity state object
+   * @private
+   * @returns {any} Result of evaluation
+   */
+  _evalExpression(expr, stateObj) {
+    if (!expr) return undefined;
+    try {
+      const hass = this.hass;
+      const entity = stateObj;
+      const state = stateObj?.state;
+      const attributes = stateObj?.attributes || {};
+      return eval(expr);
+    } catch (e) {
+      console.error("[StateValueFeature] Error evaluating expression:", expr, e);
+      return undefined;
+    }
+  }
+
   setConfig(config) {
     this.config = config;
   }
@@ -102,10 +124,35 @@ class StateValueFeature extends HAControlThresholdBase {
       ? this.hass.formatEntityState(stateObj)
       : stateObj.state;
 
-    // Threshold evaluation on raw state
+    // Evaluate expressions or fallback to static configuration
+    let prefix = this.config.prefix || '';
+    if (this.config.prefix_expression) {
+      prefix = this._evalExpression(this.config.prefix_expression, stateObj) ?? prefix;
+    }
+
+    let suffix = this.config.suffix || '';
+    if (this.config.suffix_expression) {
+      suffix = this._evalExpression(this.config.suffix_expression, stateObj) ?? suffix;
+    }
+
+    // Threshold or expression evaluation on raw state
     const rawState = stateObj.state;
-    const matchedColor = this._getMatchedProperty(rawState, this.config.thresholds, 'color');
-    const matchedAnim = this._getMatchedProperty(rawState, this.config.thresholds, 'animation');
+
+    let matchedColor = undefined;
+    if (this.config.color_expression) {
+      matchedColor = this._evalExpression(this.config.color_expression, stateObj);
+    }
+    if (matchedColor == null) {
+      matchedColor = this._getMatchedProperty(rawState, this.config.thresholds, 'color');
+    }
+
+    let matchedAnim = undefined;
+    if (this.config.animation_expression) {
+      matchedAnim = this._evalExpression(this.config.animation_expression, stateObj);
+    }
+    if (matchedAnim == null) {
+      matchedAnim = this._getMatchedProperty(rawState, this.config.thresholds, 'animation');
+    }
 
     const featureColor = matchedColor || this.config.color || this.color || 'inherit';
     const matchedAnimClass = matchedAnim || '';
@@ -116,9 +163,6 @@ class StateValueFeature extends HAControlThresholdBase {
       font-weight: ${this.config.font_weight || 'normal'};
       text-align: ${this.config.text_align || 'center'};
     `;
-
-    const prefix = this.config.prefix || '';
-    const suffix = this.config.suffix || '';
 
     // Prevent double-rendering units if the formatted displayValue already contains the unit/suffix
     let finalSuffix = suffix;

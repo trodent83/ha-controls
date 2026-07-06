@@ -63,7 +63,9 @@ class RadiatorControlCardEditor extends HAControlBase {
       "timer_hold_action",
       "temperature_thresholds",
       "heating_animation",
-      "dehumidifier_animation"
+      "dehumidifier_animation",
+      "dehumidifier_run_time_entity",
+      "dehumidifier_threshold_entity"
     ];
     this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
@@ -105,7 +107,9 @@ class RadiatorControlCardEditor extends HAControlBase {
       { name: "climate_entity", label: this._localize('climate_entity'), selector: { entity: { domain: "climate" } } },
       { name: "sensor_entity", label: this._localize('sensor_entity'), selector: { entity: { domain: "sensor" } } },
       { name: "select_entity", label: this._localize('select_entity'), selector: { entity: { domain: "input_select" } } },
-      { name: "timer_entity", label: this._localize('timer_entity'), selector: { entity: { domain: "timer" } } }
+      { name: "timer_entity", label: this._localize('timer_entity'), selector: { entity: { domain: "timer" } } },
+      { name: "dehumidifier_run_time_entity", label: "Dehumidifier Run Time Entity", selector: { entity: { domain: "input_number" } } },
+      { name: "dehumidifier_threshold_entity", label: "Dehumidifier Threshold Entity", selector: { entity: { domain: "input_number" } } }
     ];
   }
 
@@ -129,6 +133,8 @@ class RadiatorControlCardEditor extends HAControlBase {
     if (this._config.temperature_thresholds !== undefined) cleaned.temperature_thresholds = this._config.temperature_thresholds;
     if (this._config.heating_animation !== undefined) cleaned.heating_animation = this._config.heating_animation;
     if (this._config.dehumidifier_animation !== undefined) cleaned.dehumidifier_animation = this._config.dehumidifier_animation;
+    if (this._config.dehumidifier_run_time_entity !== undefined) cleaned.dehumidifier_run_time_entity = this._config.dehumidifier_run_time_entity;
+    if (this._config.dehumidifier_threshold_entity !== undefined) cleaned.dehumidifier_threshold_entity = this._config.dehumidifier_threshold_entity;
 
     this._config = cleaned;
     this._fireConfigChanged();

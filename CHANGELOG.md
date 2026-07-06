@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
+- **State Value Feature (`state-value-feature`)**:
+  - Added support for Javascript-based expressions (`prefix_expression`, `suffix_expression`, `color_expression`, and `animation_expression`) to allow fully dynamic renderings and style assignments.
 
 ### Changed
 - **Vacuum Select Card (`vacuum-select-card`)**:
@@ -21,6 +23,13 @@ All notable changes to this project will be documented in this file.
 - **Calendar Grid Card (`calendar-grid-card`)**:
   - Integrated the safe HTML parser for event descriptions in grid dialog popups.
   - Bumped loader version to `0.4.56`.
+- **State Value Feature (`state-value-feature`)**:
+  - Bumped loader version to `0.1.30`.
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Added watched entity configuration and dynamic property binding for dehumidifier runtime tracking (`dehumidifier_run_time_entity`, `dehumidifier_threshold_entity`).
+  - Added conditional rendering: when the card is set to `Dehumidify` mode, the thermostat adjusters and target labels are replaced with a dynamic blue runtime progress bar and text status display (e.g. `4.5 / 6 h`).
+  - Added visual configuration editor selectors for the runtime and threshold entities, HSL progress bar CSS rules, and English localization for the status display.
+  - Bumped loader version to `1.0.15`.
 
 ## [1.4.4] - 2026-06-30
 

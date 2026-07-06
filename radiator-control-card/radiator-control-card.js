@@ -50,6 +50,8 @@ class RadiatorControlCard extends HAControlThresholdBase {
   _getWatchedEntities(config) {
     const entities = new Set(super._getWatchedEntities(config));
     entities.add(this.config?.dehumidifier_entity || 'switch.dehumidifier_power_control');
+    entities.add(this.config?.dehumidifier_run_time_entity || 'input_number.dehumidifier_run_time');
+    entities.add(this.config?.dehumidifier_threshold_entity || 'input_number.dehumidifier_cleaning_threshold');
     return Array.from(entities);
   }
 
@@ -360,6 +362,16 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const activeMode = selectState ? selectState.state : "None";
     const timerActive = timerState && timerState.state === "active";
 
+    // Dehumidifier run hours and threshold
+    const dehumidifierRunTimeEntity = this.config.dehumidifier_run_time_entity || 'input_number.dehumidifier_run_time';
+    const dehumidifierThresholdEntity = this.config.dehumidifier_threshold_entity || 'input_number.dehumidifier_cleaning_threshold';
+    
+    const runTimeState = this.hass.states[dehumidifierRunTimeEntity];
+    const thresholdState = this.hass.states[dehumidifierThresholdEntity];
+    
+    const runTime = runTimeState ? parseFloat(runTimeState.state) : 0;
+    const threshold = thresholdState ? parseFloat(thresholdState.state) : 6;
+
     return html`
       ${this.renderStyle('radiator-control-card.css')}
       <ha-card>
@@ -375,19 +387,31 @@ class RadiatorControlCard extends HAControlThresholdBase {
           </div>
         </div>
 
-        <!-- Target Controller -->
-        <div class="target-controller ${isUnavailable ? 'disabled' : ''}">
-          <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(-0.5)}">
-            <ha-icon icon="mdi:minus"></ha-icon>
-          </button>
-          <div class="target-display">
-            <span class="target-value">${formattedTarget}${isUnavailable ? '' : '°'}</span>
-            <span class="target-label">${this._localize('target_temp', { temp: formattedTarget }).split(' ')[0]}</span>
+        <!-- Target Controller or Dehumidifier Status -->
+        ${activeMode === 'Dehumidify' ? html`
+          <div class="dehumidifier-status-container">
+            <div class="dehumidifier-progress-bar-wrap">
+              <div class="dehumidifier-progress-bar" style="width: ${Math.min(100, (runTime / (threshold || 6)) * 100)}%;"></div>
+            </div>
+            <div class="dehumidifier-status-text">
+              <span class="status-value">${isNaN(runTime) ? '0.0' : runTime.toFixed(1)} / ${isNaN(threshold) ? '6' : threshold.toFixed(0)} h</span>
+              <span class="status-label">${this._localize('dehumidifier_runtime_label') || 'Dehumidifier Run Time'}</span>
+            </div>
           </div>
-          <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(0.5)}">
-            <ha-icon icon="mdi:plus"></ha-icon>
-          </button>
-        </div>
+        ` : html`
+          <div class="target-controller ${isUnavailable ? 'disabled' : ''}">
+            <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(-0.5)}">
+              <ha-icon icon="mdi:minus"></ha-icon>
+            </button>
+            <div class="target-display">
+              <span class="target-value">${formattedTarget}${isUnavailable ? '' : '°'}</span>
+              <span class="target-label">${this._localize('target_temp', { temp: formattedTarget }).split(' ')[0]}</span>
+            </div>
+            <button class="adjust-btn" ?disabled="${isUnavailable}" @click="${() => this._adjustTemperature(0.5)}">
+              <ha-icon icon="mdi:plus"></ha-icon>
+            </button>
+          </div>
+        `}
 
         <!-- Mode Segmented Selector -->
         <div class="mode-selector">

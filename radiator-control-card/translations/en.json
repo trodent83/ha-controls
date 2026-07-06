@@ -13,5 +13,6 @@
   "timer_entity": "Timer Entity",
   "name": "Card Title",
   "unrecognized_settings": "Unrecognized settings: {keys}",
-  "clean_settings_desc": "Clean up unrecognized options below."
+  "clean_settings_desc": "Clean up unrecognized options below.",
+  "dehumidifier_runtime_label": "Dehumidifier Run Time"
 }

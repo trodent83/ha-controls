@@ -280,3 +280,53 @@ ha-card {
   0%, 100% { opacity: 1; color: var(--warning-color, orange); }
   50% { opacity: 0.3; color: var(--primary-text-color); }
 }
+
+/* ==========================================================================
+   DEHUMIDIFIER PROGRESS STATUS
+   ========================================================================== */
+.dehumidifier-status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+
+.dehumidifier-progress-bar-wrap {
+  width: 80%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(var(--rgb-primary-text-color), 0.1);
+  overflow: hidden;
+}
+
+.dehumidifier-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--info-color, #2196f3);
+  transition: width 0.3s ease;
+}
+
+.dehumidifier-status-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dehumidifier-status-text .status-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+}
+
+.dehumidifier-status-text .status-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  margin-top: 2px;
+  color: var(--secondary-text-color);
+}
