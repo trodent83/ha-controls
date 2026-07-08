@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.8';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.12';
 
 /**
  * FitGridLayout
@@ -16,15 +16,11 @@ class FitGridLayout extends HAControlBase {
   }
 
   get translationPath() {
-    return null;
+    return "/local/ha-controls/fit-grid-layout/translations";
   }
 
   get translationVersion() {
     return VERSION;
-  }
-
-  renderStyle(filename) {
-    return html`<link rel="stylesheet" href="/local/ha-controls/fit-grid-layout/${filename}?v=${this.translationVersion}">`;
   }
 
   static get properties() {
@@ -226,7 +222,13 @@ class FitGridLayout extends HAControlBase {
 
     // 1. Get host's actual available dimensions
     const availableWidth = this.clientWidth || window.innerWidth;
-    const availableHeight = this.clientHeight || (window.innerHeight - 56);
+    
+    // Resolve header height dynamically or fall back to 56
+    const headerHeight = parseInt(getComputedStyle(this).getPropertyValue('--header-height')) || 56;
+    const viewportHeight = window.innerHeight - headerHeight;
+    
+    // Cap available height at viewport height to force scaling down when height is unconstrained
+    const availableHeight = this.clientHeight > 0 ? Math.min(this.clientHeight, viewportHeight) : viewportHeight;
 
     if (availableWidth <= 0 || availableHeight <= 0) return;
 
@@ -246,17 +248,17 @@ class FitGridLayout extends HAControlBase {
     const originalTransition = container.style.transition;
     container.style.transition = "none";
 
-    // 2. Temporarily render at scale 1.0 to measure natural dimensions
+    // 2. Temporarily render at scale 1.0 with auto height to measure natural dimensions
     container.style.transform = "none";
     container.style.width = `${availableWidth}px`;
-    container.style.height = `${availableHeight}px`;
+    container.style.height = "auto";
 
     // Force a reflow
     container.offsetHeight;
 
-    // 3. Obtain scroll dimensions
+    // 3. Obtain unscaled natural content dimensions
     const contentWidth = container.scrollWidth;
-    const contentHeight = container.scrollHeight;
+    const contentHeight = container.scrollHeight || container.offsetHeight;
 
     // Re-enable original transition
     container.style.transition = originalTransition;

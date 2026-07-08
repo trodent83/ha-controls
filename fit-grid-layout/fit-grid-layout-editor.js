@@ -1,10 +1,10 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.12';
 
 /**
  * FitGridLayoutEditor
@@ -27,7 +27,7 @@ class FitGridLayoutEditor extends HAControlBase {
     this._activeTab = 'layout';
   }
 
-  get translationPath() { return null; }
+  get translationPath() { return "/local/ha-controls/fit-grid-layout/translations"; }
   get translationVersion() { return VERSION; }
 
   setConfig(config) {

@@ -124,6 +124,12 @@ tap_action:
 
 When rendering dashboards on wall-mounted tablets or smaller display panels, `FitGridLayout` automatically scales down using CSS transforms (`transform: scale(...)`) to fit the screen boundaries perfectly. 
 
+### Height Calculation & Capping
+To ensure the layout scales down even when placed inside scrolling parent containers (such as default Home Assistant tabs or views), the layout card calculates available vertical space dynamically:
+1. It reads the CSS custom property `--header-height` (falling back to `56px` if not set) to determine the space occupied by the Home Assistant header.
+2. It calculates the visible viewport height as `window.innerHeight - headerHeight`.
+3. It caps the measured `availableHeight` at the computed visible viewport height. This guarantees that vertical overflow will trigger proportional scaling rather than forcing a page scrollbar.
+
 To ensure popups remain fully usable and centered on these smaller devices, `FitGridLayout` propagates its exact measured layout dimensions and scale factors using CSS custom properties:
 - `--fit-available-width`: The measured width of the view layout.
 - `--fit-available-height`: The measured height of the view layout.

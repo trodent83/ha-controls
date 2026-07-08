@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file.
   - Added support for Javascript-based expressions (`prefix_expression`, `suffix_expression`, `color_expression`, and `animation_expression`) to allow fully dynamic renderings and style assignments.
 
 ### Changed
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - Implemented dynamic available height capping based on the visible viewport height (evaluating the `--header-height` CSS variable dynamically, defaulting to `56px`) to prevent vertical layout overflow when rendering inside unconstrained parent containers (e.g., standard scrolling tabs).
+  - Optimized the scaling measurement by temporarily setting `height: auto` on the grid container to allow natural row track layouts and precise calculation of required content height.
+  - Implemented `translationPath` and `translationVersion` getters to support standard stylesheet resolution and removed redundant manual `renderStyle` overrides.
+  - Added a dummy fallback translation file `translations/en.json` to eliminate browser console `404 Not Found` warnings.
+  - Bumped the loader version to `1.1.12` and editor version to `1.1.12`.
 - **Vacuum Select Card (`vacuum-select-card`)**:
   - Added missing translation keys (`general`, `rooms`, `clean`, `reset`) in `en.json` to resolve console warnings in the card config editor.
   - Bumped loader version to `1.0.23`.
