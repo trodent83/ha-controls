@@ -160,14 +160,14 @@
    GPU OPTIMIZED ANIMATIONS
    will-change properties prevent layout shifts and utilize GPU layers.
    ========================================================================== */
-.bouncing, .spinning, .pulsing, .shaking, .floating, .spin-slow, .flash {
+.bouncing, .spinning, .pulsing, .shaking, .floating, .spin-slow, .flash, .blink, .blinking {
     will-change: transform;
     transform: translateZ(0);
 }
 
 /* Animation triggers */
 .bouncing  { animation: bounce 1s ease infinite; }
-.flash     { animation: blink 1.5s linear infinite; }
+.flash, .blink, .blinking { animation: blink 1.5s linear infinite; }
 .spinning  { animation: rotating 2s linear infinite; }
 .pulsing   { animation: pulse 2s infinite; }
 .shaking   { animation: shake 0.4s linear infinite; }

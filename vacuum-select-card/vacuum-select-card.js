@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -102,7 +102,8 @@ class VacuumSelectCard extends HAControlBase {
       <div class="container ${isReadonly ? 'readonly' : ''}" 
           style="--grid-columns: ${this.config.columns || 4}; 
                   --selection-color: ${this.config.selection_color || 'var(--primary-color)'}; 
-                  --selection-foreground: ${this.config.selection_foreground || 'white'};">
+                  --selection-foreground: ${this.config.selection_foreground || 'white'};
+                  --cleaning-blink-color: ${this.config.mark_animation_background || '#4CAF50'};">
         
         <div class="room-grid">
           ${rooms.map(room => {
@@ -125,7 +126,7 @@ class VacuumSelectCard extends HAControlBase {
             }
             
             return html`
-              <div class="room-button ${isSelected ? 'active' : ''}" 
+              <div class="room-button ${isSelected ? 'active' : ''} ${showActiveCleaning ? 'cleaning' : ''}" 
                    style="${animationStyle}"
                    @click="${() => !isReadonly && this._toggleRoom(room.id, selectedRooms, cleanSequence)}">
                 <ha-icon 

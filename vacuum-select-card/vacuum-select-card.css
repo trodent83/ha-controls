@@ -140,14 +140,14 @@
    GPU OPTIMIZED ANIMATIONS
    will-change properties prevent layout shifts and utilize GPU layers.
    ========================================================================== */
-.bouncing, .spinning, .pulsing, .shaking, .floating, .spin-slow, .flash {
+.bouncing, .spinning, .pulsing, .shaking, .floating, .spin-slow, .flash, .blink, .blinking {
   will-change: transform;
   transform: translateZ(0);
 }
 
 /* Animation triggers */
 .bouncing  { animation: bounce 1s ease infinite; }
-.flash     { animation: blink 1.5s linear infinite; }
+.flash, .blink, .blinking { animation: blink 1.5s linear infinite; }
 .spinning  { animation: rotating 2s linear infinite; }
 .pulsing   { animation: pulse 2s infinite; }
 .shaking   { animation: shake 0.4s linear infinite; }
@@ -191,3 +191,23 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
+
+/* Active cleaning blinking room style */
+.room-button.cleaning {
+    opacity: 1.0;
+    border: 2.5px solid var(--cleaning-blink-color, #4CAF50) !important;
+    animation: cleaning-blink 1.5s infinite ease-in-out;
+}
+
+/* Alternate room background color and box shadow glowing glow */
+@keyframes cleaning-blink {
+    0%, 100% {
+        background-color: var(--ha-card-background, var(--card-background-color, white));
+        box-shadow: none;
+    }
+    50% {
+        background-color: rgba(76, 175, 80, 0.15);
+        box-shadow: inset 0 0 8px rgba(76, 175, 80, 0.3), 0 0 12px rgba(76, 175, 80, 0.3);
+    }
+}
+
