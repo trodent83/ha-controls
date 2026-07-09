@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.12';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.13';
 
 /**
  * FitGridLayout
@@ -41,16 +41,36 @@ class FitGridLayout extends HAControlBase {
     this._popupEl = null;
     this._popupHeading = "";
     this._resizeObserver = null;
+    this._lastWidth = null;
+    this._lastHeight = null;
+    this._lastContentWidth = null;
+    this._lastContentHeight = null;
+    this._lastScale = null;
     this._calculateScaleDebounced = this._debounce(() => this._calculateScale(), 30);
+
+    // Document visibility change listener to clear cached dimensions and recalculate on wakeup
+    this._handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        this._lastWidth = null;
+        this._lastHeight = null;
+        this._lastContentWidth = null;
+        this._lastContentHeight = null;
+        this._lastScale = null;
+        this._calculateScaleDebounced();
+      }
+    };
   }
 
   firstUpdated() {
-    // Watch size changes on the host element
+    // Watch size changes on observed elements
     this._resizeObserver = new ResizeObserver(() => this._calculateScaleDebounced());
     this._resizeObserver.observe(this);
 
     // Watch resize changes on the window
     window.addEventListener("resize", this._calculateScaleDebounced);
+
+    // Listen to screen visibility shifts (e.g. tablet screen sleep/wakeup)
+    document.addEventListener("visibilitychange", this._handleVisibilityChange);
 
     // Listen to custom popup events and standard Lovelace actions
     this.addEventListener("show-grid-popup", (e) => this._handleShowPopup(e));
@@ -67,6 +87,7 @@ class FitGridLayout extends HAControlBase {
       this._resizeObserver.disconnect();
     }
     window.removeEventListener("resize", this._calculateScaleDebounced);
+    document.removeEventListener("visibilitychange", this._handleVisibilityChange);
   }
 
   updated(changedProperties) {
@@ -90,6 +111,14 @@ class FitGridLayout extends HAControlBase {
     // Propagate state object updates to the active popup card if one is open
     if (changedProperties.has("hass") && this._popupEl) {
       this._popupEl.hass = this.hass;
+    }
+
+    // Monitor child wrappers for content changes to trigger scaling adjustments
+    if (this._resizeObserver) {
+      const wrappers = this.shadowRoot.querySelectorAll(".grid-item-wrapper");
+      wrappers.forEach(wrapper => {
+        this._resizeObserver.observe(wrapper);
+      });
     }
   }
 
@@ -237,16 +266,11 @@ class FitGridLayout extends HAControlBase {
     document.documentElement.style.setProperty('--fit-available-width', `${availableWidth}px`);
     document.documentElement.style.setProperty('--fit-available-height', `${availableHeight}px`);
 
-    // Prevent ResizeObserver loops by skipping if host size hasn't changed since last scale calculation
-    if (this._lastWidth === availableWidth && this._lastHeight === availableHeight) {
-      return;
-    }
-    this._lastWidth = availableWidth;
-    this._lastHeight = availableHeight;
-
-    // Disable transition during measurement to get instant dimension values
+    // Disable transition and force hidden overflow during measurement to get accurate scrollWidth/scrollHeight
     const originalTransition = container.style.transition;
+    const originalOverflow = container.style.overflow;
     container.style.transition = "none";
+    container.style.overflow = "hidden";
 
     // 2. Temporarily render at scale 1.0 with auto height to measure natural dimensions
     container.style.transform = "none";
@@ -260,8 +284,9 @@ class FitGridLayout extends HAControlBase {
     const contentWidth = container.scrollWidth;
     const contentHeight = container.scrollHeight || container.offsetHeight;
 
-    // Re-enable original transition
+    // Re-enable original transition and overflow
     container.style.transition = originalTransition;
+    container.style.overflow = originalOverflow;
 
     // 4. Compute optimal scale factor
     const scaleX = contentWidth > 0 ? (availableWidth / contentWidth) : 1.0;
@@ -271,6 +296,22 @@ class FitGridLayout extends HAControlBase {
     let scale = Math.min(scaleX, scaleY);
     if (scale > 1.0) scale = 1.0;
     if (scale < 0.2) scale = 0.2; // Don't scale down past 20% to keep things legible
+
+    // Prevent ResizeObserver loops by skipping if host size and content size haven't changed since last scale calculation
+    if (
+      this._lastWidth === availableWidth &&
+      this._lastHeight === availableHeight &&
+      this._lastContentWidth === contentWidth &&
+      this._lastContentHeight === contentHeight &&
+      this._lastScale === scale
+    ) {
+      return;
+    }
+    this._lastWidth = availableWidth;
+    this._lastHeight = availableHeight;
+    this._lastContentWidth = contentWidth;
+    this._lastContentHeight = contentHeight;
+    this._lastScale = scale;
 
     this.style.setProperty('--fit-layout-scale', `${scale}`);
     document.documentElement.style.setProperty('--fit-layout-scale', `${scale}`);
