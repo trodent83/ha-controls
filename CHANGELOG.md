@@ -12,11 +12,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **Fit Grid Layout Card (`fit-grid-layout`)**:
-  - Implemented dynamic available height capping based on the visible viewport height (evaluating the `--header-height` CSS variable dynamically, defaulting to `56px`) to prevent vertical layout overflow when rendering inside unconstrained parent containers (e.g., standard scrolling tabs).
-  - Optimized the scaling measurement by temporarily setting `height: auto` on the grid container to allow natural row track layouts and precise calculation of required content height.
-  - Implemented `translationPath` and `translationVersion` getters to support standard stylesheet resolution and removed redundant manual `renderStyle` overrides.
-  - Added a dummy fallback translation file `translations/en.json` to eliminate browser console `404 Not Found` warnings.
-  - Bumped the loader version to `1.1.12` and editor version to `1.1.12`.
+  - Fixed automatic viewport scaling when child controls change size after loading by attaching `ResizeObserver` and `MutationObserver` directly to child cards, item wrappers, and inner Shadow DOM trees.
+  - Added capturing event listeners for `iron-resize`, `card-resized`, `ll-rebuild`, `location-changed`, `hass-api-called`, `load`, `transitionend`, and `animationend` events across child controls.
+  - Implemented staggered post-update scale recalculations (50ms - 3000ms) to catch asynchronous card data fetches, weather forecasts, task list loads, and image rendering.
+  - Refined available viewport height calculation using `getBoundingClientRect().top` to strictly cap available vertical space to the exact visible screen area below headers and navigation bars.
+  - Enhanced content height measurement to evaluate physical bottom coordinates of all grid wrappers, child cards, and shadow DOM elements to prevent vertical page scrolling on tablet displays.
+  - Bumped the loader version and card version to `1.1.14`.
 - **Vacuum Select Card (`vacuum-select-card`)**:
   - Added missing translation keys (`general`, `rooms`, `clean`, `reset`) in `en.json` to resolve console warnings in the card config editor.
   - Bumped loader version to `1.0.23`.

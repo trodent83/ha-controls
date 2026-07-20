@@ -1,12 +1,13 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.13';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.14';
 
 /**
  * FitGridLayout
  * A custom Home Assistant view layout card that renders child cards inside a CSS Grid container.
- * Automatically monitors available screen space using ResizeObserver and dynamically scales down the content
- * (maintaining layout proportions) via CSS transform scale so that it fits the screen exactly without overflowing.
+ * Automatically monitors available screen space using ResizeObserver and MutationObserver,
+ * and dynamically scales down the content (maintaining layout proportions) via CSS transform scale
+ * so that it fits the screen exactly without overflowing or requiring vertical scrolling.
  *
  * @extends HAControlBase
  */
@@ -41,6 +42,7 @@ class FitGridLayout extends HAControlBase {
     this._popupEl = null;
     this._popupHeading = "";
     this._resizeObserver = null;
+    this._mutationObserver = null;
     this._lastWidth = null;
     this._lastHeight = null;
     this._lastContentWidth = null;
@@ -56,7 +58,7 @@ class FitGridLayout extends HAControlBase {
         this._lastContentWidth = null;
         this._lastContentHeight = null;
         this._lastScale = null;
-        this._calculateScaleDebounced();
+        this._schedulePostUpdateCalculations();
       }
     };
   }
@@ -64,7 +66,8 @@ class FitGridLayout extends HAControlBase {
   firstUpdated() {
     // Watch size changes on observed elements
     this._resizeObserver = new ResizeObserver(() => this._calculateScaleDebounced());
-    this._resizeObserver.observe(this);
+    this._observeElements();
+    this._setupMutationObserver();
 
     // Watch resize changes on the window
     window.addEventListener("resize", this._calculateScaleDebounced);
@@ -77,14 +80,32 @@ class FitGridLayout extends HAControlBase {
     this.addEventListener("close-grid-popup", () => this._handleClosePopup());
     this.addEventListener("ll-custom", (e) => this._handleLLCustom(e));
 
-    // Initial scale computation
-    setTimeout(() => this._calculateScale(), 50);
+    // Listen for size/content mutation events capturing across the DOM tree
+    const eventTypes = [
+      "iron-resize",
+      "card-resized",
+      "ll-rebuild",
+      "location-changed",
+      "hass-api-called",
+      "load",
+      "transitionend",
+      "animationend"
+    ];
+    eventTypes.forEach(evt => {
+      this.addEventListener(evt, () => this._calculateScaleDebounced(), { capture: true, passive: true });
+    });
+
+    // Staggered initial scale computations to catch async card loads
+    this._schedulePostUpdateCalculations();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
+    }
+    if (this._mutationObserver) {
+      this._mutationObserver.disconnect();
     }
     window.removeEventListener("resize", this._calculateScaleDebounced);
     document.removeEventListener("visibilitychange", this._handleVisibilityChange);
@@ -106,20 +127,101 @@ class FitGridLayout extends HAControlBase {
           if (card) card.hass = this.hass;
         });
       }
-      this._calculateScaleDebounced();
+      this._observeElements();
+      this._setupMutationObserver();
+      this._schedulePostUpdateCalculations();
     }
     // Propagate state object updates to the active popup card if one is open
     if (changedProperties.has("hass") && this._popupEl) {
       this._popupEl.hass = this.hass;
     }
+  }
 
-    // Monitor child wrappers for content changes to trigger scaling adjustments
-    if (this._resizeObserver) {
-      const wrappers = this.shadowRoot.querySelectorAll(".grid-item-wrapper");
-      wrappers.forEach(wrapper => {
-        this._resizeObserver.observe(wrapper);
-      });
+  /**
+   * Schedules multiple post-update recalculations to catch async network responses,
+   * card renders, and font/image loading.
+   */
+  _schedulePostUpdateCalculations() {
+    this._calculateScaleDebounced();
+    [50, 150, 400, 800, 1500, 3000].forEach(delay => {
+      setTimeout(() => {
+        if (this.isConnected) {
+          this._observeElements();
+          this._setupMutationObserver();
+          this._calculateScaleDebounced();
+        }
+      }, delay);
+    });
+  }
+
+  /**
+   * Attaches ResizeObserver to host, container, item wrappers, child cards, and shadow DOM children.
+   */
+  _observeElements() {
+    if (!this._resizeObserver) return;
+
+    this._resizeObserver.observe(this);
+    const container = this.shadowRoot?.getElementById("grid-container");
+    if (container) {
+      this._resizeObserver.observe(container);
     }
+
+    const wrappers = this.shadowRoot?.querySelectorAll(".grid-item-wrapper") || [];
+    wrappers.forEach(wrapper => {
+      this._resizeObserver.observe(wrapper);
+      const card = wrapper.firstElementChild;
+      if (card) {
+        this._resizeObserver.observe(card);
+        if (card.shadowRoot) {
+          Array.from(card.shadowRoot.children).forEach(child => {
+            try {
+              this._resizeObserver.observe(child);
+            } catch (e) {}
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Attaches MutationObserver to observe DOM structural changes in container and card shadow DOMs.
+   */
+  _setupMutationObserver() {
+    if (!this._mutationObserver) {
+      this._mutationObserver = new MutationObserver(() => {
+        this._observeElements();
+        this._calculateScaleDebounced();
+      });
+    } else {
+      this._mutationObserver.disconnect();
+    }
+
+    const container = this.shadowRoot?.getElementById("grid-container");
+    if (container) {
+      try {
+        this._mutationObserver.observe(container, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          characterData: true
+        });
+      } catch (e) {}
+    }
+
+    const wrappers = this.shadowRoot?.querySelectorAll(".grid-item-wrapper") || [];
+    wrappers.forEach(wrapper => {
+      const card = wrapper.firstElementChild;
+      if (card && card.shadowRoot) {
+        try {
+          this._mutationObserver.observe(card.shadowRoot, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            characterData: true
+          });
+        } catch (e) {}
+      }
+    });
   }
 
   get _debugEnabled() {
@@ -246,18 +348,22 @@ class FitGridLayout extends HAControlBase {
    * Measures unscaled grid content size vs available host size and applies scale transformation.
    */
   _calculateScale() {
-    const container = this.shadowRoot.getElementById("grid-container");
+    const container = this.shadowRoot?.getElementById("grid-container");
     if (!container) return;
 
     // 1. Get host's actual available dimensions
     const availableWidth = this.clientWidth || window.innerWidth;
     
-    // Resolve header height dynamically or fall back to 56
+    // Determine exact remaining viewport height below card top
+    const rect = this.getBoundingClientRect();
     const headerHeight = parseInt(getComputedStyle(this).getPropertyValue('--header-height')) || 56;
-    const viewportHeight = window.innerHeight - headerHeight;
-    
-    // Cap available height at viewport height to force scaling down when height is unconstrained
-    const availableHeight = this.clientHeight > 0 ? Math.min(this.clientHeight, viewportHeight) : viewportHeight;
+    const topOffset = rect.top > 0 ? rect.top : headerHeight;
+    const viewportRemaining = Math.max(100, window.innerHeight - topOffset);
+
+    // Available height capped strictly at viewport remaining space to prevent vertical scrolling
+    const availableHeight = this.clientHeight > 0
+      ? Math.min(this.clientHeight, viewportRemaining)
+      : viewportRemaining;
 
     if (availableWidth <= 0 || availableHeight <= 0) return;
 
@@ -266,7 +372,7 @@ class FitGridLayout extends HAControlBase {
     document.documentElement.style.setProperty('--fit-available-width', `${availableWidth}px`);
     document.documentElement.style.setProperty('--fit-available-height', `${availableHeight}px`);
 
-    // Disable transition and force hidden overflow during measurement to get accurate scrollWidth/scrollHeight
+    // Disable transition and force hidden overflow during measurement
     const originalTransition = container.style.transition;
     const originalOverflow = container.style.overflow;
     container.style.transition = "none";
@@ -281,12 +387,41 @@ class FitGridLayout extends HAControlBase {
     container.offsetHeight;
 
     // 3. Obtain unscaled natural content dimensions
-    const contentWidth = container.scrollWidth;
-    const contentHeight = container.scrollHeight || container.offsetHeight;
+    let contentWidth = container.scrollWidth;
+    let contentHeight = Math.max(container.scrollHeight, container.offsetHeight);
 
-    // Re-enable original transition and overflow
-    container.style.transition = originalTransition;
-    container.style.overflow = originalOverflow;
+    // Calculate maximum bottom coordinate of all child card wrappers to account for shadow DOM content overflow
+    const containerPaddingBottom = parseInt(getComputedStyle(container).paddingBottom) || 8;
+    let maxChildBottom = 0;
+    const wrappers = container.querySelectorAll(".grid-item-wrapper");
+
+    wrappers.forEach(w => {
+      const wTop = w.offsetTop;
+      const wHeight = Math.max(w.offsetHeight || 0, w.scrollHeight || 0);
+      let maxCardHeight = wHeight;
+
+      const card = w.firstElementChild;
+      if (card) {
+        const cHeight = Math.max(card.offsetHeight || 0, card.scrollHeight || 0);
+        maxCardHeight = Math.max(maxCardHeight, cHeight);
+
+        if (card.shadowRoot) {
+          Array.from(card.shadowRoot.children).forEach(sChild => {
+            const sHeight = Math.max(sChild.offsetHeight || 0, sChild.scrollHeight || 0);
+            maxCardHeight = Math.max(maxCardHeight, sHeight);
+          });
+        }
+      }
+
+      const itemBottom = wTop + maxCardHeight;
+      if (itemBottom > maxChildBottom) {
+        maxChildBottom = itemBottom;
+      }
+    });
+
+    if (maxChildBottom > 0) {
+      contentHeight = Math.max(contentHeight, maxChildBottom + containerPaddingBottom);
+    }
 
     // 4. Compute optimal scale factor
     const scaleX = contentWidth > 0 ? (availableWidth / contentWidth) : 1.0;
@@ -297,29 +432,34 @@ class FitGridLayout extends HAControlBase {
     if (scale > 1.0) scale = 1.0;
     if (scale < 0.2) scale = 0.2; // Don't scale down past 20% to keep things legible
 
-    // Prevent ResizeObserver loops by skipping if host size and content size haven't changed since last scale calculation
+    const roundedScale = Math.round(scale * 1000) / 1000;
+
+    // Prevent ResizeObserver loops by skipping if host size and content size haven't changed
     if (
       this._lastWidth === availableWidth &&
       this._lastHeight === availableHeight &&
       this._lastContentWidth === contentWidth &&
       this._lastContentHeight === contentHeight &&
-      this._lastScale === scale
+      this._lastScale === roundedScale
     ) {
+      container.style.transition = originalTransition;
+      container.style.overflow = originalOverflow;
       return;
     }
+
     this._lastWidth = availableWidth;
     this._lastHeight = availableHeight;
     this._lastContentWidth = contentWidth;
     this._lastContentHeight = contentHeight;
-    this._lastScale = scale;
+    this._lastScale = roundedScale;
 
-    this.style.setProperty('--fit-layout-scale', `${scale}`);
-    document.documentElement.style.setProperty('--fit-layout-scale', `${scale}`);
+    this.style.setProperty('--fit-layout-scale', `${roundedScale}`);
+    document.documentElement.style.setProperty('--fit-layout-scale', `${roundedScale}`);
 
-    const popupMaxWidth = `${Math.min(920, availableWidth * 0.92 / scale)}px`;
-    const popupMaxHeight = `${Math.min(800, availableHeight * 0.92 / scale)}px`;
-    const overlayWidth = `${100 / scale}vw`;
-    const overlayHeight = `${100 / scale}vh`;
+    const popupMaxWidth = `${Math.min(920, availableWidth * 0.92 / roundedScale)}px`;
+    const popupMaxHeight = `${Math.min(800, availableHeight * 0.92 / roundedScale)}px`;
+    const overlayWidth = `${100 / roundedScale}vw`;
+    const overlayHeight = `${100 / roundedScale}vh`;
 
     this.style.setProperty('--fit-popup-max-width', popupMaxWidth);
     this.style.setProperty('--fit-popup-max-height', popupMaxHeight);
@@ -332,16 +472,20 @@ class FitGridLayout extends HAControlBase {
     document.documentElement.style.setProperty('--fit-popup-overlay-height', overlayHeight);
 
     // 5. Apply scale transforms and size corrections
-    if (scale < 1.0) {
-      container.style.width = `${availableWidth / scale}px`;
-      container.style.height = `${availableHeight / scale}px`;
-      container.style.transform = `scale(${scale})`;
+    if (roundedScale < 1.0) {
+      container.style.width = `${availableWidth / roundedScale}px`;
+      container.style.height = `${availableHeight / roundedScale}px`;
+      container.style.transform = `scale(${roundedScale})`;
       container.style.transformOrigin = "top left";
     } else {
       container.style.width = "100%";
       container.style.height = "100%";
       container.style.transform = "none";
     }
+
+    // Re-enable original transition and overflow
+    container.style.transition = originalTransition;
+    container.style.overflow = originalOverflow;
   }
 
   _isConfigMatch(c1, c2) {
