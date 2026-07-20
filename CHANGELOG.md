@@ -22,7 +22,8 @@ All notable changes to this project will be documented in this file.
   - Bumped loader version to `1.0.23`.
 - **Task List Card (`task-list-card`)**:
   - Integrated the safe HTML parser for task descriptions in `task-list-card-item.js` to render formatting tags.
-  - Bumped loader version to `1.0.31`.
+  - Added visual loading overlay during initial task fetches on dashboard/tablet reload, suppressed false "No tasks" state during loading, disabled refresh action button while processing, and safely caught `reload_config_entry` errors on repeated refresh taps.
+  - Bumped loader version to `1.0.32`.
 - **Calendar List Card (`calendar-list-card`)**:
   - Integrated the safe HTML parser for event descriptions in list dialog popups, row lists, and calendar property features.
   - Bumped loader version to `1.0.25`.
@@ -33,9 +34,10 @@ All notable changes to this project will be documented in this file.
   - Bumped loader version to `0.1.30`.
 - **Radiator Control Card (`radiator-control-card`)**:
   - Added watched entity configuration and dynamic property binding for dehumidifier runtime tracking (`dehumidifier_run_time_entity`, `dehumidifier_threshold_entity`).
-  - Added conditional rendering: when the card is set to `Dehumidify` mode, the thermostat adjusters and target labels are replaced with a dynamic blue runtime progress bar and text status display (e.g. `4.5 / 6 h`).
+  - Added conditional rendering: when the card is set to `Dehumidify` mode, the thermostat adjusters and target labels are replaced with a dynamic blue runtime progress bar and text status display.
   - Added visual configuration editor selectors for the runtime and threshold entities, HSL progress bar CSS rules, and English localization for the status display.
-  - Bumped loader version to `1.0.15`.
+  - Fixed state tracking and watched entity list invalidation so external scripts starting dehumidifying trigger GUI re-renders immediately, added active mode fallback when dehumidifier switch turns on, and updated the status text to display current runtime (e.g. `4.5 h`) instead of `4.5 / 6 h`.
+  - Bumped loader version to `1.0.16`.
 
 ## [1.4.4] - 2026-06-30
 

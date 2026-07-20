@@ -1,4 +1,4 @@
-﻿import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -99,9 +99,9 @@ class TaskListCard extends HAControlBase {
       block_future_toggles: true,
       ...config
     };
-    this._groups = [];
+    this._groups = null;
     this._toggledItems = [];
-    this._processing = null;
+    this._processing = 'loading';
     this._fetchItems();
   }
 
@@ -245,50 +245,62 @@ class TaskListCard extends HAControlBase {
   async _fetchItems() {
     if (!this.hass) return;
 
-    const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
-
-    const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
-    const dataManager = new TaskDataManager(this.hass);
-    let allItems = await dataManager.fetchTasks(entities);
-
-    if (maxDays !== null) {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() + maxDays);
-      cutoff.setHours(23, 59, 59, 999);
-
-      allItems = allItems.filter(item => {
-        if (maxDays !== null && item.due) return new Date(item.due) <= cutoff;
-        return true;
-      });
+    if (!this._processing) {
+      this._processing = 'loading';
     }
 
-    const taskObjects = allItems.map(item => new Task(item, this.config));
+    try {
+      const maxDays = this.config.max_days !== undefined && this.config.max_days !== null && this.config.max_days !== '' ? parseInt(this.config.max_days) : null;
 
-    taskObjects.sort((a, b) => {
-      if (a.due === b.due) return 0;
-      if (!a.due) return -1;
-      if (!b.due) return 1;
-      return a.due < b.due ? -1 : 1;
-    });
+      const entities = this.config.entities || (this.config.entity ? [this.config.entity] : []);
+      const dataManager = new TaskDataManager(this.hass);
+      let allItems = await dataManager.fetchTasks(entities);
 
-    const groups = [];
+      if (maxDays !== null) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() + maxDays);
+        cutoff.setHours(23, 59, 59, 999);
 
-    if (this.config.merge_tasks_same_day) {
-      taskObjects.forEach(task => {
-        const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
-        if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
-          groups[groups.length - 1].tasks.push(task);
-        } else {
+        allItems = allItems.filter(item => {
+          if (maxDays !== null && item.due) return new Date(item.due) <= cutoff;
+          return true;
+        });
+      }
+
+      const taskObjects = allItems.map(item => new Task(item, this.config));
+
+      taskObjects.sort((a, b) => {
+        if (a.due === b.due) return 0;
+        if (!a.due) return -1;
+        if (!b.due) return 1;
+        return a.due < b.due ? -1 : 1;
+      });
+
+      const groups = [];
+
+      if (this.config.merge_tasks_same_day) {
+        taskObjects.forEach(task => {
+          const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
+          if (groups.length > 0 && groups[groups.length - 1].date === taskDate) {
+            groups[groups.length - 1].tasks.push(task);
+          } else {
+            groups.push(new Day(taskDate, [task]));
+          }
+        });
+      } else {
+        taskObjects.forEach(task => {
+          const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
           groups.push(new Day(taskDate, [task]));
-        }
-      });
-    } else {
-      taskObjects.forEach(task => {
-        const taskDate = task.due ? (task.due.length > 10 ? task.due.substring(0, 10) : task.due) : 'no-date';
-        groups.push(new Day(taskDate, [task]));
-      });
+        });
+      }
+      this._groups = groups;
+    } catch (e) {
+      console.error("Error fetching tasks:", e);
+    } finally {
+      if (this._processing === 'loading') {
+        this._processing = null;
+      }
     }
-    this._groups = groups;
   }
 
   /**
@@ -346,6 +358,7 @@ class TaskListCard extends HAControlBase {
 
     let lastDate = null;
     const groups = this._groups || [];
+    const isLoading = !!this._processing;
 
     return html`
       ${this.renderStyle('task-list-card.css')}
@@ -374,14 +387,14 @@ class TaskListCard extends HAControlBase {
                   .hass=${this.hass}
                   .config=${this.config}
                   .day=${group}
-                  .readonly=${!!this._processing}
+                  .readonly=${isLoading}
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
                 ></task-list-card-row>
               `;
       })}
-            ${groups.length === 0 ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
+            ${(!isLoading && groups.length === 0) ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
           </div>
-          ${this._processing === 'refresh' ? html`
+          ${isLoading ? html`
             <div class="loading-overlay">
               <ha-icon icon="mdi:loading" class="spinning"></ha-icon>
             </div>
@@ -390,7 +403,7 @@ class TaskListCard extends HAControlBase {
       </ha-card>
           ${this.config.show_delete_completed_button ? html`
           <ha-card>
-            <div class="tile-button" @click="${() => this._deleteCompletedTasks()}">
+            <div class="tile-button ${isLoading ? 'disabled' : ''}" @click="${() => this._deleteCompletedTasks()}">
               <div class="tile-icon-container">
                 <ha-icon icon="${this._processing === 'delete' ? 'mdi:refresh' : 'mdi:delete-sweep'}" class="${this._processing === 'delete' ? 'spinning' : ''}"></ha-icon>
               </div>
@@ -403,7 +416,7 @@ class TaskListCard extends HAControlBase {
           ` : ''}
           ${this.config.show_refresh_button ? html`
           <ha-card>
-            <div class="tile-button" @click="${() => this.updateTodos()}">
+            <div class="tile-button ${isLoading ? 'disabled' : ''}" @click="${() => this.updateTodos()}">
               <div class="tile-icon-container">
                 <ha-icon icon="mdi:refresh" class="${this._processing === 'refresh' ? 'spinning' : ''}"></ha-icon>
               </div>
@@ -436,9 +449,14 @@ class TaskListCard extends HAControlBase {
     }
 
     try {
-      await this.hass.callService("homeassistant", "reload_config_entry", {
-        entity_id: entityIds
-      });
+      try {
+        await this.hass.callService("homeassistant", "reload_config_entry", {
+          entity_id: entityIds
+        });
+      } catch (e) {
+        console.warn("Could not reload config entry for todo entities:", e);
+      }
+      await this._fetchItems();
     } catch (e) {
       console.error("Error updating todo entities", e);
     } finally {
@@ -470,9 +488,14 @@ class TaskListCard extends HAControlBase {
       await this.hass.callService("todo", "remove_completed_items", {
         entity_id: entityIds
       });
-      await this.hass.callService("homeassistant", "reload_config_entry", {
-        entity_id: entityIds
-      });
+      try {
+        await this.hass.callService("homeassistant", "reload_config_entry", {
+          entity_id: entityIds
+        });
+      } catch (e) {
+        console.warn("Could not reload config entry after removing completed items:", e);
+      }
+      await this._fetchItems();
     } catch (e) {
       console.error("Error deleting completed tasks", e);
     } finally {

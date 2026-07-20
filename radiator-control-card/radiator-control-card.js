@@ -48,10 +48,19 @@ class RadiatorControlCard extends HAControlThresholdBase {
   }
 
   _getWatchedEntities(config) {
-    const entities = new Set(super._getWatchedEntities(config));
+    const entities = new Set();
+    if (this.config?.climate_entity) entities.add(this.config.climate_entity);
+    if (this.config?.sensor_entity) entities.add(this.config.sensor_entity);
+    if (this.config?.select_entity) entities.add(this.config.select_entity);
+    if (this.config?.timer_entity) entities.add(this.config.timer_entity);
     entities.add(this.config?.dehumidifier_entity || 'switch.dehumidifier_power_control');
     entities.add(this.config?.dehumidifier_run_time_entity || 'input_number.dehumidifier_run_time');
     entities.add(this.config?.dehumidifier_threshold_entity || 'input_number.dehumidifier_cleaning_threshold');
+
+    const scanned = super._getWatchedEntities(config);
+    if (Array.isArray(scanned)) {
+      scanned.forEach(e => entities.add(e));
+    }
     return Array.from(entities);
   }
 
@@ -226,7 +235,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
   _handleAction(actionConfig) {
     if (!actionConfig) return;
     const action = actionConfig.action;
-    
+
     if (action === 'call-service' || action === 'perform-action') {
       const { service, data, target, perform_action } = actionConfig;
       const svc = service || perform_action;
@@ -291,9 +300,9 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const timerState = timerEntity ? this.hass.states[timerEntity] : null;
 
     // Check heating active state
-    const isHeating = climateState.state === "heating" || 
-                      climateState.state === "heat" || 
-                      climateState.attributes.hvac_action === "heating";
+    const isHeating = climateState.state === "heating" ||
+      climateState.state === "heat" ||
+      climateState.attributes.hvac_action === "heating";
 
     const isUnavailable = climateState.state === "unavailable" || climateState.state === "unknown";
 
@@ -304,7 +313,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
     // Current Room Temperature Threshold Styling
     let currentTempText = "--";
     let badgeColor = "var(--secondary-text-color)";
-    
+
     if (sensorState && sensorState.state !== "unavailable" && sensorState.state !== "unknown") {
       const currentTemp = parseFloat(sensorState.state);
       if (!isNaN(currentTemp)) {
@@ -333,42 +342,45 @@ class RadiatorControlCard extends HAControlThresholdBase {
     const isDehumidifierUnavailable = !dehumidifierState || dehumidifierState.state === "unavailable" || dehumidifierState.state === "unknown";
 
     const modes = [
-      { 
-        name: "None", 
-        label: this._localize('none_mode'), 
-        icon: "mdi:power", 
-        color: "var(--disabled-text-color)", 
+      {
+        name: "None",
+        label: this._localize('none_mode'),
+        icon: "mdi:power",
+        color: "var(--disabled-text-color)",
         anim: "",
         disabled: false
       },
-      { 
-        name: "Heating", 
-        label: isRadiatorUnavailable ? `${this._localize('heating_mode')} (Offline)` : this._localize('heating_mode'), 
-        icon: isRadiatorUnavailable ? "mdi:cloud-off-outline" : "mdi:fire", 
-        color: "orange", 
+      {
+        name: "Heating",
+        label: isRadiatorUnavailable ? `${this._localize('heating_mode')} (Offline)` : this._localize('heating_mode'),
+        icon: isRadiatorUnavailable ? "mdi:cloud-off-outline" : "mdi:fire",
+        color: "orange",
         anim: this.config.heating_animation || "pulse",
         disabled: isRadiatorUnavailable
       },
-      { 
-        name: "Dehumidify", 
-        label: isDehumidifierUnavailable ? `${this._localize('dehumidify_mode')} (Offline)` : this._localize('dehumidify_mode'), 
-        icon: isDehumidifierUnavailable ? "mdi:cloud-off-outline" : "mdi:water-percent", 
-        color: "blue", 
+      {
+        name: "Dehumidify",
+        label: isDehumidifierUnavailable ? `${this._localize('dehumidify_mode')} (Offline)` : this._localize('dehumidify_mode'),
+        icon: isDehumidifierUnavailable ? "mdi:cloud-off-outline" : "mdi:water-percent",
+        color: "blue",
         anim: this.config.dehumidifier_animation || "rotating",
         disabled: isDehumidifierUnavailable
       }
     ];
 
-    const activeMode = selectState ? selectState.state : "None";
+    let activeMode = selectState ? selectState.state : "None";
+    if (activeMode === "None" && dehumidifierState && dehumidifierState.state === "on") {
+      activeMode = "Dehumidify";
+    }
     const timerActive = timerState && timerState.state === "active";
 
     // Dehumidifier run hours and threshold
     const dehumidifierRunTimeEntity = this.config.dehumidifier_run_time_entity || 'input_number.dehumidifier_run_time';
     const dehumidifierThresholdEntity = this.config.dehumidifier_threshold_entity || 'input_number.dehumidifier_cleaning_threshold';
-    
+
     const runTimeState = this.hass.states[dehumidifierRunTimeEntity];
     const thresholdState = this.hass.states[dehumidifierThresholdEntity];
-    
+
     const runTime = runTimeState ? parseFloat(runTimeState.state) : 0;
     const threshold = thresholdState ? parseFloat(thresholdState.state) : 6;
 
@@ -394,7 +406,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
               <div class="dehumidifier-progress-bar" style="width: ${Math.min(100, (runTime / (threshold || 6)) * 100)}%;"></div>
             </div>
             <div class="dehumidifier-status-text">
-              <span class="status-value">${isNaN(runTime) ? '0.0' : runTime.toFixed(1)} / ${isNaN(threshold) ? '6' : threshold.toFixed(0)} h</span>
+              <span class="status-value">${isNaN(runTime) ? '0.0' : runTime.toFixed(1)} h</span>
               <span class="status-label">${this._localize('dehumidifier_runtime_label') || 'Dehumidifier Run Time'}</span>
             </div>
           </div>
@@ -416,13 +428,13 @@ class RadiatorControlCard extends HAControlThresholdBase {
         <!-- Mode Segmented Selector -->
         <div class="mode-selector">
           ${modes.map(mode => {
-            const isActive = activeMode === mode.name;
-            const isDisabled = mode.disabled;
-            const style = isActive
-              ? `background-color: ${mode.color}; color: white;`
-              : ``;
+      const isActive = activeMode === mode.name;
+      const isDisabled = mode.disabled;
+      const style = isActive
+        ? `background-color: ${mode.color}; color: white;`
+        : ``;
 
-            return html`
+      return html`
               <div class="mode-btn ${isActive ? 'active ' + mode.anim : ''} ${isDisabled ? 'disabled' : ''}"
                    style="${style}"
                    @click="${() => !isDisabled && this._selectOption(mode.name)}"
@@ -433,15 +445,15 @@ class RadiatorControlCard extends HAControlThresholdBase {
                 <span class="mode-label">${mode.label}</span>
               </div>
             `;
-          })}
+    })}
         </div>
 
         <!-- Timer Countdowns -->
         ${timerActive ? html`
           <div class="timer-container" @click="${(e) => {
-            e.stopPropagation();
-            this.hass.callService('timer', 'pause', { entity_id: timerEntity });
-          }}" style="cursor: pointer;">
+          e.stopPropagation();
+          this.hass.callService('timer', 'pause', { entity_id: timerEntity });
+        }}" style="cursor: pointer;">
             <ha-icon icon="mdi:clock-outline"></ha-icon>
             <span>${this._localize('timer_label')}: ${this._formatTimer(timerState)}</span>
           </div>
@@ -459,6 +471,7 @@ class RadiatorControlCard extends HAControlThresholdBase {
     if (!config.climate_entity) {
       throw new Error("You must configure 'climate_entity'");
     }
+    this._watchedEntities = null;
     this.config = {
       name: "Radiator",
       temperature_thresholds: [],
