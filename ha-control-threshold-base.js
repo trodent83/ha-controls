@@ -1,6 +1,10 @@
-﻿import { HAControlBase, html, css } from "./ha-control-base.js?v=0.6.8";
+import { HAControlBase, html, css } from "./ha-control-base.js?v=0.6.9";
 
 export { html, css };
+
+// Cache for pre-sorted numeric threshold arrays, keyed by the array reference.
+// Avoids re-sorting on every _getMatchedProperty() call during render.
+const _sortedThresholdsCache = new WeakMap();
 
 /**
  * HAControlThresholdBase
@@ -32,9 +36,14 @@ export class HAControlThresholdBase extends HAControlBase {
     // Numeric comparison match (parseFloat)
     const numericValue = parseFloat(stateValue);
     if (!isNaN(numericValue)) {
-      const numericThresholds = thresholds
-        .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)))
-        .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+      // Retrieve or build the sorted numeric threshold list from the WeakMap cache
+      let numericThresholds = _sortedThresholdsCache.get(thresholds);
+      if (!numericThresholds) {
+        numericThresholds = thresholds
+          .filter(t => t.value !== undefined && t.value !== null && !isNaN(parseFloat(t.value)))
+          .sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+        _sortedThresholdsCache.set(thresholds, numericThresholds);
+      }
 
       const match = numericThresholds.find(t => numericValue >= parseFloat(t.value));
       if (match) {

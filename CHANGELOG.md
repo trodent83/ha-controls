@@ -10,6 +10,37 @@ All notable changes to this project will be documented in this file.
 - **State Value Feature (`state-value-feature`)**:
   - Added support for Javascript-based expressions (`prefix_expression`, `suffix_expression`, `color_expression`, and `animation_expression`) to allow fully dynamic renderings and style assignments.
 
+### Optimized
+- **Base Control Class (`ha-control-base.js`)**:
+  - Refactored the translation loading system to run inside `willUpdate` instead of `updated`. Cached translation strings are now resolved synchronously *before* rendering, rendering translation text on the very first frame and eliminating a duplicate rendering pass.
+  - Implemented Promise sharing/request de-duplication: parallel card instances loading at boot share a single in-progress fetch Promise, avoiding duplicate HTTP requests to translation files during boot storms.
+  - Bumped imported version parameter to `?v=0.6.9` in imports of `ha-control-base.js` across all 44 JavaScript control files.
+- **Calendar Grid Card (`calendar-grid-card`)**:
+  - Guarded `updated()` to only call `_checkAndFetch()` when an actual calendar entity state changes. Previously every hass update (any entity) triggered a debounce timer restart — now only calendar entity changes do.
+  - Pre-built a `date → events` Map once per render in `render()` to avoid an O(days × events) scanning loop inside the 35-cell grid map. Events are now looked up in O(1) per cell.
+  - Bumped `VERSION` to `0.4.22`.
+- **Calendar List Card (`calendar-list-card`)**:
+  - Added entity-state comparison guard to `shouldUpdate()` so that hass updates that don't affect any calendar entity are rejected before reaching render.
+  - Guarded `updated()` with the same entity comparison pattern, ensuring `_checkAndFetch()` is only triggered on genuine calendar entity changes.
+  - Bumped `VERSION` to `1.0.1`.
+- **Navigation Bar Card (`navigation-bar-card`)**:
+  - Added a synchronous pre-check in `_updateFilteredCounts()` that reads all tracked entity timestamps before entering the async WebSocket loop. If no entity has changed since the last fetch, the async work is skipped entirely.
+  - Pre-compiled per-item filter regex patterns in `setConfig()` and removed per-call regex recompilation from both the todo and calendar fetch branches.
+  - Bumped `VERSION` to `1.0.2`.
+- **Task List Card (`task-list-card`)**:
+  - Eliminated the duplicate entity change-detection loop: `shouldUpdate()` now sets a `_hassEntityChanged` flag when it detects a real change; `updated()` reads the flag directly instead of re-scanning all entities.
+  - Memoized `_getEntities()` result into `this._entities` during `setConfig()`, removing array reconstruction on every render cycle.
+- **Weather Grid Card (`weather-grid-card`)**:
+  - Extracted `_getConditionIcon`, `_getConditionColor`, `_getConditionLabel`, and `_getYYYYMMDD` to module-level constants and functions, removing object literal recreation on every call and eliminating complete code duplication between `WeatherGridCard` and `WeatherGridCardDialog`.
+  - Cached the popup dialog element reference (`this._dialog`) in `_openDetails()` so that `updated()` no longer queries `document.getElementById` on every hass state change.
+  - Bumped `VERSION` to `1.0.1`.
+- **Radiator Control Card (`radiator-control-card`)**:
+  - Guarded the 1-second timer interval's `requestUpdate()` call: a render is now triggered only when the formatted countdown string changes, not unconditionally every tick.
+  - Bumped `VERSION` to `1.0.1`.
+- **Threshold Base Class (`ha-control-threshold-base.js`)**:
+  - Added a `WeakMap`-based cache for the sorted numeric threshold array in `_getMatchedProperty()`. The array sort is now performed at most once per unique configuration object rather than on every render call.
+  - Fixed `ha-control-threshold-base.js?v=0.6.8` import version to `?v=0.6.9` across all 7 files that imported it (`radiator-control-card`, `navigation-bar-card`, `multi-property-card`, and feature renderer cards).
+
 ### Changed
 - **Fit Grid Layout Card (`fit-grid-layout`)**:
   - Fixed automatic viewport scaling when child controls change size after loading by attaching `ResizeObserver` and `MutationObserver` directly to child cards, item wrappers, and inner Shadow DOM trees.

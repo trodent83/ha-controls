@@ -1,10 +1,74 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-/**
- * Cache-busting version parameter for dynamic asset loading
- * @type {string}
- */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
+
+// ---------------------------------------------------------------------------
+// Module-level helper functions shared between WeatherGridCard and WeatherGridCardDialog
+// Defined once here to avoid object literal recreation on every method call
+// ---------------------------------------------------------------------------
+
+const CONDITION_ICON_MAP = {
+  "clear-night": "mdi:weather-night",
+  "cloudy": "mdi:weather-cloudy",
+  "fog": "mdi:weather-fog",
+  "hail": "mdi:weather-hail",
+  "lightning": "mdi:weather-lightning",
+  "lightning-rainy": "mdi:weather-lightning-rainy",
+  "partlycloudy": "mdi:weather-partly-cloudy",
+  "pouring": "mdi:weather-pouring",
+  "rainy": "mdi:weather-rainy",
+  "snowy": "mdi:weather-snowy",
+  "snowy-rainy": "mdi:weather-snowy-rainy",
+  "sunny": "mdi:weather-sunny",
+  "windy": "mdi:weather-windy",
+  "windy-variant": "mdi:weather-windy-variant",
+  "exceptional": "mdi:alert-circle-outline"
+};
+
+const CONDITION_COLOR_MAP = {
+  "clear-night": "var(--state-weather-clear-night-color, #7986cb)",
+  "cloudy": "var(--state-weather-cloudy-color, #90a4ae)",
+  "fog": "var(--state-weather-fog-color, #b0bec5)",
+  "hail": "var(--state-weather-hail-color, #80deea)",
+  "lightning": "var(--state-weather-lightning-color, #fdd835)",
+  "lightning-rainy": "var(--state-weather-lightning-rainy-color, #ffb300)",
+  "partlycloudy": "var(--state-weather-partlycloudy-color, #b0bec5)",
+  "pouring": "var(--state-weather-pouring-color, #0288d1)",
+  "rainy": "var(--state-weather-rainy-color, #29b6f6)",
+  "snowy": "var(--state-weather-snowy-color, #e0f7fa)",
+  "snowy-rainy": "var(--state-weather-snowy-rainy-color, #80deea)",
+  "sunny": "var(--state-weather-sunny-color, #ffb300)",
+  "windy": "var(--state-weather-windy-color, #4db6ac)",
+  "windy-variant": "var(--state-weather-windy-variant-color, #80cbc4)",
+  "exceptional": "var(--state-weather-exceptional-color, #e57373)"
+};
+
+function getConditionIcon(cond) {
+  return CONDITION_ICON_MAP[cond?.toLowerCase()] || "mdi:weather-sunny";
+}
+
+function getConditionColor(cond) {
+  return CONDITION_COLOR_MAP[cond?.toLowerCase()] || "var(--primary-color, #ff9800)";
+}
+
+function getConditionLabel(cond) {
+  if (!cond) return "";
+  return cond.replace("-", " ").replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+}
+
+function getYYYYMMDD(dt) {
+  if (!dt) return "";
+  if (typeof dt === "string") return dt.substring(0, 10);
+  try {
+    const d = new Date(dt);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dayVal = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dayVal}`;
+  } catch (e) {
+    return "";
+  }
+}
 
 /**
  * WeatherGridCard
@@ -167,17 +231,15 @@ class WeatherGridCard extends HAControlBase {
         }
       }
 
-      // Update portal dialog hass if open
-      const dialog = document.getElementById("weather-grid-card-dialog-instance");
-      if (dialog) {
-        dialog.hass = this.hass;
+      // Update cached portal dialog hass if open
+      if (this._dialog) {
+        this._dialog.hass = this.hass;
       }
     }
 
     if (changedProperties.has("_hourlyForecast")) {
-      const dialog = document.getElementById("weather-grid-card-dialog-instance");
-      if (dialog) {
-        dialog.hourlyForecast = this._hourlyForecast;
+      if (this._dialog) {
+        this._dialog.hourlyForecast = this._hourlyForecast;
       }
     }
   }
@@ -258,27 +320,7 @@ class WeatherGridCard extends HAControlBase {
     }
   }
 
-  /**
-   * Helper to resolve the YYYY-MM-DD date string format.
-   * Immunizes date matching comparisons against timezone shifts.
-   */
-  _getYYYYMMDD(dt) {
-    if (!dt) return "";
-    if (typeof dt === "string") return dt.substring(0, 10);
-    try {
-      const d = new Date(dt);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const dayVal = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${dayVal}`;
-    } catch (e) {
-      return "";
-    }
-  }
 
-  /**
-   * Returns severe weather warning text if active.
-   */
   _getWarning() {
     if (!this.config?.warning_entity || !this.hass) return null;
     const warningObj = this.hass.states[this.config.warning_entity];
@@ -288,63 +330,6 @@ class WeatherGridCard extends HAControlBase {
       return warningObj.attributes.friendly_name ? `${warningObj.attributes.friendly_name}: ${state}` : state;
     }
     return null;
-  }
-
-
-  /**
-   * Resolves Material Design weather icon mapping.
-   */
-  _getConditionIcon(cond) {
-    const map = {
-      "clear-night": "mdi:weather-night",
-      "cloudy": "mdi:weather-cloudy",
-      "fog": "mdi:weather-fog",
-      "hail": "mdi:weather-hail",
-      "lightning": "mdi:weather-lightning",
-      "lightning-rainy": "mdi:weather-lightning-rainy",
-      "partlycloudy": "mdi:weather-partly-cloudy",
-      "pouring": "mdi:weather-pouring",
-      "rainy": "mdi:weather-rainy",
-      "snowy": "mdi:weather-snowy",
-      "snowy-rainy": "mdi:weather-snowy-rainy",
-      "sunny": "mdi:weather-sunny",
-      "windy": "mdi:weather-windy",
-      "windy-variant": "mdi:weather-windy-variant",
-      "exceptional": "mdi:alert-circle-outline"
-    };
-    return map[cond?.toLowerCase()] || "mdi:weather-sunny";
-  }
-
-  /**
-   * Resolves HSL color dynamically depending on the weather condition.
-   */
-  _getConditionColor(cond) {
-    const map = {
-      "clear-night": "var(--state-weather-clear-night-color, #7986cb)", // Indigo-ish
-      "cloudy": "var(--state-weather-cloudy-color, #90a4ae)", // Blue-gray
-      "fog": "var(--state-weather-fog-color, #b0bec5)",
-      "hail": "var(--state-weather-hail-color, #80deea)", // Pale teal
-      "lightning": "var(--state-weather-lightning-color, #fdd835)", // Yellow
-      "lightning-rainy": "var(--state-weather-lightning-rainy-color, #ffb300)", // Amber
-      "partlycloudy": "var(--state-weather-partlycloudy-color, #b0bec5)", // Light gray
-      "pouring": "var(--state-weather-pouring-color, #0288d1)", // Darker blue
-      "rainy": "var(--state-weather-rainy-color, #29b6f6)", // Sky blue
-      "snowy": "var(--state-weather-snowy-color, #e0f7fa)", // Icy white
-      "snowy-rainy": "var(--state-weather-snowy-rainy-color, #80deea)",
-      "sunny": "var(--state-weather-sunny-color, #ffb300)", // Yellow-orange
-      "windy": "var(--state-weather-windy-color, #4db6ac)", // Teal-gray
-      "windy-variant": "var(--state-weather-windy-variant-color, #80cbc4)",
-      "exceptional": "var(--state-weather-exceptional-color, #e57373)" // Coral red
-    };
-    return map[cond?.toLowerCase()] || "var(--primary-color, #ff9800)";
-  }
-
-  /**
-   * Formats condition ID string for display label.
-   */
-  _getConditionLabel(cond) {
-    if (!cond) return "";
-    return cond.replace("-", " ").replace(/(^\w|\s\w)/g, m => m.toUpperCase());
   }
 
   /**
@@ -383,8 +368,8 @@ class WeatherGridCard extends HAControlBase {
           ` : forecastDays.map((day) => {
             const date = new Date(day.datetime);
             const dayName = date.toLocaleDateString(locale.language, { weekday: 'short' });
-            const icon = this._getConditionIcon(day.condition);
-            const iconColor = this._getConditionColor(day.condition);
+            const icon = getConditionIcon(day.condition);
+            const iconColor = getConditionColor(day.condition);
             
             return html`
               <div class="multi-state-entity" @click="${() => this._openDetails(day)}">
@@ -441,15 +426,15 @@ class WeatherGridCard extends HAControlBase {
               const date = new Date(day.datetime);
               const dayName = date.toLocaleDateString(locale.language, { weekday: 'long' });
               const dateStr = date.toLocaleDateString(locale.language, { month: 'short', day: 'numeric' });
-              const icon = this._getConditionIcon(day.condition);
-              const iconColor = this._getConditionColor(day.condition);
+              const icon = getConditionIcon(day.condition);
+              const iconColor = getConditionColor(day.condition);
 
               return html`
                 <div class="grid-cell" @click="${() => this._openDetails(day)}">
                   <div class="cell-day">${dayName}</div>
                   <div class="cell-date">${dateStr}</div>
                   <ha-icon .icon="${icon}" class="cell-icon" style="color: ${iconColor};"></ha-icon>
-                  <div class="cell-label">${this._getConditionLabel(day.condition)}</div>
+                  <div class="cell-label">${getConditionLabel(day.condition)}</div>
                   <div class="cell-temps">
                     <span class="temp-high">${day.temperature}°</span>
                     ${day.templow !== undefined ? html`<span class="temp-low">${day.templow}°</span>` : ''}
@@ -485,6 +470,8 @@ class WeatherGridCard extends HAControlBase {
       this._closeDetails();
     });
     
+    // Cache the reference so updated() doesn't need getElementById
+    this._dialog = dialog;
     document.body.appendChild(dialog);
   }
 
@@ -493,9 +480,13 @@ class WeatherGridCard extends HAControlBase {
    */
   _closeDetails() {
     this._selectedDay = null;
-    const existing = document.getElementById("weather-grid-card-dialog-instance");
-    if (existing) {
-      existing.remove();
+    if (this._dialog) {
+      this._dialog.remove();
+      this._dialog = null;
+    } else {
+      // Fallback cleanup for stale dialogs
+      const existing = document.getElementById("weather-grid-card-dialog-instance");
+      if (existing) existing.remove();
     }
   }
 }
@@ -519,67 +510,6 @@ class WeatherGridCardDialog extends HAControlBase {
   get translationPath() { return "/local/ha-controls/weather-grid-card/translations"; }
   get translationVersion() { return VERSION; }
 
-  _getConditionIcon(cond) {
-    const map = {
-      "clear-night": "mdi:weather-night",
-      "cloudy": "mdi:weather-cloudy",
-      "fog": "mdi:weather-fog",
-      "hail": "mdi:weather-hail",
-      "lightning": "mdi:weather-lightning",
-      "lightning-rainy": "mdi:weather-lightning-rainy",
-      "partlycloudy": "mdi:weather-partly-cloudy",
-      "pouring": "mdi:weather-pouring",
-      "rainy": "mdi:weather-rainy",
-      "snowy": "mdi:weather-snowy",
-      "snowy-rainy": "mdi:weather-snowy-rainy",
-      "sunny": "mdi:weather-sunny",
-      "windy": "mdi:weather-windy",
-      "windy-variant": "mdi:weather-windy-variant",
-      "exceptional": "mdi:alert-circle-outline"
-    };
-    return map[cond?.toLowerCase()] || "mdi:weather-sunny";
-  }
-
-  _getConditionColor(cond) {
-    const map = {
-      "clear-night": "var(--state-weather-clear-night-color, #7986cb)",
-      "cloudy": "var(--state-weather-cloudy-color, #90a4ae)",
-      "fog": "var(--state-weather-fog-color, #b0bec5)",
-      "hail": "var(--state-weather-hail-color, #80deea)",
-      "lightning": "var(--state-weather-lightning-color, #fdd835)",
-      "lightning-rainy": "var(--state-weather-lightning-rainy-color, #ffb300)",
-      "partlycloudy": "var(--state-weather-partlycloudy-color, #b0bec5)",
-      "pouring": "var(--state-weather-pouring-color, #0288d1)",
-      "rainy": "var(--state-weather-rainy-color, #29b6f6)",
-      "snowy": "var(--state-weather-snowy-color, #e0f7fa)",
-      "snowy-rainy": "var(--state-weather-snowy-rainy-color, #80deea)",
-      "sunny": "var(--state-weather-sunny-color, #ffb300)",
-      "windy": "var(--state-weather-windy-color, #4db6ac)",
-      "windy-variant": "var(--state-weather-windy-variant-color, #80cbc4)",
-      "exceptional": "var(--state-weather-exceptional-color, #e57373)"
-    };
-    return map[cond?.toLowerCase()] || "var(--primary-color, #ff9800)";
-  }
-
-  _getConditionLabel(cond) {
-    if (!cond) return "";
-    return cond.replace("-", " ").replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-  }
-
-  _getYYYYMMDD(dt) {
-    if (!dt) return "";
-    if (typeof dt === "string") return dt.substring(0, 10);
-    try {
-      const d = new Date(dt);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const dayVal = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${dayVal}`;
-    } catch (e) {
-      return "";
-    }
-  }
-
   _close() {
     this.dispatchEvent(new CustomEvent("close-dialog", { bubbles: true, composed: true }));
   }
@@ -592,18 +522,18 @@ class WeatherGridCardDialog extends HAControlBase {
     const day = this.day;
     const date = new Date(day.datetime);
     const dayTitle = date.toLocaleDateString(this.locale?.language || 'en', { weekday: 'long', month: 'long', day: 'numeric' });
-    const condIcon = this._getConditionIcon(day.condition);
-    const condColor = this._getConditionColor(day.condition);
-    const condLabel = this._getConditionLabel(day.condition);
+    const condIcon = getConditionIcon(day.condition);
+    const condColor = getConditionColor(day.condition);
+    const condLabel = getConditionLabel(day.condition);
 
     const tempUnit = stateObj.attributes.temperature_unit || "°C";
     const windSpeedUnit = stateObj.attributes.wind_speed_unit || "km/h";
     const precipUnit = stateObj.attributes.precipitation_unit || "mm";
     const pressureUnit = stateObj.attributes.pressure_unit || "hPa";
 
-    const targetDateStr = this._getYYYYMMDD(day.datetime);
+    const targetDateStr = getYYYYMMDD(day.datetime);
     const dayHours = this.hourlyForecast ? this.hourlyForecast.filter(hour => {
-      return this._getYYYYMMDD(hour.datetime) === targetDateStr;
+      return getYYYYMMDD(hour.datetime) === targetDateStr;
     }) : [];
 
     return html`

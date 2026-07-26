@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
@@ -6,7 +6,7 @@ import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.22';
 
 /**
  * CalendarGridCard
@@ -199,8 +199,20 @@ class CalendarGridCard extends HAControlBase {
    */
   updated(changedProps) {
     super.updated(changedProps);
-    if (changedProps.has('hass') || changedProps.has('_currentDate')) {
+    if (changedProps.has('_currentDate')) {
       this._checkAndFetch();
+      return;
+    }
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass) {
+        // First hass assignment
+        this._checkAndFetch();
+        return;
+      }
+      const entities = (this.config?.entities || []).map(e => typeof e === 'object' ? e.entity : e);
+      const entityChanged = entities.some(id => this.hass.states[id] !== oldHass.states[id]);
+      if (entityChanged) this._checkAndFetch();
     }
   }
 
@@ -496,6 +508,27 @@ class CalendarGridCard extends HAControlBase {
         gridStyle = `grid-template-rows: min-content repeat(${rowCount}, 1fr); grid-template-columns: repeat(7, 1fr);`;
     }
 
+    // Pre-build a date→events map once per render (avoids O(days×events) scanning in the cell loop)
+    const now = new Date();
+    const showFinished = this.config.show_finished_events !== false;
+    const eventsByDay = new Map();
+    for (const event of this._events) {
+      if (this._disabledCalendars.has(event.entity_id)) continue;
+      if (!showFinished && event.end < now) continue;
+      // Collect all day-strings this multi-day event spans
+      const spanStart = new Date(event.start);
+      spanStart.setHours(0, 0, 0, 0);
+      const spanEnd = new Date(event.end);
+      spanEnd.setHours(0, 0, 0, 0);
+      const cur = new Date(spanStart);
+      while (cur <= spanEnd) {
+        const key = cur.toISOString().split('T')[0];
+        if (!eventsByDay.has(key)) eventsByDay.set(key, []);
+        eventsByDay.get(key).push(event);
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
     return html`
       ${this.renderStyle('calendar-grid-card.css')}
       <ha-card>
@@ -536,12 +569,11 @@ class CalendarGridCard extends HAControlBase {
             
             ${days.map(day => {
                 const dateStr = day.toISOString().split('T')[0];
-                const now = new Date();
-                const isToday = day.getDate() === now.getDate() && 
-                                day.getMonth() === now.getMonth() && 
+                const isToday = day.getDate() === now.getDate() &&
+                                day.getMonth() === now.getMonth() &&
                                 day.getFullYear() === now.getFullYear();
                 const isCurrentMonth = day.getMonth() === this._currentDate.getMonth();
-                const dayEvents = this._getEventsForDay(dateStr, this._events);
+                const dayEvents = eventsByDay.get(dateStr) || [];
 
                 const cellStyle = [];
                 if (isToday) {

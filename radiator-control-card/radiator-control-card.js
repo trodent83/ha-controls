@@ -1,10 +1,10 @@
-import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.9";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
 
 /**
  * RadiatorControlCard
@@ -123,7 +123,16 @@ class RadiatorControlCard extends HAControlThresholdBase {
    */
   _startTimer() {
     if (this._interval) return;
-    this._interval = setInterval(() => this.requestUpdate(), 1000);
+    this._lastTimerFormatted = null;
+    this._interval = setInterval(() => {
+      if (!this.hass || !this.config?.timer_entity) return;
+      const timerState = this.hass.states[this.config.timer_entity];
+      const formatted = this._formatTimer(timerState);
+      if (formatted !== this._lastTimerFormatted) {
+        this._lastTimerFormatted = formatted;
+        this.requestUpdate();
+      }
+    }, 1000);
   }
 
   /**

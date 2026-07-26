@@ -143,12 +143,12 @@ export class HAControlBase extends LitElement {
   }
 
   /**
-   * Invoked after the element has updated.
+   * Invoked before the element updates and renders.
    * Tracks active language modifications and initiates translations updates.
    * @param {Map} changedProps - Map of changed properties
    */
-  updated(changedProps) {
-    super.updated(changedProps);
+  willUpdate(changedProps) {
+    super.willUpdate(changedProps);
     // Check if hass is defined and changed
     if (!changedProps.has('hass') || !this.hass) return;
 
@@ -161,7 +161,7 @@ export class HAControlBase extends LitElement {
 
   /**
    * Loads translations for the specified language.
-   * Combines parallel resource fetching and cache storage.
+   * Combines parallel resource fetching and cache storage with de-duplicated shared Promises.
    * @param {string} lang - The language code
    * @async
    */
@@ -171,14 +171,28 @@ export class HAControlBase extends LitElement {
     this._loadedLang = lang;
     this._translationsLoaded = false;
 
-    // Check module level cache first to prevent duplicate fetches across instances
     const cacheKey = `${this.translationPath}_${lang}`;
     if (translationCache[cacheKey]) {
-      const cached = translationCache[cacheKey];
-      this._strings = cached.strings;
-      this._fallbackStrings = cached.fallback;
+      const entry = translationCache[cacheKey];
+      if (entry instanceof Promise) {
+        try {
+          const cached = await entry;
+          if (this._loadedLang === lang) {
+            this._strings = cached.strings;
+            this._fallbackStrings = cached.fallback;
+            this._translationsLoaded = true;
+            this.requestUpdate();
+          }
+        } catch (e) {
+          console.error(`[HAControlBase] Error awaiting shared translation promise:`, e);
+        }
+        return;
+      }
+      
+      // If it's already resolved data, assign it synchronously
+      this._strings = entry.strings;
+      this._fallbackStrings = entry.fallback;
       this._translationsLoaded = true;
-      this.requestUpdate();
       return;
     }
 
@@ -190,53 +204,66 @@ export class HAControlBase extends LitElement {
       languagesToTry.push('en');
     }
 
-    // Fetch all translation candidate files in parallel
-    const fetchPromises = languagesToTry.map(async (l) => {
-      try {
-        const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
-        if (response.ok) {
-          const json = await response.json();
-          return { lang: l, json };
-        }
-      } catch (e) {
-        console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
-      }
-      return null;
-    });
-
-    const results = await Promise.all(fetchPromises);
-
-    let primaryStringsSet = false;
-    let primaryStrings = {};
-    let fallbackStrings = {};
-
-    for (const l of languagesToTry) {
-      const match = results.find(r => r && r.lang === l);
-      if (match) {
-        if (!primaryStringsSet) {
-          if (l !== lang) {
-            console.info(`[HAControlBase] Translation for '${lang}' not found, falling back to '${l}'.`);
+    // Fetch all translation candidate files in parallel via a single shared Promise
+    const fetchPromise = (async () => {
+      const fetchPromises = languagesToTry.map(async (l) => {
+        try {
+          const response = await fetch(`${this.translationPath}/${l}.json?v=${this.translationVersion}`);
+          if (response.ok) {
+            const json = await response.json();
+            return { lang: l, json };
           }
-          primaryStrings = match.json;
-          primaryStringsSet = true;
+        } catch (e) {
+          console.error(`[HAControlBase] Error loading translation for '${l}':`, e);
         }
-        if (l === 'en') {
-          fallbackStrings = match.json;
+        return null;
+      });
+
+      const results = await Promise.all(fetchPromises);
+
+      let primaryStringsSet = false;
+      let primaryStrings = {};
+      let fallbackStrings = {};
+
+      for (const l of languagesToTry) {
+        const match = results.find(r => r && r.lang === l);
+        if (match) {
+          if (!primaryStringsSet) {
+            if (l !== lang) {
+              console.info(`[HAControlBase] Translation for '${lang}' not found, falling back to '${l}'.`);
+            }
+            primaryStrings = match.json;
+            primaryStringsSet = true;
+          }
+          if (l === 'en') {
+            fallbackStrings = match.json;
+          }
         }
       }
+
+      const resolvedData = {
+        strings: primaryStrings,
+        fallback: fallbackStrings
+      };
+
+      // Store the resolved data in the cache to overwrite the promise
+      translationCache[cacheKey] = resolvedData;
+      return resolvedData;
+    })();
+
+    translationCache[cacheKey] = fetchPromise;
+
+    try {
+      const cached = await fetchPromise;
+      if (this._loadedLang === lang) {
+        this._strings = cached.strings;
+        this._fallbackStrings = cached.fallback;
+        this._translationsLoaded = true;
+        this.requestUpdate();
+      }
+    } catch (e) {
+      console.error(`[HAControlBase] Error loading translations:`, e);
     }
-
-    this._strings = primaryStrings;
-    this._fallbackStrings = fallbackStrings;
-
-    // Cache the loaded translations globally
-    translationCache[cacheKey] = {
-      strings: primaryStrings,
-      fallback: fallbackStrings
-    };
-
-    this._translationsLoaded = true;
-    this.requestUpdate();
   }
 
   /**

@@ -1,10 +1,10 @@
-﻿import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.8";
+import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=0.6.9";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
 
 /**
  * NavigationBarCard
@@ -109,6 +109,16 @@ class NavigationBarCard extends HAControlThresholdBase {
     if (!this.hass || !this.config) return;
 
     const items = this.config.items || [];
+
+    // Synchronous pre-check: skip the async work entirely if no entity timestamps have changed
+    const anyChanged = items.some((item, idx) => {
+      if (!item.show_counter || !item.entity) return false;
+      const stateObj = this.hass.states[item.entity];
+      if (!stateObj) return false;
+      return this._lastFetchedStates[item.entity] !== stateObj.last_updated;
+    });
+    if (!anyChanged) return;
+
     const newCounts = { ...this._filteredCounts };
     let needsUpdate = false;
 
@@ -128,6 +138,9 @@ class NavigationBarCard extends HAControlThresholdBase {
       this._lastFetchedStates[entityId] = lastUpdated;
       needsUpdate = true;
 
+      // Use pre-compiled regex filters from setConfig
+      const compiledFilters = this._compiledItemFilters?.[idx] || [];
+
       if (entityId.startsWith("todo.")) {
         try {
           const response = await this.hass.callWS({
@@ -137,27 +150,6 @@ class NavigationBarCard extends HAControlThresholdBase {
 
           if (response && response.items) {
             let tasks = response.items;
-
-            // Apply filter patterns
-            const filters = [];
-            if (item.filters) {
-              filters.push(...item.filters);
-            }
-            if (item.filter) {
-              filters.push({ pattern: item.filter, case_sensitive: item.case_sensitive });
-            }
-
-            const compiledFilters = filters
-              .filter(f => f && f.pattern)
-              .map(f => {
-                try {
-                  const flags = f.case_sensitive === false ? 'i' : '';
-                  return new RegExp(f.pattern, flags);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .filter(Boolean);
 
             if (compiledFilters.length > 0) {
               tasks = tasks.filter(t => {
@@ -217,27 +209,6 @@ class NavigationBarCard extends HAControlThresholdBase {
 
           if (events && Array.isArray(events)) {
             let filteredEvents = events;
-
-            // Apply filters
-            const filters = [];
-            if (item.filters) {
-              filters.push(...item.filters);
-            }
-            if (item.filter) {
-              filters.push({ pattern: item.filter, case_sensitive: item.case_sensitive });
-            }
-
-            const compiledFilters = filters
-              .filter(f => f && f.pattern)
-              .map(f => {
-                try {
-                  const flags = f.case_sensitive === false ? 'i' : '';
-                  return new RegExp(f.pattern, flags);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .filter(Boolean);
 
             if (compiledFilters.length > 0) {
               filteredEvents = filteredEvents.filter(event => {
@@ -386,6 +357,22 @@ class NavigationBarCard extends HAControlThresholdBase {
       items: [],
       ...config
     };
+    // Pre-compile regex filters for each item to avoid recompilation on every update
+    this._compiledItemFilters = (this.config.items || []).map(item => {
+      const filters = [];
+      if (item.filters) filters.push(...item.filters);
+      if (item.filter) filters.push({ pattern: item.filter, case_sensitive: item.case_sensitive });
+      return filters
+        .filter(f => f && f.pattern)
+        .map(f => {
+          try {
+            return new RegExp(f.pattern, f.case_sensitive === false ? 'i' : '');
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+    });
   }
 }
 

@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
 import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager.js?v=0.4.36";
 
@@ -6,7 +6,7 @@ import { CalendarDataManager } from "../utilities/calendar/calendar-data-manager
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.1';
 
 /**
  * CalendarListCard
@@ -142,12 +142,20 @@ class CalendarListCard extends HAControlBase {
    * @returns {boolean} True if the card should re-render, false otherwise
    */
   shouldUpdate(changedProps) {
-    if (changedProps.has('_events') || 
+    if (changedProps.has('_events') ||
         changedProps.has('_fetching') ||
         changedProps.has('_selectedEvent') ||
         changedProps.has('config') ||
         changedProps.has('_strings')) {
       return true;
+    }
+
+    // Only re-render on hass changes if a calendar entity state has changed
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass || !this.config) return true;
+      const entities = this._getEntities();
+      return entities.some(id => this.hass.states[id] !== oldHass.states[id]);
     }
 
     return super.shouldUpdate(changedProps);
@@ -160,8 +168,20 @@ class CalendarListCard extends HAControlBase {
    */
   updated(changedProps) {
     super.updated(changedProps);
-    if (changedProps.has('hass') || changedProps.has('config')) {
+    if (changedProps.has('config')) {
       this._checkAndFetch();
+      return;
+    }
+    if (changedProps.has('hass')) {
+      const oldHass = changedProps.get('hass');
+      if (!oldHass) {
+        // First hass assignment
+        this._checkAndFetch();
+        return;
+      }
+      const entities = this._getEntities();
+      const entityChanged = entities.some(id => this.hass.states[id] !== oldHass.states[id]);
+      if (entityChanged) this._checkAndFetch();
     }
   }
 

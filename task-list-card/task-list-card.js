@@ -1,4 +1,4 @@
-import { HAControlBase, html } from "../ha-control-base.js?v=0.6.8";
+import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
 /**
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
@@ -102,6 +102,10 @@ class TaskListCard extends HAControlBase {
     this._groups = null;
     this._toggledItems = [];
     this._processing = 'loading';
+    // Memoize entity list so _getEntities() doesn't reconstruct the array on every call
+    this._entities = (this.config.entities || (this.config.entity ? [this.config.entity] : []))
+      .map(e => (typeof e === 'object' ? e.entity : e));
+    this._hassEntityChanged = false;
     this._fetchItems();
   }
 
@@ -136,13 +140,19 @@ class TaskListCard extends HAControlBase {
       return true;
     }
 
+    const oldHass = changedProps.get("hass");
+    if (!oldHass) {
+      this._hassEntityChanged = true;
+      return true;
+    }
+
     const entities = this._getEntities();
     let hasChanged = false;
     let ignoredCount = 0;
     let changeCount = 0;
 
     for (const entityId of entities) {
-      const oldState = changedProps.get("hass")?.states[entityId];
+      const oldState = oldHass.states[entityId];
       const newState = this.hass.states[entityId];
 
       if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
@@ -160,6 +170,9 @@ class TaskListCard extends HAControlBase {
         }
       }
     }
+
+    // Record result so updated() can skip its own duplicate scan
+    this._hassEntityChanged = hasChanged && changeCount !== ignoredCount;
 
     if (hasChanged && changeCount === ignoredCount) {
       return false;
@@ -194,31 +207,16 @@ class TaskListCard extends HAControlBase {
     
     const oldHass = changedProps.get("hass");
     if (!oldHass) {
-      // First update cycle. Since setConfig is called before hass is set,
-      // the initial fetch in setConfig was skipped. We perform the fetch now.
+      // First update cycle - hass set for the first time, trigger initial fetch
       this._fetchItems();
       return;
     }
 
-    const entities = this._getEntities();
-    let hasChanged = false;
+    // Reuse the flag set in shouldUpdate to avoid a duplicate entity scan
+    if (!this._hassEntityChanged) { return; }
+    this._hassEntityChanged = false;
 
-    for (const entityId of entities) {
-      const oldState = oldHass.states[entityId];
-      const newState = this.hass.states[entityId];
-
-      if (!newState || ["unavailable", "unknown"].includes(newState.state)) {
-        return;
-      }
-
-      if (!hasChanged && (!oldState || oldState.last_updated !== newState?.last_updated)) {
-        hasChanged = true;
-      }
-    }
-
-    if (!hasChanged) { return; }
     clearTimeout(this._debounceTimer);
-
     this._debounceTimer = setTimeout(() => {
       this._fetchItems();
     }, 500);
@@ -226,13 +224,13 @@ class TaskListCard extends HAControlBase {
 
   /**
    * Helper parsing entities from configured target entity or custom entities array.
+   * Returns the memoized entity list cached in setConfig to avoid rebuilding on every call.
    * 
    * @private
    * @returns {Array<string>} List of todo list entity IDs
    */
   _getEntities() {
-    return (this.config.entities || (this.config.entity ? [this.config.entity] : []))
-      .map(e => (typeof e === 'object' ? e.entity : e));
+    return this._entities || [];
   }
 
   /**
