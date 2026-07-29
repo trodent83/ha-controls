@@ -204,7 +204,7 @@ class NavigationBarCard extends HAControlThresholdBase {
           const startStr = start.toISOString();
           const endStr = end.toISOString();
           const path = `calendars/${entityId}?start=${startStr}&end=${endStr}`;
-          
+
           const events = await this.hass.callApi("GET", path);
 
           if (events && Array.isArray(events)) {
@@ -258,70 +258,70 @@ class NavigationBarCard extends HAControlThresholdBase {
       ${this.renderStyle('navigation-bar-card.css')}
       <div class="nav-bar-container">
         ${items.map((item, idx) => {
-          const entityId = item.entity;
-          const stateObj = entityId ? this.hass.states[entityId] : null;
-          const stateValue = stateObj ? stateObj.state : null;
+      const entityId = item.entity;
+      const stateObj = entityId ? this.hass.states[entityId] : null;
+      const stateValue = stateObj ? stateObj.state : null;
 
-          // Defaults
-          let color = item.color || '';
-          let icon = item.icon || 'mdi:circle-outline';
-          let animation = '';
+      // Defaults
+      let color = item.color || '';
+      let icon = item.icon || 'mdi:circle-outline';
+      let animation = '';
 
-          // Resolve thresholds sequentially (first match wins priority)
-          if (item.thresholds && Array.isArray(item.thresholds)) {
-            for (const t of item.thresholds) {
-              const targetEntityId = t.entity || entityId;
-              if (!targetEntityId) continue;
+      // Resolve thresholds sequentially (first match wins priority)
+      if (item.thresholds && Array.isArray(item.thresholds)) {
+        for (const t of item.thresholds) {
+          const targetEntityId = t.entity || entityId;
+          if (!targetEntityId) continue;
 
-              let targetValue;
-              if (targetEntityId === entityId && (entityId.startsWith("todo.") || entityId.startsWith("calendar."))) {
-                const val = this._filteredCounts[idx];
-                targetValue = val !== undefined ? val : (stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0);
-              } else {
-                const targetStateObj = this.hass.states[targetEntityId];
-                if (!targetStateObj) continue;
-                targetValue = targetStateObj.state;
-              }
-
-              if (this._checkThresholdMatch(targetValue, t.value)) {
-                if (t.color !== undefined) color = t.color;
-                if (t.icon !== undefined) icon = t.icon;
-                if (t.animation !== undefined) animation = t.animation;
-                break; // First matching rule applies
-              }
-            }
+          let targetValue;
+          if (targetEntityId === entityId && (entityId.startsWith("todo.") || entityId.startsWith("calendar."))) {
+            const val = this._filteredCounts[idx];
+            targetValue = val !== undefined ? val : (stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0);
+          } else {
+            const targetStateObj = this.hass.states[targetEntityId];
+            if (!targetStateObj) continue;
+            targetValue = targetStateObj.state;
           }
 
-          // Active highlighting: checks if the current URL contains the target navigation path
-          const isActive = currentPath.endsWith(item.navigation_path) || window.location.href.includes(item.navigation_path);
-
-          let itemStyle = '';
-          let iconStyle = '';
-          if (isActive) {
-            // Highlighting primary active link
-            itemStyle = `background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12) !important; border-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.25) !important;`;
-            iconStyle = `color: var(--primary-color) !important;`;
-          } else if (color) {
-            // Apply matched custom threshold styles
-            itemStyle = `border-color: ${color} !important;`;
-            iconStyle = `color: ${color} !important;`;
+          if (this._checkThresholdMatch(targetValue, t.value)) {
+            if (t.color !== undefined) color = t.color;
+            if (t.icon !== undefined) icon = t.icon;
+            if (t.animation !== undefined) animation = t.animation;
+            break; // First matching rule applies
           }
+        }
+      }
 
-          // Counter value lookup
-          let counterValue = 0;
-          let showCounter = false;
+      // Active highlighting: checks if the current URL contains the target navigation path
+      const isActive = currentPath.endsWith(item.navigation_path) || window.location.href.includes(item.navigation_path);
 
-          if (item.show_counter && entityId) {
-            if (entityId.startsWith("todo.") || entityId.startsWith("calendar.")) {
-              const val = this._filteredCounts[idx];
-              counterValue = val !== undefined ? val : (stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0);
-            } else {
-              counterValue = stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0;
-            }
-            showCounter = counterValue > 0;
-          }
+      let itemStyle = '';
+      let iconStyle = '';
+      if (isActive) {
+        // Highlighting primary active link
+        itemStyle = `background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12) !important; border-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.25) !important;`;
+        iconStyle = `color: var(--primary-color) !important;`;
+      } else if (color) {
+        // Apply matched custom threshold styles
+        itemStyle = `border-color: ${color} !important;`;
+        iconStyle = `color: ${color} !important;`;
+      }
 
-          return html`
+      // Counter value lookup
+      let counterValue = 0;
+      let showCounter = false;
+
+      if (item.show_counter && entityId) {
+        if (entityId.startsWith("todo.") || entityId.startsWith("calendar.")) {
+          const val = this._filteredCounts[idx];
+          counterValue = val !== undefined ? val : (stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0);
+        } else {
+          counterValue = stateValue && !isNaN(parseFloat(stateValue)) ? parseFloat(stateValue) : 0;
+        }
+        showCounter = counterValue > 0;
+      }
+
+      return html`
             <div class="nav-item ${isActive ? 'active' : ''} ${animation}" 
                  style="${itemStyle}"
                  @click="${() => this._navigate(item.navigation_path)}">
@@ -330,7 +330,7 @@ class NavigationBarCard extends HAControlThresholdBase {
               ${showCounter ? html`<span class="nav-counter" style="${color ? `background-color: ${color};` : ''}">${Math.round(counterValue)}</span>` : ''}
             </div>
           `;
-        })}
+    })}
       </div>
     `;
   }

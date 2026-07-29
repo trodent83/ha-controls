@@ -143,10 +143,10 @@ class CalendarListCard extends HAControlBase {
    */
   shouldUpdate(changedProps) {
     if (changedProps.has('_events') ||
-        changedProps.has('_fetching') ||
-        changedProps.has('_selectedEvent') ||
-        changedProps.has('config') ||
-        changedProps.has('_strings')) {
+      changedProps.has('_fetching') ||
+      changedProps.has('_selectedEvent') ||
+      changedProps.has('config') ||
+      changedProps.has('_strings')) {
       return true;
     }
 
@@ -252,10 +252,10 @@ class CalendarListCard extends HAControlBase {
 
     const { start, end } = this._getFetchRange();
     const dataManager = new CalendarDataManager(this.hass);
-    
+
     try {
       let events = await dataManager.fetchEvents(entities, start, end);
-      
+
       const showFinished = this.config.show_finished_events !== false;
       if (!showFinished) {
         const now = new Date();
@@ -345,13 +345,13 @@ class CalendarListCard extends HAControlBase {
     if (!this.config.day_separator_color || !lastDate || !currentDate) {
       return false;
     }
-    
+
     const mode = this.config.separator_mode || 'day';
     if (mode === 'day') {
       return lastDate.toDateString() !== currentDate.toDateString();
     } else if (mode === 'month') {
-      return lastDate.getFullYear() !== currentDate.getFullYear() || 
-             lastDate.getMonth() !== currentDate.getMonth();
+      return lastDate.getFullYear() !== currentDate.getFullYear() ||
+        lastDate.getMonth() !== currentDate.getMonth();
     } else if (mode === 'week') {
       return this._getWeek(lastDate) !== this._getWeek(currentDate);
     }
@@ -371,11 +371,11 @@ class CalendarListCard extends HAControlBase {
     const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const diffTime = target - today;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return this._localize('today') || "Today";
     if (diffDays === 1) return this._localize('tomorrow') || "Tomorrow";
     if (diffDays === -1) return this._localize('yesterday') || "Yesterday";
-    
+
     const locale = this.hass.locale || { language: 'en' };
     return date.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric' });
   }
@@ -391,19 +391,19 @@ class CalendarListCard extends HAControlBase {
    */
   _renderDialogFeature(feature, event, lang) {
     const origin = event.originEvent || {};
-    
+
     switch (feature.type) {
       case "time": {
         const isAllDay = event.isAllDay;
         const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const optionsTime = { hour: '2-digit', minute: '2-digit' };
-        
+
         let timeDisplay = "";
         if (isAllDay) {
           const startStr = event.start.toLocaleDateString(lang, optionsDate);
           const endAdjusted = new Date(event.end);
           endAdjusted.setDate(endAdjusted.getDate() - 1);
-          
+
           if (event.start.toDateString() === endAdjusted.toDateString()) {
             timeDisplay = startStr;
           } else {
@@ -415,7 +415,7 @@ class CalendarListCard extends HAControlBase {
           const startStr = event.start.toLocaleDateString(lang, optionsDate);
           const startTimeStr = event.start.toLocaleTimeString(lang, optionsTime);
           const endTimeStr = event.end.toLocaleTimeString(lang, optionsTime);
-          
+
           if (event.start.toDateString() === event.end.toDateString()) {
             timeDisplay = `${startStr}, ${startTimeStr} - ${endTimeStr}`;
           } else {
@@ -431,11 +431,11 @@ class CalendarListCard extends HAControlBase {
           </div>
         `;
       }
-      
+
       case "location": {
         const location = origin.location;
         if (!location) return "";
-        
+
         const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(location)}`;
         return html`
           <div class="dialog-feature-row feature-location">
@@ -469,23 +469,23 @@ class CalendarListCard extends HAControlBase {
             <div class="feature-content">
               <div class="attendees-list">
                 ${attendees.map(a => {
-                  const name = a.displayName || a.name || a.email;
-                  const role = a.responseStatus || a.status || "";
-                  let statusClass = "status-unknown";
-                  let statusIcon = "mdi:help-circle-outline";
+          const name = a.displayName || a.name || a.email;
+          const role = a.responseStatus || a.status || "";
+          let statusClass = "status-unknown";
+          let statusIcon = "mdi:help-circle-outline";
 
-                  if (role === "accepted") {
-                    statusClass = "status-accepted";
-                    statusIcon = "mdi:check-circle-outline";
-                  } else if (role === "declined") {
-                    statusClass = "status-declined";
-                    statusIcon = "mdi:close-circle-outline";
-                  } else if (role === "tentative") {
-                    statusClass = "status-tentative";
-                    statusIcon = "mdi:minus-circle-outline";
-                  }
-                  
-                  return html`
+          if (role === "accepted") {
+            statusClass = "status-accepted";
+            statusIcon = "mdi:check-circle-outline";
+          } else if (role === "declined") {
+            statusClass = "status-declined";
+            statusIcon = "mdi:close-circle-outline";
+          } else if (role === "tentative") {
+            statusClass = "status-tentative";
+            statusIcon = "mdi:minus-circle-outline";
+          }
+
+          return html`
                     <div class="attendee-item">
                       <span class="attendee-name">${name}</span>
                       ${role ? html`
@@ -495,7 +495,7 @@ class CalendarListCard extends HAControlBase {
                       ` : ''}
                     </div>
                   `;
-                })}
+        })}
               </div>
             </div>
           </div>
@@ -517,14 +517,14 @@ class CalendarListCard extends HAControlBase {
     if (!this._selectedEvent) return "";
 
     const event = this._selectedEvent;
-    
+
     // Find calendar entity configuration to get matching color context
-    const entityConf = (this.config.entities || []).find(e => 
+    const entityConf = (this.config.entities || []).find(e =>
       (typeof e === 'object' ? e.entity : e) === event.entity_id
     );
     const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : 'var(--primary-color)';
-    const calendarName = (typeof entityConf === 'object' && entityConf.name) 
-      ? entityConf.name 
+    const calendarName = (typeof entityConf === 'object' && entityConf.name)
+      ? entityConf.name
       : (this.hass.states[event.entity_id]?.attributes?.friendly_name || event.entity_id);
 
     const lang = this.hass.language || 'en';
@@ -590,30 +590,30 @@ class CalendarListCard extends HAControlBase {
         <div class="event-list-wrapper">
           <div class="event-list">
             ${events.map((event) => {
-              const currentDate = event.start;
-              const previousDate = lastDate;
-              lastDate = currentDate;
+      const currentDate = event.start;
+      const previousDate = lastDate;
+      lastDate = currentDate;
 
-              const showGroupingHeaders = this.config.show_grouping_headers !== false;
-              let dayHeaderHtml = html``;
-              
-              if (showGroupingHeaders) {
-                const isDifferentDay = previousDate === null || previousDate.toDateString() !== currentDate.toDateString();
-                if (isDifferentDay) {
-                  dayHeaderHtml = html`<div class="group-header">${this._getGroupHeaderLabel(currentDate)}</div>`;
-                }
-              } else {
-                if (this._shouldShowSeparator(previousDate, currentDate)) {
-                  dayHeaderHtml = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
-                }
-              }
+      const showGroupingHeaders = this.config.show_grouping_headers !== false;
+      let dayHeaderHtml = html``;
 
-              const entityConf = (this.config.entities || []).find(e => 
-                (typeof e === 'object' ? e.entity : e) === event.entity_id
-              );
-              const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : 'var(--primary-color)';
+      if (showGroupingHeaders) {
+        const isDifferentDay = previousDate === null || previousDate.toDateString() !== currentDate.toDateString();
+        if (isDifferentDay) {
+          dayHeaderHtml = html`<div class="group-header">${this._getGroupHeaderLabel(currentDate)}</div>`;
+        }
+      } else {
+        if (this._shouldShowSeparator(previousDate, currentDate)) {
+          dayHeaderHtml = html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`;
+        }
+      }
 
-              return html`
+      const entityConf = (this.config.entities || []).find(e =>
+        (typeof e === 'object' ? e.entity : e) === event.entity_id
+      );
+      const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : 'var(--primary-color)';
+
+      return html`
                 ${dayHeaderHtml}
                 <calendar-list-card-row
                   .hass=${this.hass}
@@ -624,7 +624,7 @@ class CalendarListCard extends HAControlBase {
                   @event-click=${(e) => this._onEventClick(e)}
                 ></calendar-list-card-row>
               `;
-            })}
+    })}
             ${events.length === 0 ? html`<div class="event-row empty-text">${this._localize('no_events') || 'No events'}</div>` : ''}
           </div>
           

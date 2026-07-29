@@ -21,8 +21,8 @@ class CalendarListCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -106,8 +106,8 @@ class CalendarListCardEditor extends HAControlBase {
     const value = target.checked !== undefined ? target.checked : target.value;
 
     if (configValue) {
-        this._config = { ...this._config, [configValue]: value };
-        this._fireConfigChanged();
+      this._config = { ...this._config, [configValue]: value };
+      this._fireConfigChanged();
     }
   }
 
@@ -143,7 +143,7 @@ class CalendarListCardEditor extends HAControlBase {
   _addFilter(index) {
     const entities = this._getEntities();
     let entityConf = typeof entities[index] === 'object' ? { ...entities[index] } : { entity: entities[index] };
-    
+
     if (!entityConf.filters) {
       entityConf.filters = [];
     }
@@ -156,7 +156,7 @@ class CalendarListCardEditor extends HAControlBase {
   _removeFilter(entityIndex, filterIndex) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
-    
+
     if (entityConf.filters) {
       entityConf.filters.splice(filterIndex, 1);
     }
@@ -168,14 +168,14 @@ class CalendarListCardEditor extends HAControlBase {
   _filterChanged(ev, entityIndex, filterIndex, prop) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
-    
+
     if (!entityConf.filters) {
       entityConf.filters = [];
     }
-    
-    entityConf.filters[filterIndex] = { 
-      ...entityConf.filters[filterIndex], 
-      [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] 
+
+    entityConf.filters[filterIndex] = {
+      ...entityConf.filters[filterIndex],
+      [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value']
     };
     entities[entityIndex] = entityConf;
     this._config = { ...this._config, entities };
@@ -190,7 +190,7 @@ class CalendarListCardEditor extends HAControlBase {
     const customFeatures = window.customCardFeatures || [];
     const found = customFeatures.find(f => f.type === type);
     if (found && found.name) return found.name;
-    
+
     let cleanType = type.startsWith("custom:") ? type.substring(7) : type;
     cleanType = cleanType.replace(/-card-feature$/, '').replace(/-/g, ' ');
     return cleanType.replace(/\b\w/g, c => c.toUpperCase());
@@ -199,13 +199,13 @@ class CalendarListCardEditor extends HAControlBase {
   _addFeature(ev) {
     const type = ev.detail.type;
     if (!type) return;
-    
+
     const featureConfig = { type: type };
     const isCustom = type.startsWith("custom:");
     const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
     const FeatureClass = customElements.get(tag);
     if (FeatureClass && FeatureClass.getStubConfig) {
-        Object.assign(featureConfig, FeatureClass.getStubConfig());
+      Object.assign(featureConfig, FeatureClass.getStubConfig());
     }
 
     const features = [...(this._config.features || []), featureConfig];
@@ -285,7 +285,7 @@ class CalendarListCardEditor extends HAControlBase {
     addIfDiff("icon", "mdi:calendar-multiselect");
     if (this._config.max_days !== undefined) cleaned.max_days = this._config.max_days;
     if (this._config.max_items !== undefined) cleaned.max_items = this._config.max_items;
-    
+
     addIfDiff("show_due_date", true);
     addIfDiff("show_description", false);
     addIfDiff("show_due_in_days", true);
@@ -295,12 +295,12 @@ class CalendarListCardEditor extends HAControlBase {
 
     addIfDiff("separator_mode", "day");
     addIfDiff("date_separator_color", "transparent");
-    
+
     if (this._config.default_due_date_color !== undefined) cleaned.default_due_date_color = this._config.default_due_date_color;
     if (this._config.day_separator_color !== undefined) cleaned.day_separator_color = this._config.day_separator_color;
     if (this._config.due_in_days_separator_color !== undefined) cleaned.due_in_days_separator_color = this._config.due_in_days_separator_color;
     if (this._config.source_color !== undefined) cleaned.source_color = this._config.source_color;
-    
+
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
         if (typeof ent === 'object') {
@@ -311,7 +311,7 @@ class CalendarListCardEditor extends HAControlBase {
         return ent;
       });
     }
-    
+
     if (this._config.due_date_colors && Array.isArray(this._config.due_date_colors)) {
       cleaned.due_date_colors = this._config.due_date_colors.map(rule => {
         const r = {};
@@ -323,7 +323,7 @@ class CalendarListCardEditor extends HAControlBase {
     }
 
     if (this._config.features !== undefined) cleaned.features = this._config.features;
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -432,13 +432,13 @@ class CalendarListCardEditor extends HAControlBase {
           <ha-expansion-panel header="${this._localize('entities') || 'Entities'}" outlined expanded class="panel">
             <div class="entities-list">
               ${entities.map((entityConf, index) => {
-                const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
-                let filters = [];
-                if (typeof entityConf === 'object' && entityConf.filters) {
-                  filters = entityConf.filters;
-                }
+      const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
+      let filters = [];
+      if (typeof entityConf === 'object' && entityConf.filters) {
+        filters = entityConf.filters;
+      }
 
-                return html`
+      return html`
                 <div class="entity-row-container">
                   <div class="entity-row">
                     <ha-entity-picker
@@ -528,12 +528,12 @@ class CalendarListCardEditor extends HAControlBase {
                   class="operator"
                   .value="${rule.operator || '<='}"
                   @closed="${(e) => {
-                    e.stopPropagation();
-                    const target = e.target;
-                    if (target.value !== undefined && target.value !== rule.operator) {
-                      this._dueDateColorChanged({ target }, index, 'operator');
-                    }
-                  }}"
+          e.stopPropagation();
+          const target = e.target;
+          if (target.value !== undefined && target.value !== rule.operator) {
+            this._dueDateColorChanged({ target }, index, 'operator');
+          }
+        }}"
                   fixedMenuPosition
                   naturalMenuWidth
                 >
@@ -636,12 +636,12 @@ class CalendarListCardEditor extends HAControlBase {
                 .value="${this._config.separator_mode || 'day'}"
                 .configValue="${'separator_mode'}"
                 @closed="${(e) => {
-                  e.stopPropagation();
-                  const target = e.target;
-                  if (target.value !== undefined && target.value !== this._config.separator_mode) {
-                    this._valueChanged({ target: { configValue: 'separator_mode', value: target.value } });
-                  }
-                }}"
+          e.stopPropagation();
+          const target = e.target;
+          if (target.value !== undefined && target.value !== this._config.separator_mode) {
+            this._valueChanged({ target: { configValue: 'separator_mode', value: target.value } });
+          }
+        }}"
                 fixedMenuPosition
                 naturalMenuWidth
                 style="width: 100%; display: block; margin-top: 8px;"

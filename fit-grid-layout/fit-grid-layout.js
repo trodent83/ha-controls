@@ -176,7 +176,7 @@ class FitGridLayout extends HAControlBase {
           Array.from(card.shadowRoot.children).forEach(child => {
             try {
               this._resizeObserver.observe(child);
-            } catch (e) {}
+            } catch (e) { }
           });
         }
       }
@@ -205,7 +205,7 @@ class FitGridLayout extends HAControlBase {
           attributes: true,
           characterData: true
         });
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const wrappers = this.shadowRoot?.querySelectorAll(".grid-item-wrapper") || [];
@@ -219,7 +219,7 @@ class FitGridLayout extends HAControlBase {
             attributes: true,
             characterData: true
           });
-        } catch (e) {}
+        } catch (e) { }
       }
     });
   }
@@ -316,7 +316,7 @@ class FitGridLayout extends HAControlBase {
         el = document.createElement(tag);
         el.setConfig(cardConfig);
       }
-      
+
       el.hass = this.hass;
       this._popupEl = el;
       this._popupHeading = heading;
@@ -338,7 +338,7 @@ class FitGridLayout extends HAControlBase {
    */
   _debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
       clearTimeout(timeout);
       timeout = setTimeout(() => func.apply(this, args), wait);
     };
@@ -353,7 +353,7 @@ class FitGridLayout extends HAControlBase {
 
     // 1. Get host's actual available dimensions
     const availableWidth = this.clientWidth || window.innerWidth;
-    
+
     // Determine exact remaining viewport height below card top
     const rect = this.getBoundingClientRect();
     const headerHeight = parseInt(getComputedStyle(this).getPropertyValue('--header-height')) || 56;
@@ -494,7 +494,7 @@ class FitGridLayout extends HAControlBase {
     if (c1.entity !== c2.entity) return false;
     if (c1.name !== c2.name) return false;
     if (c1.title !== c2.title) return false;
-    
+
     // For grid cards, compare child card types to ensure correct match
     if (c1.cards && c2.cards) {
       if (c1.cards.length !== c2.cards.length) return false;
@@ -504,20 +504,20 @@ class FitGridLayout extends HAControlBase {
         if (type1 !== type2) return false;
       }
     }
-    
+
     return true;
   }
 
   _getViewLayout(card, index) {
     if (!card) return {};
-    
+
     const cardConfig = card.config || card._config || (card.host && (card.host.config || card.host._config));
-    
+
     if (cardConfig) {
       if (cardConfig.view_layout) {
         return cardConfig.view_layout;
       }
-      
+
       // Match card structurally against original configs to resolve correct view_layout
       if (this.config && this.config.cards) {
         const matched = this.config.cards.find(c => this._isConfigMatch(c, cardConfig));
@@ -526,12 +526,12 @@ class FitGridLayout extends HAControlBase {
         }
       }
     }
-    
+
     // Fallback to index matching
     if (this.config && this.config.cards && this.config.cards[index]) {
       return this.config.cards[index].view_layout || {};
     }
-    
+
     return {};
   }
 
@@ -564,13 +564,13 @@ class FitGridLayout extends HAControlBase {
       ${this.renderStyle("fit-grid-layout.css")}
       <div id="grid-container" class="${this._activePopup ? 'popup-active' : ''}" style="${gridStyle}">
         ${(this.cards || []).map((card, index) => {
-          const viewLayout = this._getViewLayout(card, index);
-          const gridArea = viewLayout['grid-area'] || viewLayout.grid_area || viewLayout.gridArea || '';
-          const placeSelf = viewLayout['place-self'] || viewLayout.place_self || viewLayout.placeSelf || '';
-          const alignSelf = viewLayout['align-self'] || viewLayout.align_self || viewLayout.alignSelf || '';
-          const justifySelf = viewLayout['justify-self'] || viewLayout.justify_self || viewLayout.justifySelf || '';
+      const viewLayout = this._getViewLayout(card, index);
+      const gridArea = viewLayout['grid-area'] || viewLayout.grid_area || viewLayout.gridArea || '';
+      const placeSelf = viewLayout['place-self'] || viewLayout.place_self || viewLayout.placeSelf || '';
+      const alignSelf = viewLayout['align-self'] || viewLayout.align_self || viewLayout.alignSelf || '';
+      const justifySelf = viewLayout['justify-self'] || viewLayout.justify_self || viewLayout.justifySelf || '';
 
-          const style = `
+      const style = `
             ${gridArea ? `grid-area: ${gridArea};` : ''}
             ${placeSelf ? `place-self: ${placeSelf};` : ''}
             ${alignSelf ? `align-self: ${alignSelf};` : ''}
@@ -579,12 +579,12 @@ class FitGridLayout extends HAControlBase {
             height: 100%;
             box-sizing: border-box;
           `;
-          return html`
+      return html`
             <div class="grid-item-wrapper" style="${style}">
               ${card}
             </div>
           `;
-        })}
+    })}
       </div>
 
       ${this._activePopup && this._popupEl ? html`

@@ -76,7 +76,7 @@ class TaskListCardItem extends HAControlBase {
 
     const t = this.task;
     const done = t.isCompleted;
-    
+
     let hidden = !t.isVisible;
 
     const separatorColor = this.config.merged_tasks_separator_color || 'var(--divider-color)';
@@ -93,11 +93,11 @@ class TaskListCardItem extends HAControlBase {
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${parseHtml(t.description)}</span>` : ''}
         ${this.config.show_source ? (() => {
-          const entity = this.hass.states[t.entity_id];
-          if (!entity) return '';
-          const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
-          return html`<div class="task-source" style=${style}><ha-icon icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon><span>${entity.attributes.friendly_name || t.entity_id}</span></div>`;
-        })() : ''}
+        const entity = this.hass.states[t.entity_id];
+        if (!entity) return '';
+        const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+        return html`<div class="task-source" style=${style}><ha-icon icon="${entity.attributes.icon || 'mdi:checkbox-marked-circle-outline'}"></ha-icon><span>${entity.attributes.friendly_name || t.entity_id}</span></div>`;
+      })() : ''}
       </div>
     `;
   }

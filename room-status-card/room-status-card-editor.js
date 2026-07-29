@@ -131,11 +131,11 @@ class RoomStatusCardEditor extends HAControlBase {
   _moveBadge(index, direction) {
     const badges = [...(this._config.badges || [])];
     if (index + direction < 0 || index + direction >= badges.length) return;
-    
+
     const temp = badges[index];
     badges[index] = badges[index + direction];
     badges[index + direction] = temp;
-    
+
     this._config = { ...this._config, badges };
     this._fireConfigChanged();
   }
@@ -248,9 +248,9 @@ class RoomStatusCardEditor extends HAControlBase {
    */
   _schema() {
     return [
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "name", label: this._localize('room_name'), selector: { text: {} } },
           { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
@@ -311,7 +311,7 @@ class RoomStatusCardEditor extends HAControlBase {
         cleaned.header_settings.heading_style = this._config.header_settings.heading_style;
       }
     }
-    
+
     if (this._config.badges && Array.isArray(this._config.badges)) {
       cleaned.badges = this._config.badges.map(badge => {
         const b = {};
@@ -321,7 +321,7 @@ class RoomStatusCardEditor extends HAControlBase {
         return b;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -373,12 +373,12 @@ class RoomStatusCardEditor extends HAControlBase {
         <ha-form
           .hass=${this.hass}
           .data=${{
-            ...this._config,
-            header_settings: {
-              heading_style: 'subtitle',
-              ...this._config.header_settings
-            }
-          }}
+          ...this._config,
+          header_settings: {
+            heading_style: 'subtitle',
+            ...this._config.header_settings
+          }
+        }}
           .schema=${this._schema()}
           .computeLabel=${(schema) => schema.label || schema.name}
           @value-changed=${this._valueChanged}
@@ -387,18 +387,18 @@ class RoomStatusCardEditor extends HAControlBase {
         <div class="badges-section" style="margin-top: 0;">
           <h3>${this._localize('badges')}</h3>
           ${badges.map((badge, idx) => {
-            const entityId = badge.entity;
-            const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
-            const friendlyName = stateObj?.attributes?.friendly_name || entityId;
-            
-            const badgeSchema = [
-              { name: "entity", selector: { entity: {} } },
-              { name: "color", label: this._localize('default_color') || 'Color', selector: { text: {} } }
-            ];
-            
-            const badgeData = { ...badge };
+          const entityId = badge.entity;
+          const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
+          const friendlyName = stateObj?.attributes?.friendly_name || entityId;
 
-            return html`
+          const badgeSchema = [
+            { name: "entity", selector: { entity: {} } },
+            { name: "color", label: this._localize('default_color') || 'Color', selector: { text: {} } }
+          ];
+
+          const badgeData = { ...badge };
+
+          return html`
               <ha-expansion-panel outlined style="margin-bottom: 12px; display: block;">
                 <div slot="header" class="badge-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                   <span>${friendlyName || this._localize('badge_num', { num: idx + 1 })}</span>
@@ -443,9 +443,9 @@ class RoomStatusCardEditor extends HAControlBase {
                             .hass=${this.hass}
                             .config=${feature}
                             @config-changed=${(e) => {
-                              e.stopPropagation();
-                              this._updateFeature(idx, fIdx, e.detail.config);
-                            }}
+              e.stopPropagation();
+              this._updateFeature(idx, fIdx, e.detail.config);
+            }}
                           ></feature-renderer-editor-card>
                         </div>
                       `)}
@@ -462,7 +462,7 @@ class RoomStatusCardEditor extends HAControlBase {
                 </div>
               </ha-expansion-panel>
             `;
-          })}
+        })}
           
           <ha-button raised @click=${this._addBadge} style="margin-top: 8px;">
             <ha-icon icon="mdi:plus" slot="icon"></ha-icon> ${this._localize('add_badge')}

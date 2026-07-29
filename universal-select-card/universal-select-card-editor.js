@@ -22,8 +22,8 @@ class UniversalSelectCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -82,17 +82,17 @@ class UniversalSelectCardEditor extends HAControlBase {
       { name: "entity", label: this._localize('controlled_dropdown'), selector: { entity: { domain: "input_select" } } },
       { name: "lock_entity", label: this._localize('disable_control'), selector: { entity: { domain: "binary_sensor" } } },
       { name: "show_label", label: this._localize('show_labels'), selector: { boolean: {} } },
-      { 
-        name: "layout", 
-        label: this._localize('layout'), 
-        selector: { 
-          select: { 
+      {
+        name: "layout",
+        label: this._localize('layout'),
+        selector: {
+          select: {
             options: [
               { value: "row", label: this._localize('horizontal') },
               { value: "column", label: this._localize('vertical') }
-            ] 
-          } 
-        } 
+            ]
+          }
+        }
       }
     ];
   }
@@ -138,7 +138,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     addIfDiff("show_label", true);
     addIfDiff("layout", "row");
     if (this._config.options_order !== undefined) cleaned.options_order = this._config.options_order;
-    
+
     if (this._config.options_config && typeof this._config.options_config === 'object') {
       cleaned.options_config = {};
       for (const [optName, optConf] of Object.entries(this._config.options_config)) {
@@ -154,7 +154,7 @@ class UniversalSelectCardEditor extends HAControlBase {
         cleaned.options_config[optName] = o;
       }
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -182,22 +182,22 @@ class UniversalSelectCardEditor extends HAControlBase {
   render() {
     if (!this.hass || !this._config) return html``;
     const data = { layout: 'row', ...this._config };
-    
+
     const entityId = this._config.entity;
     const stateObj = entityId ? this.hass.states[entityId] : null;
     let options = stateObj?.attributes?.options || [];
 
     // Sort options according to the user-defined order in the configuration, if provided
     if (this._config.options_order) {
-        const order = this._config.options_order;
-        options = [...options].sort((a, b) => {
-            const idxA = order.indexOf(a);
-            const idxB = order.indexOf(b);
-            if (idxA === -1 && idxB === -1) return 0;
-            if (idxA === -1) return 1;
-            if (idxB === -1) return -1;
-            return idxA - idxB;
-        });
+      const order = this._config.options_order;
+      options = [...options].sort((a, b) => {
+        const idxA = order.indexOf(a);
+        const idxB = order.indexOf(b);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
     }
 
     return html`
@@ -260,48 +260,48 @@ class UniversalSelectCardEditor extends HAControlBase {
    * @returns {import('lit-html').TemplateResult} Rendered options settings pane HTML
    */
   _renderOption(option, idx, total) {
-      const optionData = this._config.options_config?.[option] || {};
-      const mainSchema = [
+    const optionData = this._config.options_config?.[option] || {};
+    const mainSchema = [
+      {
+        name: "",
+        type: "grid",
+        schema: [
+          { name: "label", label: this._localize('custom_label'), selector: { text: {} } },
+          { name: "active_label_entity", label: this._localize('active_label_entity') || "Active Label Entity", selector: { entity: {} } },
+          { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
+          { name: "color", label: this._localize('color'), selector: { text: {} } },
           {
-            name: "",
-            type: "grid",
-            schema: [
-              { name: "label", label: this._localize('custom_label'), selector: { text: {} } },
-              { name: "active_label_entity", label: this._localize('active_label_entity') || "Active Label Entity", selector: { entity: {} } },
-              { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
-              { name: "color", label: this._localize('color'), selector: { text: {} } },
-              { 
-                name: "animation", 
-                label: this._localize('animation'), 
-                selector: { 
-                  select: { 
-                    options: [
-                      { value: "", label: this._localize('none') },
-                      { value: "bounce", label: this._localize('bounce') },
-                      { value: "blink", label: this._localize('blink') },
-                      { value: "rotating", label: this._localize('rotating') },
-                      { value: "pulse", label: this._localize('pulse') },
-                      { value: "shake", label: this._localize('shake') },
-                      { value: "float", label: this._localize('float') },
-                      { value: "spin-slow", label: this._localize('spin_slow') }
-                    ] 
-                  } 
-                }
-              },
-              { name: "hide_label_if_active", label: this._localize('hide_label_if_active') || "Hide Label When Active", selector: { boolean: {} } }
-            ]
-          }
-      ];
+            name: "animation",
+            label: this._localize('animation'),
+            selector: {
+              select: {
+                options: [
+                  { value: "", label: this._localize('none') },
+                  { value: "bounce", label: this._localize('bounce') },
+                  { value: "blink", label: this._localize('blink') },
+                  { value: "rotating", label: this._localize('rotating') },
+                  { value: "pulse", label: this._localize('pulse') },
+                  { value: "shake", label: this._localize('shake') },
+                  { value: "float", label: this._localize('float') },
+                  { value: "spin-slow", label: this._localize('spin_slow') }
+                ]
+              }
+            }
+          },
+          { name: "hide_label_if_active", label: this._localize('hide_label_if_active') || "Hide Label When Active", selector: { boolean: {} } }
+        ]
+      }
+    ];
 
-      const actionSchema = [
-          {
-            name: "hold_action",
-            label: this._localize('hold_action'),
-            selector: { "ui-action": {} }
-          }
-      ];
+    const actionSchema = [
+      {
+        name: "hold_action",
+        label: this._localize('hold_action'),
+        selector: { "ui-action": {} }
+      }
+    ];
 
-      return html`
+    return html`
         <ha-expansion-panel outlined class="option-panel">
             <div slot="header" class="panel-header">
                 <div class="panel-title">${optionData.label || option}</div>
@@ -375,19 +375,19 @@ class UniversalSelectCardEditor extends HAControlBase {
   _addFeature(option, ev) {
     const type = ev.detail.type;
     if (!type) return;
-    
+
     const featureConfig = { type: type };
     const isCustom = type.startsWith("custom:");
     const tag = isCustom ? type.substring(7) : `hui-${type}-card-feature`;
     const FeatureClass = customElements.get(tag);
     if (FeatureClass && FeatureClass.getStubConfig) {
-        Object.assign(featureConfig, FeatureClass.getStubConfig());
+      Object.assign(featureConfig, FeatureClass.getStubConfig());
     }
 
     const optionsConfig = this._config.options_config || {};
     const optionConfig = optionsConfig[option] || {};
     const features = [...(optionConfig.features || []), featureConfig];
-    
+
     this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
     this._fireConfigChanged();
   }
@@ -403,17 +403,17 @@ class UniversalSelectCardEditor extends HAControlBase {
     const entityId = this._config?.entity;
     const stateObj = entityId ? this.hass.states[entityId] : null;
     let options = stateObj?.attributes?.options || [];
-    
+
     let currentOrder = this._config.options_order ? [...this._config.options_order] : [...options];
-    
+
     // Ensure all options are in currentOrder if not present
     options.forEach(opt => {
-        if (!currentOrder.includes(opt)) currentOrder.push(opt);
+      if (!currentOrder.includes(opt)) currentOrder.push(opt);
     });
 
     const index = currentOrder.indexOf(option);
     if (index === -1) return;
-    
+
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= currentOrder.length) return;
 
@@ -435,7 +435,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     const optionConfig = optionsConfig[option] || {};
     const features = [...(optionConfig.features || [])];
     features.splice(fIdx, 1);
-    
+
     this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
     this._fireConfigChanged();
   }
@@ -453,7 +453,7 @@ class UniversalSelectCardEditor extends HAControlBase {
     const optionConfig = optionsConfig[option] || {};
     const features = [...(optionConfig.features || [])];
     features[fIdx] = newFeatureConfig;
-    
+
     this._config = { ...this._config, options_config: { ...optionsConfig, [option]: { ...optionConfig, features } } };
     this._fireConfigChanged();
   }
@@ -466,10 +466,10 @@ class UniversalSelectCardEditor extends HAControlBase {
    * @private
    */
   _optionValueChanged(option, ev) {
-      const newOptionConfig = { ...this._config.options_config?.[option], ...ev.detail.value };
-      const optionsConfig = { ...this._config.options_config, [option]: newOptionConfig };
-      this._config = { ...this._config, options_config: optionsConfig };
-      this._fireConfigChanged();
+    const newOptionConfig = { ...this._config.options_config?.[option], ...ev.detail.value };
+    const optionsConfig = { ...this._config.options_config, [option]: newOptionConfig };
+    this._config = { ...this._config, options_config: optionsConfig };
+    this._fireConfigChanged();
   }
 
   /**

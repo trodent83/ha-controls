@@ -23,8 +23,8 @@ class TaskListCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -117,8 +117,8 @@ class TaskListCardEditor extends HAControlBase {
     const value = target.checked !== undefined ? target.checked : target.value;
 
     if (configValue) {
-        this._config = { ...this._config, [configValue]: value };
-        this._fireConfigChanged();
+      this._config = { ...this._config, [configValue]: value };
+      this._fireConfigChanged();
     }
   }
 
@@ -150,7 +150,7 @@ class TaskListCardEditor extends HAControlBase {
     const entities = this._getEntities();
     entities.push("");
     this._config = { ...this._config, entities };
-      this._fireConfigChanged();
+    this._fireConfigChanged();
   }
 
   /**
@@ -162,7 +162,7 @@ class TaskListCardEditor extends HAControlBase {
   _addFilter(index) {
     const entities = this._getEntities();
     let entityConf = typeof entities[index] === 'object' ? { ...entities[index] } : { entity: entities[index] };
-    
+
     if (!entityConf.filters) {
       entityConf.filters = [];
       if (entityConf.filter) {
@@ -187,14 +187,14 @@ class TaskListCardEditor extends HAControlBase {
   _removeFilter(entityIndex, filterIndex) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
-    
+
     if (entityConf.filters) {
       entityConf.filters.splice(filterIndex, 1);
     } else if (entityConf.filter && filterIndex === 0) {
       delete entityConf.filter;
       delete entityConf.case_sensitive;
     }
-    
+
     entities[entityIndex] = entityConf;
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
@@ -212,7 +212,7 @@ class TaskListCardEditor extends HAControlBase {
   _filterChanged(ev, entityIndex, filterIndex, prop) {
     const entities = this._getEntities();
     let entityConf = typeof entities[entityIndex] === 'object' ? { ...entities[entityIndex] } : { entity: entities[entityIndex] };
-    
+
     if (!entityConf.filters) {
       entityConf.filters = [];
       if (entityConf.filter) {
@@ -221,7 +221,7 @@ class TaskListCardEditor extends HAControlBase {
         delete entityConf.case_sensitive;
       }
     }
-    
+
     entityConf.filters[filterIndex] = { ...entityConf.filters[filterIndex], [prop]: ev.target[prop === 'case_sensitive' ? 'checked' : 'value'] };
     entities[entityIndex] = entityConf;
     this._config = { ...this._config, entities };
@@ -357,7 +357,7 @@ class TaskListCardEditor extends HAControlBase {
     if (this._config.day_separator_color !== undefined) cleaned.day_separator_color = this._config.day_separator_color;
     if (this._config.due_in_days_separator_color !== undefined) cleaned.due_in_days_separator_color = this._config.due_in_days_separator_color;
     if (this._config.source_color !== undefined) cleaned.source_color = this._config.source_color;
-    
+
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
         if (typeof ent === 'object') {
@@ -368,7 +368,7 @@ class TaskListCardEditor extends HAControlBase {
         return ent;
       });
     }
-    
+
     if (this._config.due_date_colors && Array.isArray(this._config.due_date_colors)) {
       cleaned.due_date_colors = this._config.due_date_colors.map(rule => {
         const r = {};
@@ -378,7 +378,7 @@ class TaskListCardEditor extends HAControlBase {
         return r;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -506,17 +506,17 @@ class TaskListCardEditor extends HAControlBase {
           <ha-expansion-panel header="${this._localize('entities')}" outlined expanded class="panel">
             <div class="entities-list">
               ${entities.map((entityConf, index) => {
-                const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
-                let filters = [];
-                if (typeof entityConf === 'object') {
-                  if (entityConf.filters) {
-                    filters = entityConf.filters;
-                  } else if (entityConf.filter) {
-                    filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
-                  }
-                }
+      const entityId = typeof entityConf === 'object' ? entityConf.entity : entityConf;
+      let filters = [];
+      if (typeof entityConf === 'object') {
+        if (entityConf.filters) {
+          filters = entityConf.filters;
+        } else if (entityConf.filter) {
+          filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+        }
+      }
 
-                return html`
+      return html`
                 <div class="entity-row-container">
                   <div class="entity-row">
                     <ha-entity-picker
@@ -574,12 +574,12 @@ class TaskListCardEditor extends HAControlBase {
                   class="operator"
                   .value="${rule.operator || '<='}"
                   @closed="${(e) => {
-                    e.stopPropagation();
-                    const target = e.target;
-                    if (target.value !== undefined && target.value !== rule.operator) {
-                      this._dueDateColorChanged({ target }, index, 'operator');
-                    }
-                  }}"
+          e.stopPropagation();
+          const target = e.target;
+          if (target.value !== undefined && target.value !== rule.operator) {
+            this._dueDateColorChanged({ target }, index, 'operator');
+          }
+        }}"
                   fixedMenuPosition
                   naturalMenuWidth
                 >
@@ -665,12 +665,12 @@ class TaskListCardEditor extends HAControlBase {
                 .value="${this._config.separator_mode || 'day'}"
                 .configValue="${'separator_mode'}"
                 @closed="${(e) => {
-                  e.stopPropagation();
-                  const target = e.target;
-                  if (target.value !== undefined && target.value !== this._config.separator_mode) {
-                    this._valueChanged({ target });
-                  }
-                }}"
+          e.stopPropagation();
+          const target = e.target;
+          if (target.value !== undefined && target.value !== this._config.separator_mode) {
+            this._valueChanged({ target });
+          }
+        }}"
                 fixedMenuPosition
                 naturalMenuWidth
               >

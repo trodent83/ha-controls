@@ -75,7 +75,7 @@ class CalendarGridCardEvent extends HAControlBase {
      */
     render() {
         if (!this.event || !this.day) return html``;
-        
+
         const lang = this.hass ? this.hass.language : undefined;
         const timeStr = this.event.getTimeStr(this.day, lang);
         const now = new Date();

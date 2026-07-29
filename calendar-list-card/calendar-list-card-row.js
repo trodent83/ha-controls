@@ -97,7 +97,7 @@ class CalendarListCardRow extends HAControlBase {
 
     const diffDays = this.diffDays;
     const colors = this.config.due_date_colors;
-    
+
     if (colors && colors.length) {
       const sortedColors = [...colors].sort((a, b) => a.days - b.days);
       const match = sortedColors.find(rule => {
@@ -179,15 +179,15 @@ class CalendarListCardRow extends HAControlBase {
             <span class="event-description">${parseHtml(this.event.originEvent.description)}</span>
           ` : ''}
           ${this.config.show_source ? (() => {
-            const entity = stateObj;
-            if (!entity) return '';
-            const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
-            return html`
+        const entity = stateObj;
+        if (!entity) return '';
+        const style = this.config.source_color ? `--source-color: ${this.config.source_color}` : '';
+        return html`
               <div class="event-source" style=${style}>
                 <ha-icon icon="${entity.attributes.icon || 'mdi:calendar'}"></ha-icon>
                 <span>${entity.attributes.friendly_name || this.event.entity_id}</span>
               </div>`;
-          })() : ''}
+      })() : ''}
           
           ${this.config.features && this.config.features.length > 0 ? html`
             <div class="event-features">

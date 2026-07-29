@@ -179,13 +179,13 @@ class CalendarGridCard extends HAControlBase {
    * @returns {boolean} True if element should redraw, false otherwise
    */
   shouldUpdate(changedProps) {
-    if (changedProps.has('_events') || 
-        changedProps.has('_currentDate') || 
-        changedProps.has('_sidebarOpen') || 
-        changedProps.has('_disabledCalendars') ||
-        changedProps.has('_selectedEvent') ||
-        changedProps.has('config') ||
-        changedProps.has('_strings')) {
+    if (changedProps.has('_events') ||
+      changedProps.has('_currentDate') ||
+      changedProps.has('_sidebarOpen') ||
+      changedProps.has('_disabledCalendars') ||
+      changedProps.has('_selectedEvent') ||
+      changedProps.has('config') ||
+      changedProps.has('_strings')) {
       return true;
     }
 
@@ -252,36 +252,36 @@ class CalendarGridCard extends HAControlBase {
     const firstDayOfWeek = this.config.first_day_of_week !== undefined ? this.config.first_day_of_week : 1;
 
     if (view === 'week') {
-        const startView = new Date(this._currentDate);
-        const dayOfWeek = startView.getDay();
-        const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
-        startView.setDate(startView.getDate() - diff);
-        startView.setHours(0, 0, 0, 0);
+      const startView = new Date(this._currentDate);
+      const dayOfWeek = startView.getDay();
+      const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
+      startView.setDate(startView.getDate() - diff);
+      startView.setHours(0, 0, 0, 0);
 
-        const endView = new Date(startView);
-        endView.setDate(endView.getDate() + 6);
-        endView.setHours(23, 59, 59, 999);
-        
-        return { start: startView, end: endView };
+      const endView = new Date(startView);
+      endView.setDate(endView.getDate() + 6);
+      endView.setHours(23, 59, 59, 999);
+
+      return { start: startView, end: endView };
     }
 
     if (this.config.month_start === 'today' || this.config.rolling_month) {
-        const startView = new Date(this._currentDate);
-        const dayOfWeek = startView.getDay();
-        const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
-        startView.setDate(startView.getDate() - diff);
-        startView.setHours(0, 0, 0, 0);
+      const startView = new Date(this._currentDate);
+      const dayOfWeek = startView.getDay();
+      const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
+      startView.setDate(startView.getDate() - diff);
+      startView.setHours(0, 0, 0, 0);
 
-        const endView = new Date(startView);
-        endView.setDate(endView.getDate() + 34); // 5 weeks (35 days total)
-        endView.setHours(23, 59, 59, 999);
+      const endView = new Date(startView);
+      endView.setDate(endView.getDate() + 34); // 5 weeks (35 days total)
+      endView.setHours(23, 59, 59, 999);
 
-        return { start: startView, end: endView };
+      return { start: startView, end: endView };
     }
 
     const year = this._currentDate.getFullYear();
     const month = this._currentDate.getMonth();
-    
+
     // Start of the month
     const startOfMonth = new Date(year, month, 1);
     // End of the month
@@ -290,7 +290,7 @@ class CalendarGridCard extends HAControlBase {
     // We need to include days from previous month to fill the first week row
     const startView = new Date(startOfMonth);
     const dayOfWeek = startView.getDay();
-    
+
     // Adjust to start on firstDayOfWeek:
     const diff = (dayOfWeek - firstDayOfWeek + 7) % 7;
     startView.setDate(startView.getDate() - diff);
@@ -298,13 +298,13 @@ class CalendarGridCard extends HAControlBase {
     // We need to include days from next month to fill the last week row
     const endView = new Date(endOfMonth);
     const endDayOfWeek = endView.getDay();
-    
+
     // Days to add to reach the end of the week row
     const currentColumnIndex = (endDayOfWeek - firstDayOfWeek + 7) % 7;
     const daysToAdd = 6 - currentColumnIndex;
-    
+
     endView.setDate(endView.getDate() + daysToAdd);
-    
+
     // Set times
     startView.setHours(0, 0, 0, 0);
     endView.setHours(23, 59, 59, 999);
@@ -347,7 +347,7 @@ class CalendarGridCard extends HAControlBase {
 
     const entities = (this.config.entities || (this.config.entity ? [this.config.entity] : []))
       .map(e => (typeof e === 'object' ? e.entity : e));
-      
+
     if (entities.length > 0) {
       try {
         await this.hass.callService("homeassistant", "update_entity", {
@@ -370,11 +370,11 @@ class CalendarGridCard extends HAControlBase {
   _prev() {
     const view = this.config.default_view || 'month';
     if (view === 'week') {
-        const newDate = new Date(this._currentDate);
-        newDate.setDate(newDate.getDate() - 7);
-        this._currentDate = newDate;
+      const newDate = new Date(this._currentDate);
+      newDate.setDate(newDate.getDate() - 7);
+      this._currentDate = newDate;
     } else {
-        this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() - 1, 1);
+      this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() - 1, 1);
     }
   }
 
@@ -386,11 +386,11 @@ class CalendarGridCard extends HAControlBase {
   _next() {
     const view = this.config.default_view || 'month';
     if (view === 'week') {
-        const newDate = new Date(this._currentDate);
-        newDate.setDate(newDate.getDate() + 7);
-        this._currentDate = newDate;
+      const newDate = new Date(this._currentDate);
+      newDate.setDate(newDate.getDate() + 7);
+      this._currentDate = newDate;
     } else {
-        this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() + 1, 1);
+      this._currentDate = new Date(this._currentDate.getFullYear(), this._currentDate.getMonth() + 1, 1);
     }
   }
 
@@ -414,17 +414,17 @@ class CalendarGridCard extends HAControlBase {
    */
   _getEventsForDay(dateStr, allEvents) {
     const targetDate = new Date(dateStr);
-    targetDate.setHours(0,0,0,0);
+    targetDate.setHours(0, 0, 0, 0);
     const targetEnd = new Date(targetDate);
-    targetEnd.setHours(23,59,59,999);
-    
+    targetEnd.setHours(23, 59, 59, 999);
+
     const now = new Date();
     const showFinished = this.config.show_finished_events !== false;
 
     return allEvents.filter(event => {
-        if (this._disabledCalendars.has(event.entity_id)) return false;
-        if (!showFinished && event.end < now) return false;
-        return event.start <= targetEnd && event.end > targetDate;
+      if (this._disabledCalendars.has(event.entity_id)) return false;
+      if (!showFinished && event.end < now) return false;
+      return event.start <= targetEnd && event.end > targetDate;
     });
   }
 
@@ -474,38 +474,38 @@ class CalendarGridCard extends HAControlBase {
     const { start, end } = this._getViewDateRange();
     const days = [];
     const iter = new Date(start);
-    
+
     while (iter <= end) {
-        days.push(new Date(iter));
-        iter.setDate(iter.getDate() + 1);
+      days.push(new Date(iter));
+      iter.setDate(iter.getDate() + 1);
     }
 
     const view = this.config.default_view || 'month';
     const lang = this.hass.language || 'en';
     let monthName;
     if (view === 'week') {
-        const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
-        const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
-        monthName = this._localize('cgc.card.week_of', { start: startDateStr, end: endDateStr });
+      const startDateStr = start.toLocaleDateString(lang, { month: 'short', day: 'numeric' });
+      const endDateStr = end.toLocaleDateString(lang, { month: 'short', day: 'numeric', year: 'numeric' });
+      monthName = this._localize('cgc.card.week_of', { start: startDateStr, end: endDateStr });
     } else if (view === 'month' && (this.config.month_start === 'today' || this.config.rolling_month)) {
-        const startMonthName = start.toLocaleString(lang, { month: 'short' });
-        const endMonthName = end.toLocaleString(lang, { month: 'short', year: 'numeric' });
-        monthName = `${startMonthName} - ${endMonthName}`;
+      const startMonthName = start.toLocaleString(lang, { month: 'short' });
+      const endMonthName = end.toLocaleString(lang, { month: 'short', year: 'numeric' });
+      monthName = `${startMonthName} - ${endMonthName}`;
     } else {
-        monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
+      monthName = this._currentDate.toLocaleString(lang, { month: 'long', year: 'numeric' });
     }
-    
+
     const weekDays = this._getWeekDays();
 
     const rowCount = Math.ceil(days.length / 7);
     const sidebarPos = this.config.sidebar_position || 'right';
     const orientation = this.config.orientation || 'horizontal';
-    
+
     let gridStyle = '';
     if (orientation === 'vertical') {
-        gridStyle = `grid-template-columns: min-content repeat(${rowCount}, 1fr); grid-template-rows: repeat(7, 1fr); grid-auto-flow: column;`;
+      gridStyle = `grid-template-columns: min-content repeat(${rowCount}, 1fr); grid-template-rows: repeat(7, 1fr); grid-auto-flow: column;`;
     } else {
-        gridStyle = `grid-template-rows: min-content repeat(${rowCount}, 1fr); grid-template-columns: repeat(7, 1fr);`;
+      gridStyle = `grid-template-rows: min-content repeat(${rowCount}, 1fr); grid-template-columns: repeat(7, 1fr);`;
     }
 
     // Pre-build a date→events map once per render (avoids O(days×events) scanning in the cell loop)
@@ -568,44 +568,44 @@ class CalendarGridCard extends HAControlBase {
             ${weekDays.map(d => html`<div class="day-header">${d}</div>`)}
             
             ${days.map(day => {
-                const dateStr = day.toISOString().split('T')[0];
-                const isToday = day.getDate() === now.getDate() &&
-                                day.getMonth() === now.getMonth() &&
-                                day.getFullYear() === now.getFullYear();
-                const isCurrentMonth = day.getMonth() === this._currentDate.getMonth();
-                const dayEvents = eventsByDay.get(dateStr) || [];
+      const dateStr = day.toISOString().split('T')[0];
+      const isToday = day.getDate() === now.getDate() &&
+        day.getMonth() === now.getMonth() &&
+        day.getFullYear() === now.getFullYear();
+      const isCurrentMonth = day.getMonth() === this._currentDate.getMonth();
+      const dayEvents = eventsByDay.get(dateStr) || [];
 
-                const cellStyle = [];
-                if (isToday) {
-                    if (this.config.today_background) cellStyle.push(`background: ${this.config.today_background}`);
-                    if (this.config.today_border) {
-                        const borderVal = this.config.today_border;
-                        if (/(solid|dashed|dotted|double|groove|ridge|inset|outset)/i.test(borderVal)) {
-                            cellStyle.push(`border: ${borderVal}`);
-                        } else {
-                            cellStyle.push(`border-color: ${borderVal}`);
-                        }
-                    }
-                }
+      const cellStyle = [];
+      if (isToday) {
+        if (this.config.today_background) cellStyle.push(`background: ${this.config.today_background}`);
+        if (this.config.today_border) {
+          const borderVal = this.config.today_border;
+          if (/(solid|dashed|dotted|double|groove|ridge|inset|outset)/i.test(borderVal)) {
+            cellStyle.push(`border: ${borderVal}`);
+          } else {
+            cellStyle.push(`border-color: ${borderVal}`);
+          }
+        }
+      }
 
-                return html`
+      return html`
                     <div class="day-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" 
                          style="${cellStyle.join(';')}"
                          @click=${() => this._onDayClick(day)}>
                         <div class="day-number">${day.getDate()}</div>
                         <div class="events-container">
                             ${dayEvents.map(event => {
-                                const entityConf = this.config.entities.find(e => 
-                                    (typeof e === 'object' ? e.entity : e) === event.entity_id
-                                );
-                                const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : undefined;
-                                const backgroundColor = (typeof entityConf === 'object' && entityConf.backgroundColor) ? entityConf.backgroundColor : undefined;
-                                const iconColor = (typeof entityConf === 'object' && entityConf.iconColor) ? entityConf.iconColor : undefined;
-                                const activeColor = (typeof entityConf === 'object' && entityConf.activeColor) ? entityConf.activeColor : undefined;
-                                const activeBackgroundColor = (typeof entityConf === 'object' && entityConf.activeBackgroundColor) ? entityConf.activeBackgroundColor : undefined;
-                                const activeIconAnimation = (typeof entityConf === 'object' && entityConf.activeIconAnimation) ? entityConf.activeIconAnimation : undefined;
+        const entityConf = this.config.entities.find(e =>
+          (typeof e === 'object' ? e.entity : e) === event.entity_id
+        );
+        const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : undefined;
+        const backgroundColor = (typeof entityConf === 'object' && entityConf.backgroundColor) ? entityConf.backgroundColor : undefined;
+        const iconColor = (typeof entityConf === 'object' && entityConf.iconColor) ? entityConf.iconColor : undefined;
+        const activeColor = (typeof entityConf === 'object' && entityConf.activeColor) ? entityConf.activeColor : undefined;
+        const activeBackgroundColor = (typeof entityConf === 'object' && entityConf.activeBackgroundColor) ? entityConf.activeBackgroundColor : undefined;
+        const activeIconAnimation = (typeof entityConf === 'object' && entityConf.activeIconAnimation) ? entityConf.activeIconAnimation : undefined;
 
-                                return html`
+        return html`
                                 <calendar-grid-card-event 
                                     .hass=${this.hass}
                                     .event=${event} 
@@ -618,38 +618,38 @@ class CalendarGridCard extends HAControlBase {
                                     .backgroundColor=${backgroundColor}
                                     @event-click=${this._onEventClick}
                                 ></calendar-grid-card-event>`
-                            })}
+      })}
                         </div>
                     </div>
                 `;
-            })}
+    })}
           </div>
           ${this._sidebarOpen && sidebarPos !== 'hidden' ? html`
             <div class="sidebar">
                 ${this.config.entities.map(entityConf => {
-                    const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
-                    const entityState = this.hass.states[entityId];
-                    const friendlyName = (typeof entityConf === "object" && entityConf.name) ? entityConf.name : (entityState ? entityState.attributes.friendly_name : entityId);
-                    const isChecked = !this._disabledCalendars.has(entityId);
-                    
-                    const color = typeof entityConf === "object" ? entityConf.color : undefined;
-                    const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : undefined;
+      const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+      const entityState = this.hass.states[entityId];
+      const friendlyName = (typeof entityConf === "object" && entityConf.name) ? entityConf.name : (entityState ? entityState.attributes.friendly_name : entityId);
+      const isChecked = !this._disabledCalendars.has(entityId);
 
-                    const style = [];
-                    if (isChecked) {
-                        if (color) style.push(`color: ${color}`);
-                        if (backgroundColor) {
-                            style.push(`background-color: ${backgroundColor}`);
-                            style.push(`border-color: ${backgroundColor}`);
-                        }
-                    }
-                    
-                    return html`
+      const color = typeof entityConf === "object" ? entityConf.color : undefined;
+      const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : undefined;
+
+      const style = [];
+      if (isChecked) {
+        if (color) style.push(`color: ${color}`);
+        if (backgroundColor) {
+          style.push(`background-color: ${backgroundColor}`);
+          style.push(`border-color: ${backgroundColor}`);
+        }
+      }
+
+      return html`
                         <div class="calendar-toggle ${isChecked ? 'active' : ''}" style="${style.join(';')}" @click=${() => this._toggleCalendar(entityId, !isChecked)}>
                             <span class="calendar-name">${friendlyName}</span>
                         </div>
                     `;
-                })}
+    })}
             </div>
           ` : ''}
           ${this._fetching ? html`
@@ -682,9 +682,9 @@ class CalendarGridCard extends HAControlBase {
   _toggleCalendar(entityId, checked) {
     const newDisabled = new Set(this._disabledCalendars);
     if (checked) {
-        newDisabled.delete(entityId);
+      newDisabled.delete(entityId);
     } else {
-        newDisabled.add(entityId);
+      newDisabled.add(entityId);
     }
     this._disabledCalendars = newDisabled;
     this._saveDisabledCalendars();
@@ -711,14 +711,14 @@ class CalendarGridCard extends HAControlBase {
   _loadDisabledCalendars() {
     const key = this._getStorageKey();
     if (key) {
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            try {
-                return new Set(JSON.parse(stored));
-            } catch (e) {
-                console.error("Error loading disabled calendars", e);
-            }
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          return new Set(JSON.parse(stored));
+        } catch (e) {
+          console.error("Error loading disabled calendars", e);
         }
+      }
     }
     return new Set();
   }
@@ -731,7 +731,7 @@ class CalendarGridCard extends HAControlBase {
   _saveDisabledCalendars() {
     const key = this._getStorageKey();
     if (key) {
-        localStorage.setItem(key, JSON.stringify(Array.from(this._disabledCalendars)));
+      localStorage.setItem(key, JSON.stringify(Array.from(this._disabledCalendars)));
     }
   }
 
@@ -750,12 +750,12 @@ class CalendarGridCard extends HAControlBase {
   _onDayClick(day) {
     const action = this.config.day_tap_action || { action: 'popup' };
     if (action.action === 'none') return;
-    
+
     if (action.action === 'popup') {
       const dateStr = day.toISOString().split('T')[0];
       const locale = this.hass.locale || { language: 'en' };
       const dateLabel = day.toLocaleDateString(locale.language, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      
+
       const popupConfig = this.config.popup_config || {};
 
       this.dispatchEvent(new CustomEvent("show-grid-popup", {
@@ -815,7 +815,7 @@ class CalendarGridCard extends HAControlBase {
   }
 
   _onEventClick(e) {
-      this._selectedEvent = e.detail.event;
+    this._selectedEvent = e.detail.event;
   }
 
   /**
@@ -824,7 +824,7 @@ class CalendarGridCard extends HAControlBase {
    * @private
    */
   _closeDialog() {
-      this._selectedEvent = null;
+    this._selectedEvent = null;
   }
 
   /**
@@ -837,14 +837,14 @@ class CalendarGridCard extends HAControlBase {
     if (!this._selectedEvent) return "";
 
     const event = this._selectedEvent;
-    
+
     // Find calendar entity configuration to get matching color context
-    const entityConf = this.config.entities.find(e => 
+    const entityConf = this.config.entities.find(e =>
       (typeof e === 'object' ? e.entity : e) === event.entity_id
     );
     const color = (typeof entityConf === 'object' && entityConf.color) ? entityConf.color : 'var(--primary-color)';
-    const calendarName = (typeof entityConf === 'object' && entityConf.name) 
-      ? entityConf.name 
+    const calendarName = (typeof entityConf === 'object' && entityConf.name)
+      ? entityConf.name
       : (this.hass.states[event.entity_id]?.attributes?.friendly_name || event.entity_id);
 
     // Get active user language / locale
@@ -892,14 +892,14 @@ class CalendarGridCard extends HAControlBase {
    */
   _renderFeature(feature, event, lang) {
     const origin = event.originEvent;
-    
+
     switch (feature.type) {
       case "time": {
         // Format start/end time and date nicely
         const isAllDay = event.isAllDay;
         const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const optionsTime = { hour: '2-digit', minute: '2-digit' };
-        
+
         let timeDisplay = "";
         if (isAllDay) {
           const startStr = event.start.toLocaleDateString(lang, optionsDate);
@@ -907,7 +907,7 @@ class CalendarGridCard extends HAControlBase {
           // Note: all-day end date is exclusive, so we subtract 1 day to show inclusive dates to users
           const endAdjusted = new Date(event.end);
           endAdjusted.setDate(endAdjusted.getDate() - 1);
-          
+
           if (event.start.toDateString() === endAdjusted.toDateString()) {
             timeDisplay = startStr;
           } else {
@@ -919,7 +919,7 @@ class CalendarGridCard extends HAControlBase {
           const startStr = event.start.toLocaleDateString(lang, optionsDate);
           const startTimeStr = event.start.toLocaleTimeString(lang, optionsTime);
           const endTimeStr = event.end.toLocaleTimeString(lang, optionsTime);
-          
+
           if (event.start.toDateString() === event.end.toDateString()) {
             timeDisplay = `${startStr}, ${startTimeStr} - ${endTimeStr}`;
           } else {
@@ -935,11 +935,11 @@ class CalendarGridCard extends HAControlBase {
           </div>
         `;
       }
-      
+
       case "location": {
         const location = origin.location;
         if (!location) return "";
-        
+
         const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(location)}`;
         return html`
           <div class="dialog-feature-row feature-location">
@@ -973,22 +973,22 @@ class CalendarGridCard extends HAControlBase {
             <div class="feature-content">
               <div class="attendees-list">
                 ${attendees.map(a => {
-                  const name = a.displayName || a.name || a.email;
-                  const role = a.responseStatus || a.status || "";
-                  let statusClass = "status-unknown";
-                  let statusIcon = "mdi:help-circle-outline";
-                  if (role === "accepted") {
-                    statusClass = "status-accepted";
-                    statusIcon = "mdi:check-circle-outline";
-                  } else if (role === "declined") {
-                    statusClass = "status-declined";
-                    statusIcon = "mdi:close-circle-outline";
-                  } else if (role === "tentative") {
-                    statusClass = "status-tentative";
-                    statusIcon = "mdi:minus-circle-outline";
-                  }
-                  
-                  return html`
+          const name = a.displayName || a.name || a.email;
+          const role = a.responseStatus || a.status || "";
+          let statusClass = "status-unknown";
+          let statusIcon = "mdi:help-circle-outline";
+          if (role === "accepted") {
+            statusClass = "status-accepted";
+            statusIcon = "mdi:check-circle-outline";
+          } else if (role === "declined") {
+            statusClass = "status-declined";
+            statusIcon = "mdi:close-circle-outline";
+          } else if (role === "tentative") {
+            statusClass = "status-tentative";
+            statusIcon = "mdi:minus-circle-outline";
+          }
+
+          return html`
                     <div class="attendee-item">
                       <span class="attendee-name">${name}</span>
                       ${role ? html`
@@ -998,7 +998,7 @@ class CalendarGridCard extends HAControlBase {
                       ` : ''}
                     </div>
                   `;
-                })}
+        })}
               </div>
             </div>
           </div>

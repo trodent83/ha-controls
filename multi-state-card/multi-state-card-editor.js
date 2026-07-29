@@ -21,8 +21,8 @@ class MultiStateCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -100,11 +100,11 @@ class MultiStateCardEditor extends HAControlBase {
   _moveEntity(index, direction) {
     const entities = [...(this._config.entities || [])];
     if (index + direction < 0 || index + direction >= entities.length) return;
-    
+
     const temp = entities[index];
     entities[index] = entities[index + direction];
     entities[index + direction] = temp;
-    
+
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -128,10 +128,10 @@ class MultiStateCardEditor extends HAControlBase {
    * @private
    */
   _fireConfigChanged() {
-    this.dispatchEvent(new CustomEvent("config-changed", { 
+    this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
-      composed: true 
+      composed: true
     }));
   }
 
@@ -231,16 +231,16 @@ class MultiStateCardEditor extends HAControlBase {
   _globalSchema() {
     return [
       {
-        name: "layout", 
-        label: this._localize('layout'), 
-        selector: { 
-          select: { 
+        name: "layout",
+        label: this._localize('layout'),
+        selector: {
+          select: {
             options: [
               { value: "row", label: this._localize('horizontal') },
               { value: "column", label: this._localize('vertical') }
-            ] 
-          } 
-        } 
+            ]
+          }
+        }
       },
     ];
   }
@@ -264,7 +264,7 @@ class MultiStateCardEditor extends HAControlBase {
     };
     if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
     addIfDiff("show_unavailable", false);
-    
+
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
         const e = {};
@@ -277,7 +277,7 @@ class MultiStateCardEditor extends HAControlBase {
         return e;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -339,23 +339,23 @@ class MultiStateCardEditor extends HAControlBase {
         <div class="card-config" style="margin-top: 0;">
           <div class="entities-container">
             ${(this._config.entities || []).map((ent, idx) => {
-              const entityLabel = ent.name || ent.entity || `Item ${idx + 1}`;
+      const entityLabel = ent.name || ent.entity || `Item ${idx + 1}`;
 
-              const combinedData = {
-                entity: ent.entity || "",
-                disabled_expression: ent.disabled_expression || "",
-                tap_action: ent.tap_action || { action: "none" },
-                hold_action: ent.hold_action || { action: "none" }
-              };
+      const combinedData = {
+        entity: ent.entity || "",
+        disabled_expression: ent.disabled_expression || "",
+        tap_action: ent.tap_action || { action: "none" },
+        hold_action: ent.hold_action || { action: "none" }
+      };
 
-              const combinedSchema = [
-                { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
-                { name: "disabled_expression", label: this._localize('disabled_expression') || "Disabled Expression", selector: { text: {} } },
-                { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
-                { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
-              ];
+      const combinedSchema = [
+        { name: "entity", label: this._localize('entity_override'), selector: { entity: {} } },
+        { name: "disabled_expression", label: this._localize('disabled_expression') || "Disabled Expression", selector: { text: {} } },
+        { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
+        { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
+      ];
 
-              return html`
+      return html`
                 <ha-expansion-panel>
                     <div slot="header" class="panel-header">
                       <div class="panel-title">${entityLabel}</div>
@@ -382,20 +382,20 @@ class MultiStateCardEditor extends HAControlBase {
                         .schema=${combinedSchema}
                         .computeLabel=${(schema) => schema.label || schema.name}
                         @value-changed=${(e) => {
-                          const ents = [...this._config.entities];
-                          const newValue = { ...e.detail.value };
-                          
-                          for (const key in newValue) {
-                            if (newValue[key] === "") {
-                              delete newValue[key];
-                              delete ents[idx][key];
-                            }
-                          }
+          const ents = [...this._config.entities];
+          const newValue = { ...e.detail.value };
 
-                          ents[idx] = { ...ents[idx], ...newValue };
-                          this._config = { ...this._config, entities: ents };
-                          this._fireConfigChanged();
-                        }}
+          for (const key in newValue) {
+            if (newValue[key] === "") {
+              delete newValue[key];
+              delete ents[idx][key];
+            }
+          }
+
+          ents[idx] = { ...ents[idx], ...newValue };
+          this._config = { ...this._config, entities: ents };
+          this._fireConfigChanged();
+        }}
                       ></ha-form>
 
                       <div class="features-section">
@@ -413,9 +413,9 @@ class MultiStateCardEditor extends HAControlBase {
                                 .hass=${this.hass}
                                 .config=${feature}
                                 @config-changed=${(e) => {
-                                  e.stopPropagation();
-                                  this._updateFeature(idx, fIdx, e.detail.config);
-                                }}
+            e.stopPropagation();
+            this._updateFeature(idx, fIdx, e.detail.config);
+          }}
                               ></feature-renderer-editor-card>
                             </div>
                           `)}
@@ -432,10 +432,10 @@ class MultiStateCardEditor extends HAControlBase {
                     </div>
                 </ha-expansion-panel>
                 ${idx < (this._config.entities || []).length - 1
-                  ? html`<div class="entity-separator"></div>`
-                  : ''}
+          ? html`<div class="entity-separator"></div>`
+          : ''}
               `;
-            })}
+    })}
           </div>
 
           <div class="add-button-container">

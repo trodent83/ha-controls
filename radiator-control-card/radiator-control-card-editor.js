@@ -123,7 +123,7 @@ class RadiatorControlCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
-    
+
     if (this._config.name !== undefined) cleaned.name = this._config.name;
     if (this._config.climate_entity !== undefined) cleaned.climate_entity = this._config.climate_entity;
     if (this._config.sensor_entity !== undefined) cleaned.sensor_entity = this._config.sensor_entity;

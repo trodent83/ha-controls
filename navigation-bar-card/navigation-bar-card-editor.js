@@ -122,11 +122,11 @@ class NavigationBarCardEditor extends HAControlBase {
   _moveItem(index, direction) {
     const items = [...(this._config.items || [])];
     if (index + direction < 0 || index + direction >= items.length) return;
-    
+
     const temp = items[index];
     items[index] = items[index + direction];
     items[index + direction] = temp;
-    
+
     this._config = { ...this._config, items };
     this._fireConfigChanged();
   }
@@ -239,7 +239,7 @@ class NavigationBarCardEditor extends HAControlBase {
     const cleaned = {
       type: this._config.type
     };
-    
+
     if (this._config.items && Array.isArray(this._config.items)) {
       cleaned.items = this._config.items.map(item => {
         const i = {};
@@ -252,7 +252,7 @@ class NavigationBarCardEditor extends HAControlBase {
         if (item.max_days !== undefined) i.max_days = item.max_days;
         if (item.show_completed !== undefined) i.show_completed = item.show_completed;
         if (item.show_no_due_date !== undefined) i.show_no_due_date = item.show_no_due_date;
-        
+
         if (item.filters && Array.isArray(item.filters)) {
           i.filters = item.filters.map(f => {
             const fi = {};
@@ -261,7 +261,7 @@ class NavigationBarCardEditor extends HAControlBase {
             return fi;
           });
         }
-        
+
         if (item.thresholds && Array.isArray(item.thresholds)) {
           i.thresholds = item.thresholds.map(t => {
             const th = {};
@@ -276,7 +276,7 @@ class NavigationBarCardEditor extends HAControlBase {
         return i;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -329,43 +329,43 @@ class NavigationBarCardEditor extends HAControlBase {
         <h3>${this._localize('navigation_items') || 'Navigation Items'}</h3>
         
         ${items.map((item, idx) => {
-          const itemSchema = [
-            {
-              name: "",
-              type: "grid",
-              schema: [
-                { name: "content", label: this._localize('label') || 'Label Text', selector: { text: {} } },
-                { name: "icon", label: this._localize('icon') || 'Icon', selector: { icon: {} } }
-              ]
-            },
-            { name: "navigation_path", label: this._localize('navigation_path') || 'Navigation Path', selector: { text: {} } },
-            {
-              name: "",
-              type: "grid",
-              schema: [
-                { name: "entity", label: this._localize('entity') || 'Watch Entity', selector: { entity: {} } },
-                { name: "color", label: this._localize('color') || 'Default Color', selector: { text: {} } }
-              ]
-            },
-            {
-              name: "",
-              type: "grid",
-              schema: [
-                { name: "show_counter", label: this._localize('show_counter_badge') || 'Show Counter Badge', selector: { boolean: {} } },
-                { name: "show_completed", label: this._localize('show_completed') || 'Show Completed Tasks', selector: { boolean: {} } }
-              ]
-            },
-            {
-              name: "",
-              type: "grid",
-              schema: [
-                { name: "max_days", label: this._localize('max_days') || 'Max Days (Offset Limit)', selector: { number: { min: 1, max: 30, mode: "box" } } },
-                { name: "show_no_due_date", label: this._localize('show_no_due_date') || 'Show Tasks Without Due Date', selector: { boolean: {} } }
-              ]
-            }
-          ];
+      const itemSchema = [
+        {
+          name: "",
+          type: "grid",
+          schema: [
+            { name: "content", label: this._localize('label') || 'Label Text', selector: { text: {} } },
+            { name: "icon", label: this._localize('icon') || 'Icon', selector: { icon: {} } }
+          ]
+        },
+        { name: "navigation_path", label: this._localize('navigation_path') || 'Navigation Path', selector: { text: {} } },
+        {
+          name: "",
+          type: "grid",
+          schema: [
+            { name: "entity", label: this._localize('entity') || 'Watch Entity', selector: { entity: {} } },
+            { name: "color", label: this._localize('color') || 'Default Color', selector: { text: {} } }
+          ]
+        },
+        {
+          name: "",
+          type: "grid",
+          schema: [
+            { name: "show_counter", label: this._localize('show_counter_badge') || 'Show Counter Badge', selector: { boolean: {} } },
+            { name: "show_completed", label: this._localize('show_completed') || 'Show Completed Tasks', selector: { boolean: {} } }
+          ]
+        },
+        {
+          name: "",
+          type: "grid",
+          schema: [
+            { name: "max_days", label: this._localize('max_days') || 'Max Days (Offset Limit)', selector: { number: { min: 1, max: 30, mode: "box" } } },
+            { name: "show_no_due_date", label: this._localize('show_no_due_date') || 'Show Tasks Without Due Date', selector: { boolean: {} } }
+          ]
+        }
+      ];
 
-          return html`
+      return html`
             <ha-expansion-panel outlined style="margin-bottom: 12px; display: block;">
               <div slot="header" class="item-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <span>${item.content || `Item ${idx + 1}`}</span>
@@ -429,39 +429,39 @@ class NavigationBarCardEditor extends HAControlBase {
                   <h4 style="margin-bottom: 8px;">${this._localize('priority_thresholds') || 'Priority Thresholds'}</h4>
                   
                   ${(item.thresholds || []).map((thresh, tIdx) => {
-                    const thresholdSchema = [
-                      {
-                        name: "",
-                        type: "grid",
-                        schema: [
-                          { name: "value", label: this._localize('value') || 'Value to Match', selector: { text: {} } },
-                          { name: "entity", label: this._localize('entity_override') || 'Entity Override', selector: { entity: {} } }
-                        ]
-                      },
-                      {
-                        name: "",
-                        type: "grid",
-                        schema: [
-                          { name: "color", label: this._localize('color') || 'Color Override', selector: { text: {} } },
-                          { name: "icon", label: this._localize('icon') || 'Icon Override', selector: { icon: {} } }
-                        ]
-                      },
-                      {
-                        name: "animation",
-                        label: this._localize('animation') || 'Animation Override',
-                        selector: {
-                          select: {
-                            options: [
-                              { value: "", label: this._localize('none') || 'None' },
-                              { value: "blink", label: this._localize('blink') || 'Blink' },
-                              { value: "pulse", label: this._localize('pulse') || 'Pulse' }
-                            ]
-                          }
-                        }
-                      }
-                    ];
+        const thresholdSchema = [
+          {
+            name: "",
+            type: "grid",
+            schema: [
+              { name: "value", label: this._localize('value') || 'Value to Match', selector: { text: {} } },
+              { name: "entity", label: this._localize('entity_override') || 'Entity Override', selector: { entity: {} } }
+            ]
+          },
+          {
+            name: "",
+            type: "grid",
+            schema: [
+              { name: "color", label: this._localize('color') || 'Color Override', selector: { text: {} } },
+              { name: "icon", label: this._localize('icon') || 'Icon Override', selector: { icon: {} } }
+            ]
+          },
+          {
+            name: "animation",
+            label: this._localize('animation') || 'Animation Override',
+            selector: {
+              select: {
+                options: [
+                  { value: "", label: this._localize('none') || 'None' },
+                  { value: "blink", label: this._localize('blink') || 'Blink' },
+                  { value: "pulse", label: this._localize('pulse') || 'Pulse' }
+                ]
+              }
+            }
+          }
+        ];
 
-                    return html`
+        return html`
                       <div class="threshold-block">
                         <div class="threshold-header">
                           <span style="font-weight: 500;">Rule ${tIdx + 1} ${thresh.value ? `(${thresh.value})` : ""}</span>
@@ -479,7 +479,7 @@ class NavigationBarCardEditor extends HAControlBase {
                         ></ha-form>
                       </div>
                     `;
-                  })}
+      })}
 
                   <ha-button @click=${() => this._addThreshold(idx)} style="margin-top: 8px;">
                     <ha-icon icon="mdi:plus" slot="icon"></ha-icon>
@@ -489,7 +489,7 @@ class NavigationBarCardEditor extends HAControlBase {
               </div>
             </ha-expansion-panel>
           `;
-        })}
+    })}
         
         <ha-button raised @click=${this._addItem} style="margin-top: 8px;">
           <ha-icon icon="mdi:plus" slot="icon"></ha-icon>

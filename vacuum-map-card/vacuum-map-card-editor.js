@@ -22,8 +22,8 @@ class VacuumMapCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String },
       _expandedRoomId: { type: String },
@@ -107,11 +107,11 @@ class VacuumMapCardEditor extends HAControlBase {
       { name: "currently_cleaning_entity", label: this._localize('currently_cleaning'), selector: { entity: {} } },
       { name: "readonly_entity", label: this._localize('lock_entity'), selector: { entity: { domain: "binary_sensor" } } },
       { name: "mark_active_room", label: this._localize('display_active_room'), selector: { entity: { domain: "binary_sensor" } } },
-      { 
-        name: "mark_animation", 
-        label: this._localize('animation_selected_room'), 
-        selector: { 
-          select: { 
+      {
+        name: "mark_animation",
+        label: this._localize('animation_selected_room'),
+        selector: {
+          select: {
             options: [
               { value: "none", label: this._localize('none_static') },
               { value: "spinning", label: this._localize('spinning') },
@@ -123,38 +123,38 @@ class VacuumMapCardEditor extends HAControlBase {
               { value: "spin-slow", label: this._localize('slow_spin') }
             ],
             mode: "list"
-          } 
-        } 
+          }
+        }
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "mark_animation_background", label: this._localize('animation_bg_color'), selector: { text: {} } },
           { name: "mark_animation_foreground", label: this._localize('animation_fg_color'), selector: { text: {} } }
-        ] 
+        ]
       },
-      { 
-        name: "map_height", 
-        label: this._localize('map_height'), 
-        selector: { number: { min: 150, max: 600, step: 10, mode: "slider" } } 
+      {
+        name: "map_height",
+        label: this._localize('map_height'),
+        selector: { number: { min: 150, max: 600, step: 10, mode: "slider" } }
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } },
           { name: "show_names", label: this._localize('show_names'), selector: { boolean: {} } },
           { name: "sort_by_sequence", label: this._localize('sort_by_sequence'), selector: { boolean: {} } }
-        ] 
+        ]
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "selection_color", label: this._localize('active_color'), selector: { text: {} } },
           { name: "selection_foreground", label: this._localize('active_text_color'), selector: { text: {} } }
-        ] 
+        ]
       }
     ];
   }
@@ -185,41 +185,41 @@ class VacuumMapCardEditor extends HAControlBase {
           schema: [
             { name: "label", label: this._localize('custom_name'), selector: { text: {} } },
             { name: "icon", label: this._localize('custom_icon'), selector: { icon: {} } },
-            { 
-              name: "", 
-              type: "grid", 
+            {
+              name: "",
+              type: "grid",
               schema: [
                 { name: "x", label: this._localize('coord_x'), selector: { number: { min: 0, max: 100, mode: "box" } } },
                 { name: "y", label: this._localize('coord_y'), selector: { number: { min: 0, max: 100, mode: "box" } } }
-              ] 
+              ]
             },
-            { 
-              name: "", 
-              type: "grid", 
+            {
+              name: "",
+              type: "grid",
               schema: [
                 { name: "w", label: this._localize('width'), selector: { number: { min: 1, max: 100, mode: "box" } } },
                 { name: "h", label: this._localize('height'), selector: { number: { min: 1, max: 100, mode: "box" } } }
-              ] 
+              ]
             },
             { name: "color", label: this._localize('color'), selector: { text: {} } },
-            { 
-              name: "animation", 
-              label: this._localize('animation_class'), 
-              selector: { 
-                select: { 
+            {
+              name: "animation",
+              label: this._localize('animation_class'),
+              selector: {
+                select: {
                   options: [
-                      { value: "none", label: this._localize('none_static') },
-                      { value: "spinning", label: this._localize('spinning') },
-                      { value: "pulsing", label: this._localize('pulsing') },
-                      { value: "flash", label: this._localize('flashing') },
-                      { value: "bounce", label: this._localize('bouncing') },
-                      { value: "shake", label: this._localize('shaking') },
-                      { value: "float", label: this._localize('floating') },
-                      { value: "spin-slow", label: this._localize('slow_spin') }
-                    ],
+                    { value: "none", label: this._localize('none_static') },
+                    { value: "spinning", label: this._localize('spinning') },
+                    { value: "pulsing", label: this._localize('pulsing') },
+                    { value: "flash", label: this._localize('flashing') },
+                    { value: "bounce", label: this._localize('bouncing') },
+                    { value: "shake", label: this._localize('shaking') },
+                    { value: "float", label: this._localize('floating') },
+                    { value: "spin-slow", label: this._localize('slow_spin') }
+                  ],
                   mode: "list"
-                } 
-              } 
+                }
+              }
             },
             { name: "disabled", label: this._localize('disable_room'), selector: { boolean: {} } }
           ]
@@ -273,7 +273,7 @@ class VacuumMapCardEditor extends HAControlBase {
     addIfDiff("sort_by_sequence", true);
     if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
     if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;
-    
+
     if (this._config.rooms && typeof this._config.rooms === 'object') {
       cleaned.rooms = {};
       for (const [roomId, roomConf] of Object.entries(this._config.rooms)) {
@@ -287,13 +287,13 @@ class VacuumMapCardEditor extends HAControlBase {
         if (roomConf.color !== undefined) r.color = roomConf.color;
         if (roomConf.animation !== undefined) r.animation = roomConf.animation;
         if (roomConf.disabled !== undefined) r.disabled = roomConf.disabled;
-        
+
         if (Object.keys(r).length > 0) {
           cleaned.rooms[roomId] = r;
         }
       }
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -314,9 +314,9 @@ class VacuumMapCardEditor extends HAControlBase {
   _handleRoomLayoutChanged(ev) {
     const { roomId, x, y, w, h, deleted } = ev.detail;
     if (!this._config) return;
-    
+
     const rooms = { ...(this._config.rooms || {}) };
-    
+
     if (deleted) {
       delete rooms[roomId];
     } else {
@@ -325,7 +325,7 @@ class VacuumMapCardEditor extends HAControlBase {
       const newY = (y !== undefined && !isNaN(y)) ? y : current.y;
       const newW = (w !== undefined && !isNaN(w)) ? w : current.w;
       const newH = (h !== undefined && !isNaN(h)) ? h : current.h;
-      
+
       let shapes = current.shapes;
       if (Array.isArray(shapes) && shapes.length > 0 && current.x !== undefined && current.y !== undefined) {
         const deltaX = newX - current.x;
@@ -340,7 +340,7 @@ class VacuumMapCardEditor extends HAControlBase {
           }));
         }
       }
-      
+
       rooms[roomId] = {
         ...current,
         ...(newX !== undefined ? { x: newX } : {}),
@@ -350,12 +350,12 @@ class VacuumMapCardEditor extends HAControlBase {
         ...(shapes !== undefined ? { shapes: shapes } : {})
       };
     }
-    
+
     this._config = {
       ...this._config,
       rooms
     };
-    
+
     this._fireConfigChanged();
   }
 
@@ -373,18 +373,18 @@ class VacuumMapCardEditor extends HAControlBase {
       alert("Please configure a Vacuum Entity first.");
       return;
     }
-    
+
     const parts = vacuumId.split('.');
     if (parts.length < 2) return;
     const vacuumName = parts[1];
-    
+
     // Find all matching camera entities (e.g. current map camera and saved maps cameras)
     const cameraPrefix = `camera.${vacuumName}_map`;
     const cameraEntities = Object.keys(this.hass.states).filter(id => id.startsWith(cameraPrefix));
-    
+
     let cameraRooms = null;
     let selectedCameraId = '';
-    
+
     for (const camId of cameraEntities) {
       const camState = this.hass.states[camId];
       if (camState && camState.attributes.rooms && Object.keys(camState.attributes.rooms).length > 0) {
@@ -393,7 +393,7 @@ class VacuumMapCardEditor extends HAControlBase {
         break;
       }
     }
-    
+
     if (!cameraRooms) {
       alert(`Could not find any map camera entity starting with "${cameraPrefix}" containing room coordinates in Home Assistant. Please make sure map data is loaded.`);
       return;
@@ -403,12 +403,12 @@ class VacuumMapCardEditor extends HAControlBase {
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
-    
+
     const roomCoordinates = [];
-    
+
     for (const [id, room] of Object.entries(cameraRooms)) {
       let rects = [];
-      
+
       // Try to parse room boundary coordinates from outline points array (highest accuracy)
       if (room.outline && Array.isArray(room.outline) && room.outline.length > 0) {
         const poly = room.outline.filter(p => Array.isArray(p) && p.length >= 2);
@@ -416,14 +416,14 @@ class VacuumMapCardEditor extends HAControlBase {
           // Get unique X and Y coordinates to form grid segments
           const xs = Array.from(new Set(poly.map(p => p[0]))).sort((a, b) => a - b);
           const ys = Array.from(new Set(poly.map(p => p[1]))).sort((a, b) => a - b);
-          
+
           const isPointInPolygon = (px, py, polygon) => {
             let inside = false;
             for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
               const xi = polygon[i][0], yi = polygon[i][1];
               const xj = polygon[j][0], yj = polygon[j][1];
               const intersect = ((yi > py) !== (yj > py))
-                  && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+                && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
               if (intersect) inside = !inside;
             }
             return inside;
@@ -446,14 +446,14 @@ class VacuumMapCardEditor extends HAControlBase {
               }
             }
           }
-          
+
           if (cells.length > 0) {
             cells.sort((a, b) => b.area - a.area);
             rects = cells;
           }
         }
       }
-      
+
       // Fallback to direct x0, y0, x1, y1 properties if outline parsing is unavailable
       if (rects.length === 0) {
         const x0 = room.x0 !== undefined ? room.x0 : room.x;
@@ -461,20 +461,20 @@ class VacuumMapCardEditor extends HAControlBase {
         const x1 = room.x1 !== undefined ? room.x1 : room.x;
         const y1 = room.y1 !== undefined ? room.y1 : room.y;
         if (x0 !== undefined && y0 !== undefined && x1 !== undefined && y1 !== undefined &&
-            !isNaN(x0) && !isNaN(y0) && !isNaN(x1) && !isNaN(y1)) {
+          !isNaN(x0) && !isNaN(y0) && !isNaN(x1) && !isNaN(y1)) {
           rects.push({ x0, y0, x1, y1 });
         }
       }
-      
+
       if (rects.length === 0) continue;
-      
+
       rects.forEach(r => {
         minX = Math.min(minX, r.x0, r.x1);
         maxX = Math.max(maxX, r.x0, r.x1);
         minY = Math.min(minY, r.y0, r.y1);
         maxY = Math.max(maxY, r.y0, r.y1);
       });
-      
+
       roomCoordinates.push({
         id,
         rects,
@@ -482,44 +482,44 @@ class VacuumMapCardEditor extends HAControlBase {
         icon: room.icon
       });
     }
-    
+
     if (roomCoordinates.length === 0 || minX === Infinity || maxX === -Infinity || minY === Infinity || maxY === -Infinity ||
-        isNaN(minX) || isNaN(maxX) || isNaN(minY) || isNaN(maxY)) {
+      isNaN(minX) || isNaN(maxX) || isNaN(minY) || isNaN(maxY)) {
       alert("No valid room outline coordinates found on the camera entity.");
       return;
     }
-    
+
     const width = maxX - minX || 1;
     const height = maxY - minY || 1;
-    
+
     const rooms = { ...(this._config.rooms || {}) };
-    
+
     roomCoordinates.forEach(room => {
       const rawRects = room.rects;
       const main = rawRects[0];
-      
+
       const wVal = ((main.x1 - main.x0) / width) * 100;
       const hVal = ((main.y1 - main.y0) / height) * 100;
       const xVal = ((main.x0 - minX) / width) * 100;
       const yVal = ((maxY - main.y1) / height) * 100;
-      
+
       const current = rooms[room.id] || {};
-      
+
       let w = Math.round(wVal);
       let h = Math.round(hVal);
       let x = Math.round(xVal);
       let y = Math.round(yVal);
-      
+
       if (isNaN(w) || w <= 0) w = 15;
       if (isNaN(h) || h <= 0) h = 15;
       if (isNaN(x) || x < 0) x = 10;
       if (isNaN(y) || y < 0) y = 10;
-      
+
       w = Math.max(5, Math.min(100, w));
       h = Math.max(5, Math.min(100, h));
       x = Math.max(0, Math.min(100 - w, x));
       y = Math.max(0, Math.min(100 - h, y));
-      
+
       const extraShapes = [];
       for (let i = 1; i < rawRects.length; i++) {
         const extra = rawRects[i];
@@ -527,12 +527,12 @@ class VacuumMapCardEditor extends HAControlBase {
         const ehVal = ((extra.y1 - extra.y0) / height) * 100;
         const exVal = ((extra.x0 - minX) / width) * 100;
         const eyVal = ((maxY - extra.y1) / height) * 100;
-        
+
         let ew = Math.round(ewVal);
         let eh = Math.round(ehVal);
         let ex = Math.round(exVal);
         let ey = Math.round(eyVal);
-        
+
         if (!isNaN(ew) && ew > 0 && !isNaN(eh) && eh > 0 && !isNaN(ex) && ex >= 0 && !isNaN(ey) && ey >= 0) {
           extraShapes.push({
             x: Math.max(0, Math.min(100 - ew, ex)),
@@ -542,7 +542,7 @@ class VacuumMapCardEditor extends HAControlBase {
           });
         }
       }
-      
+
       const nextRoom = {
         ...current,
         x,
@@ -555,15 +555,15 @@ class VacuumMapCardEditor extends HAControlBase {
       } else {
         delete nextRoom.shapes;
       }
-      
+
       rooms[room.id] = nextRoom;
     });
-    
+
     this._config = {
       ...this._config,
       rooms
     };
-    
+
     this._fireConfigChanged();
     alert(`Successfully extracted coordinates for ${roomCoordinates.length} rooms from camera "${selectedCameraId}"!`);
   }
@@ -649,20 +649,20 @@ class VacuumMapCardEditor extends HAControlBase {
   _addCustomRoom() {
     const id = this._newRoomId?.trim();
     const label = this._newRoomLabel?.trim();
-    
+
     if (!id || isNaN(id)) {
       alert("Please enter a valid numeric Room ID.");
       return;
     }
-    
+
     const roomId = parseFloat(id);
     const rooms = { ...(this._config.rooms || {}) };
-    
+
     if (rooms[roomId]) {
       alert(`Room ID ${roomId} is already configured.`);
       return;
     }
-    
+
     rooms[roomId] = {
       label: label || `Room ${roomId}`,
       icon: "mdi:door",
@@ -672,12 +672,12 @@ class VacuumMapCardEditor extends HAControlBase {
       h: 15,
       color: "#666666"
     };
-    
+
     this._config = {
       ...this._config,
       rooms
     };
-    
+
     this._newRoomId = '';
     this._newRoomLabel = '';
     this._expandedRoomId = roomId.toString();
@@ -690,26 +690,26 @@ class VacuumMapCardEditor extends HAControlBase {
 
   _updateRoomProp(id, prop, value) {
     if (!this._config) return;
-    
+
     let val = value;
     if (prop === 'x' || prop === 'y' || prop === 'w' || prop === 'h') {
       if (isNaN(val)) return; // Skip updating during empty/incomplete input typing
       val = Math.max(0, Math.min(100, val));
     }
-    
+
     const rooms = { ...(this._config.rooms || {}) };
     const current = rooms[id] || {};
-    
+
     rooms[id] = {
       ...current,
       [prop]: val
     };
-    
+
     if (rooms[id].x === undefined) rooms[id].x = 10;
     if (rooms[id].y === undefined) rooms[id].y = 10;
     if (rooms[id].w === undefined) rooms[id].w = 15;
     if (rooms[id].h === undefined) rooms[id].h = 15;
-    
+
     this._config = {
       ...this._config,
       rooms
@@ -720,15 +720,15 @@ class VacuumMapCardEditor extends HAControlBase {
   _deleteRoom(e, id) {
     if (e) e.stopPropagation();
     if (!confirm(`Are you sure you want to delete Room ${id}?`)) return;
-    
+
     const rooms = { ...(this._config.rooms || {}) };
     delete rooms[id];
-    
+
     this._config = {
       ...this._config,
       rooms
     };
-    
+
     if (this._expandedRoomId === id) {
       this._expandedRoomId = null;
     }
@@ -885,17 +885,17 @@ class VacuumMapCardEditor extends HAControlBase {
           </div>
           <div class="rooms-list">
             ${rooms.map((room) => {
-              const id = room.id;
-              const isExpanded = this._expandedRoomId === id;
+      const id = room.id;
+      const isExpanded = this._expandedRoomId === id;
 
-              // Resolve HA Name Entity and current value
-              const nameEntityId = vacuumName ? `select.${vacuumName}_room_${id}_name` : '';
-              const nameStateObj = nameEntityId ? this.hass.states[nameEntityId] : null;
-              const haName = nameStateObj && nameStateObj.state !== 'unknown' && nameStateObj.state !== 'unavailable' ? nameStateObj.state : '';
-              const defaultName = room.name || `Room ${id}`;
-              const displayName = room.label || haName || defaultName;
+      // Resolve HA Name Entity and current value
+      const nameEntityId = vacuumName ? `select.${vacuumName}_room_${id}_name` : '';
+      const nameStateObj = nameEntityId ? this.hass.states[nameEntityId] : null;
+      const haName = nameStateObj && nameStateObj.state !== 'unknown' && nameStateObj.state !== 'unavailable' ? nameStateObj.state : '';
+      const defaultName = room.name || `Room ${id}`;
+      const displayName = room.label || haName || defaultName;
 
-              return html`
+      return html`
                 <div class="room-card">
                   <div class="room-card-header" @click=${() => this._toggleExpandRoom(id)}>
                     <div class="room-card-header-title">
@@ -917,15 +917,15 @@ class VacuumMapCardEditor extends HAControlBase {
                               label="Home Assistant Room Name (select.*_name)"
                               .value=${nameStateObj.state}
                               @closed=${(e) => {
-                                e.stopPropagation();
-                                const target = e.target;
-                                if (target.value !== undefined && target.value !== nameStateObj.state) {
-                                  this.hass.callService('select', 'select_option', {
-                                    entity_id: nameEntityId,
-                                    option: target.value
-                                  });
-                                }
-                              }}
+                e.stopPropagation();
+                const target = e.target;
+                if (target.value !== undefined && target.value !== nameStateObj.state) {
+                  this.hass.callService('select', 'select_option', {
+                    entity_id: nameEntityId,
+                    option: target.value
+                  });
+                }
+              }}
                               fixedMenuPosition
                               naturalMenuWidth
                               style="width: 100%;"
@@ -939,11 +939,11 @@ class VacuumMapCardEditor extends HAControlBase {
                               label="Home Assistant Room Name (select.*_name)"
                               .value=${nameStateObj.state || ''}
                               @change=${(e) => {
-                                this.hass.callService('select', 'select_option', {
-                                  entity_id: nameEntityId,
-                                  option: e.target.value
-                                });
-                              }}
+                this.hass.callService('select', 'select_option', {
+                  entity_id: nameEntityId,
+                  option: e.target.value
+                });
+              }}
                               style="width: 100%;"
                             ></ha-input>
                           `}
@@ -1071,7 +1071,7 @@ class VacuumMapCardEditor extends HAControlBase {
                   ` : ''}
                 </div>
               `;
-            })}
+    })}
           </div>
         </div>
       `}

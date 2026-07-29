@@ -236,10 +236,10 @@ class FitGridLayoutEditor extends HAControlBase {
             .schema=${this._layoutSchema()}
             .computeLabel=${(s) => s.label || s.name}
             @value-changed=${(e) => {
-              e.stopPropagation();
-              this._config = { ...this._config, layout: e.detail.value };
-              this._fireConfigChanged();
-            }}
+          e.stopPropagation();
+          this._config = { ...this._config, layout: e.detail.value };
+          this._fireConfigChanged();
+        }}
           ></ha-form>
         ` : html``}
 
@@ -250,10 +250,10 @@ class FitGridLayoutEditor extends HAControlBase {
             .schema=${this._backgroundSchema()}
             .computeLabel=${(s) => s.label || s.name}
             @value-changed=${(e) => {
-              e.stopPropagation();
-              this._config = { ...this._config, background: e.detail.value };
-              this._fireConfigChanged();
-            }}
+          e.stopPropagation();
+          this._config = { ...this._config, background: e.detail.value };
+          this._fireConfigChanged();
+        }}
           ></ha-form>
         ` : html``}
 
@@ -264,10 +264,10 @@ class FitGridLayoutEditor extends HAControlBase {
             .schema=${this._popupsSchema()}
             .computeLabel=${(s) => s.label || s.name}
             @value-changed=${(e) => {
-              e.stopPropagation();
-              this._config = { ...this._config, popups: e.detail.value.popups };
-              this._fireConfigChanged();
-            }}
+          e.stopPropagation();
+          this._config = { ...this._config, popups: e.detail.value.popups };
+          this._fireConfigChanged();
+        }}
           ></ha-form>
         ` : html``}
       </div>

@@ -193,7 +193,7 @@ class TaskListCardRow extends HAControlBase {
         ` : html`<div class="task-date empty" style="border-right-color: ${separatorColor};"></div>`) : ''}
         <div class="task-content">
           ${tasks.map((t, index) => {
-            return html`
+      return html`
                 <task-list-card-item
                   .hass=${this.hass}
                   .config=${this.config}
@@ -203,7 +203,7 @@ class TaskListCardRow extends HAControlBase {
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
                 ></task-list-card-item>
               `;
-          })}
+    })}
         </div>
         ${this.config.show_due_in_days && dueInDaysText ? html`
             <div class="task-due-in ${this.config.due_in_days_separator_color ? 'separator' : ''}" style="${this.config.due_in_days_separator_color ? `border-left-color: ${this.config.due_in_days_separator_color};` : ''}">

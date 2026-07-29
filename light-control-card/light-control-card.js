@@ -139,7 +139,7 @@ class LightControlCard extends HAControlBase {
     // Extract attributes
     const name = this.config.name || stateObj.attributes.friendly_name || entityId;
     const icon = this.config.icon || stateObj.attributes.icon || "mdi:lightbulb";
-    
+
     const brightness = stateObj.attributes.brightness || 0;
     const brightnessPercent = Math.round((brightness / 255) * 100);
 
@@ -172,10 +172,10 @@ class LightControlCard extends HAControlBase {
     }
 
     // Status description string
-    let statusText = isUnavailable 
-      ? (this._localize('offline') || "Offline") 
-      : (isOn 
-        ? `${this._localize('on') || "On"}${supportsBrightness ? ` - ${brightnessPercent}%` : ""}` 
+    let statusText = isUnavailable
+      ? (this._localize('offline') || "Offline")
+      : (isOn
+        ? `${this._localize('on') || "On"}${supportsBrightness ? ` - ${brightnessPercent}%` : ""}`
         : (this._localize('off') || "Off"));
 
     return html`

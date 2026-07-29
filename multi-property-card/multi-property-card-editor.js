@@ -22,8 +22,8 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -157,11 +157,11 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
   _moveEntity(index, direction) {
     const entities = [...(this._config.entities || [])];
     if (index + direction < 0 || index + direction >= entities.length) return;
-    
+
     const temp = entities[index];
     entities[index] = entities[index + direction];
     entities[index + direction] = temp;
-    
+
     this._config = { ...this._config, entities };
     this._fireConfigChanged();
   }
@@ -185,10 +185,10 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
    * @private
    */
   _fireConfigChanged() {
-    this.dispatchEvent(new CustomEvent("config-changed", { 
+    this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
-      composed: true 
+      composed: true
     }));
   }
 
@@ -298,17 +298,17 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
           { name: "show_unavailable", label: show_unavailable, selector: { boolean: {} } }
         ]
       },
-      { 
-        name: "layout", 
-        label: this._localize('layout'), 
-        selector: { 
-          select: { 
+      {
+        name: "layout",
+        label: this._localize('layout'),
+        selector: {
+          select: {
             options: [
               { value: "row", label: this._localize('horizontal') },
               { value: "column", label: this._localize('vertical') }
-            ] 
-          } 
-        } 
+            ]
+          }
+        }
       }
     ];
   }
@@ -335,7 +335,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
     addIfDiff("show_icon", true);
     addIfDiff("show_unavailable", false);
     if (this._config.layout !== undefined) cleaned.layout = this._config.layout;
-    
+
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
         const e = {};
@@ -355,7 +355,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
         if (ent.condition !== undefined) e.condition = ent.condition;
         if (ent.tap_action !== undefined) e.tap_action = ent.tap_action;
         if (ent.hold_action !== undefined) e.hold_action = ent.hold_action;
-        
+
         if (ent.thresholds && Array.isArray(ent.thresholds)) {
           e.thresholds = ent.thresholds.map(thresh => {
             const t = {};
@@ -365,12 +365,12 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
             return t;
           });
         }
-        
+
         if (ent.features !== undefined) e.features = ent.features;
         return e;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -421,12 +421,12 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
           <ha-form
             .hass=${this.hass}
             .data=${{
-              show_label: this._config.show_label !== false,
-              show_value: this._config.show_value !== false,
-              show_icon: this._config.show_icon !== false,
-              show_unavailable: this._config.show_unavailable === true,
-              layout: this._config.layout || "row"
-            }}
+          show_label: this._config.show_label !== false,
+          show_value: this._config.show_value !== false,
+          show_icon: this._config.show_icon !== false,
+          show_unavailable: this._config.show_unavailable === true,
+          layout: this._config.layout || "row"
+        }}
             .schema=${this._globalSchema()}
             .computeLabel=${(schema) => schema.label || schema.name}
             @value-changed=${this._globalValueChanged}
@@ -436,97 +436,97 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
         <div class="card-config" style="margin-top: 0;">
           <div class="entities-container">
             ${(this._config.entities || []).map((ent, idx) => {
-              const entityId = typeof ent === 'string' ? ent : ent.entity;
-              const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
+          const entityId = typeof ent === 'string' ? ent : ent.entity;
+          const stateObj = entityId && this.hass ? this.hass.states[entityId] : null;
 
-              const hassFriendlyName = stateObj?.attributes?.friendly_name || entityId;
-              const entityLabel = ent.name || hassFriendlyName || this._localize('entity_num', { num: idx + 1 }) || `Entity ${idx + 1}`;
+          const hassFriendlyName = stateObj?.attributes?.friendly_name || entityId;
+          const entityLabel = ent.name || hassFriendlyName || this._localize('entity_num', { num: idx + 1 }) || `Entity ${idx + 1}`;
 
-              const combinedData = {
-                entity: entityId,
-                name: ent.name || "",
-                attribute: ent.attribute || "",
-                unit: ent.unit || "",
-                value: ent.value || "",
-                icon: ent.icon || "",
-                show_icon: ent.show_icon !== false,
-                show_value: ent.show_value !== false,
-                show_label: ent.show_label !== false,
-                color: ent.color || "",
-                label_font_size: ent.label_font_size ? String(ent.label_font_size).replace("px", "") : "",
-                label_bold: ent.label_bold === true,
-                animation: ent.animation || "",
-                condition: ent.condition || "",
-                tap_action: ent.tap_action || { action: "none" },
-                hold_action: ent.hold_action || { action: "none" }
-              };
+          const combinedData = {
+            entity: entityId,
+            name: ent.name || "",
+            attribute: ent.attribute || "",
+            unit: ent.unit || "",
+            value: ent.value || "",
+            icon: ent.icon || "",
+            show_icon: ent.show_icon !== false,
+            show_value: ent.show_value !== false,
+            show_label: ent.show_label !== false,
+            color: ent.color || "",
+            label_font_size: ent.label_font_size ? String(ent.label_font_size).replace("px", "") : "",
+            label_bold: ent.label_bold === true,
+            animation: ent.animation || "",
+            condition: ent.condition || "",
+            tap_action: ent.tap_action || { action: "none" },
+            hold_action: ent.hold_action || { action: "none" }
+          };
 
-              const combinedSchema = [
-                { name: "entity", label: this._localize('entity'), selector: { entity: {} } },
-                { name: "name", label: this._localize('friendly_name_override'), selector: { text: {} } },
-                {
-                  name: "",
-                  type: "grid",
-                  schema: [
-                    { name: "attribute", label: this._localize('attribute') || "Attribute Override", selector: { text: {} } },
-                    { name: "unit", label: this._localize('unit_override') || "Unit Override", selector: { text: {} } }
+          const combinedSchema = [
+            { name: "entity", label: this._localize('entity'), selector: { entity: {} } },
+            { name: "name", label: this._localize('friendly_name_override'), selector: { text: {} } },
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "attribute", label: this._localize('attribute') || "Attribute Override", selector: { text: {} } },
+                { name: "unit", label: this._localize('unit_override') || "Unit Override", selector: { text: {} } }
+              ]
+            },
+            { name: "value", label: this._localize('static_value'), selector: { text: {} } },
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "icon", label: this._localize('icon_override'), selector: { icon: {} } },
+                { name: "show_icon", label: this._localize('show_icon'), selector: { boolean: {} } }
+              ]
+            },
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "show_value", label: this._localize('show_value') || "Show Value", selector: { boolean: {} } },
+                { name: "show_label", label: this._localize('show_label') || "Show Label", selector: { boolean: {} } }
+              ]
+            },
+            { name: "color", label: this._localize('color_override'), selector: { text: {} } },
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "label_font_size", label: this._localize('label_size'), selector: { text: {} } },
+                { name: "label_bold", label: this._localize('bold'), selector: { boolean: {} } }
+              ]
+            },
+            {
+              name: "animation",
+              label: this._localize('default_animation'),
+              selector: {
+                select: {
+                  options: [
+                    { value: "", label: this._localize('none') },
+                    { value: "blink", label: this._localize('blink') },
+                    { value: "bounce", label: this._localize('bounce') },
+                    { value: "rotating", label: this._localize('rotating') },
+                    { value: "pulse", label: this._localize('pulse') },
+                    { value: "shake", label: this._localize('shake') },
+                    { value: "float", label: this._localize('float') },
+                    { value: "spin-slow", label: this._localize('spin_slow') }
                   ]
-                },
-                { name: "value", label: this._localize('static_value'), selector: { text: {} } },
-                {
-                  name: "",
-                  type: "grid",
-                  schema: [
-                    { name: "icon", label: this._localize('icon_override'), selector: { icon: {} } },
-                    { name: "show_icon", label: this._localize('show_icon'), selector: { boolean: {} } }
-                  ]
-                },
-                {
-                  name: "",
-                  type: "grid",
-                  schema: [
-                    { name: "show_value", label: this._localize('show_value') || "Show Value", selector: { boolean: {} } },
-                    { name: "show_label", label: this._localize('show_label') || "Show Label", selector: { boolean: {} } }
-                  ]
-                },
-                { name: "color", label: this._localize('color_override'), selector: { text: {} } },
-                {
-                  name: "",
-                  type: "grid",
-                  schema: [
-                    { name: "label_font_size", label: this._localize('label_size'), selector: { text: {} } },
-                    { name: "label_bold", label: this._localize('bold'), selector: { boolean: {} } }
-                  ]
-                },
-                { 
-                  name: "animation", 
-                  label: this._localize('default_animation'), 
-                  selector: { 
-                    select: { 
-                      options: [
-                        { value: "", label: this._localize('none') },
-                        { value: "blink", label: this._localize('blink') },
-                        { value: "bounce", label: this._localize('bounce') },
-                        { value: "rotating", label: this._localize('rotating') },
-                        { value: "pulse", label: this._localize('pulse') },
-                        { value: "shake", label: this._localize('shake') },
-                        { value: "float", label: this._localize('float') },
-                        { value: "spin-slow", label: this._localize('spin_slow') }
-                      ]
-                    } 
-                  } 
-                },
-                { 
-                  name: "condition", 
-                  label: this._localize('complex_visibility_condition'), 
-                  selector: { text: { multiline: true } },
-                  helper: this._localize('complex_visibility_condition_placeholder')
-                },
-                { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
-                { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
-              ];
+                }
+              }
+            },
+            {
+              name: "condition",
+              label: this._localize('complex_visibility_condition'),
+              selector: { text: { multiline: true } },
+              helper: this._localize('complex_visibility_condition_placeholder')
+            },
+            { name: "tap_action", label: this._localize('tap_action'), selector: { "ui-action": {} } },
+            { name: "hold_action", label: this._localize('hold_action'), selector: { "ui-action": {} } }
+          ];
 
-              return html`
+          return html`
                 <ha-expansion-panel>
                     <div slot="header" class="panel-header">
                       <div class="panel-title">${entityLabel}</div>
@@ -553,20 +553,20 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
                         .schema=${combinedSchema}
                         .computeLabel=${(schema) => schema.label || schema.name}
                         @value-changed=${(e) => {
-                          const ents = [...this._config.entities];
-                          const newValue = { ...e.detail.value };
-                          
-                          for (const key in newValue) {
-                            if (newValue[key] === "") {
-                              delete newValue[key];
-                              delete ents[idx][key];
-                            }
-                          }
+              const ents = [...this._config.entities];
+              const newValue = { ...e.detail.value };
 
-                          ents[idx] = { ...ents[idx], ...newValue };
-                          this._config = { ...this._config, entities: ents };
-                          this._fireConfigChanged();
-                        }}
+              for (const key in newValue) {
+                if (newValue[key] === "") {
+                  delete newValue[key];
+                  delete ents[idx][key];
+                }
+              }
+
+              ents[idx] = { ...ents[idx], ...newValue };
+              this._config = { ...this._config, entities: ents };
+              this._fireConfigChanged();
+            }}
                       ></ha-form>
 
                       <!-- Thresholds Section -->
@@ -590,33 +590,33 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
                                 .hass=${this.hass}
                                 .data=${thresh}
                                 .schema=${[
-                                  {
-                                    name: "",
-                                    type: "grid",
-                                    schema: [
-                                      { name: "value", label: this._localize('value'), selector: { text: {} } },
-                                      { name: "color", label: this._localize('color'), selector: { text: {} } }
-                                    ]
-                                  },
-                                  { 
-                                    name: "animation", 
-                                    label: this._localize('animation'), 
-                                    selector: { 
-                                      select: { 
-                                        options: [
-                                          { value: "", label: this._localize('none') },
-                                          { value: "blink", label: this._localize('blink') },
-                                          { value: "bounce", label: this._localize('bounce') },
-                                          { value: "rotating", label: this._localize('rotating') },
-                                          { value: "pulse", label: this._localize('pulse') },
-                                          { value: "shake", label: this._localize('shake') },
-                                          { value: "float", label: this._localize('float') },
-                                          { value: "spin-slow", label: this._localize('spin_slow') }
-                                        ]
-                                      } 
-                                    } 
-                                  }
-                                ]}
+                {
+                  name: "",
+                  type: "grid",
+                  schema: [
+                    { name: "value", label: this._localize('value'), selector: { text: {} } },
+                    { name: "color", label: this._localize('color'), selector: { text: {} } }
+                  ]
+                },
+                {
+                  name: "animation",
+                  label: this._localize('animation'),
+                  selector: {
+                    select: {
+                      options: [
+                        { value: "", label: this._localize('none') },
+                        { value: "blink", label: this._localize('blink') },
+                        { value: "bounce", label: this._localize('bounce') },
+                        { value: "rotating", label: this._localize('rotating') },
+                        { value: "pulse", label: this._localize('pulse') },
+                        { value: "shake", label: this._localize('shake') },
+                        { value: "float", label: this._localize('float') },
+                        { value: "spin-slow", label: this._localize('spin_slow') }
+                      ]
+                    }
+                  }
+                }
+              ]}
                                 .computeLabel=${(schema) => schema.label || schema.name}
                                 @value-changed=${(e) => this._updateThreshold(idx, tIdx, null, e.detail.value)}
                               ></ha-form>
@@ -649,9 +649,9 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
                                   .hass=${this.hass}
                                   .config=${feature}
                                   @config-changed=${(e) => {
-                                    e.stopPropagation();
-                                    this._updateFeature(idx, fIdx, e.detail.config);
-                                  }}
+                  e.stopPropagation();
+                  this._updateFeature(idx, fIdx, e.detail.config);
+                }}
                                 ></feature-renderer-editor-card>
                               </div>
                             `)}
@@ -669,7 +669,7 @@ class MultiPropertyCardEditor extends HAControlThresholdBase {
                     </div>
                 </ha-expansion-panel>
               `;
-            })}
+        })}
           </div>
 
           <div class="add-button-container">

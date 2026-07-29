@@ -23,9 +23,9 @@ class CalendarGridCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
-      _config: { type: Object }, 
+    return {
+      ...super.properties,
+      _config: { type: Object },
       _dayNamesExpanded: { state: true },
       _activeTab: { type: String }
     };
@@ -124,7 +124,7 @@ class CalendarGridCardEditor extends HAControlBase {
     let newValue = target.checked !== undefined ? target.checked : target.value;
     // Handle day names list
     if (configValue === "day_names") {
-        newValue = newValue.split(',').map(v => v.trim());
+      newValue = newValue.split(',').map(v => v.trim());
     }
     this._config = {
       ...this._config,
@@ -242,7 +242,7 @@ class CalendarGridCardEditor extends HAControlBase {
     if (this._config.today_background !== undefined) cleaned.today_background = this._config.today_background;
     if (this._config.today_border !== undefined) cleaned.today_border = this._config.today_border;
     if (this._config.event_features !== undefined) cleaned.event_features = this._config.event_features;
-    
+
     if (this._config.entities && Array.isArray(this._config.entities)) {
       cleaned.entities = this._config.entities.map(ent => {
         if (typeof ent === 'object') {
@@ -260,7 +260,7 @@ class CalendarGridCardEditor extends HAControlBase {
         return ent;
       });
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
@@ -324,43 +324,43 @@ class CalendarGridCardEditor extends HAControlBase {
         <div class="card-config" style="margin-top: 0;">
           <ha-form
               .hass=${this.hass}
-              .data=${{ 
-                  first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1",
-                  orientation: this._config.orientation || "horizontal"
-              }}
+              .data=${{
+          first_day_of_week: this._config.first_day_of_week !== undefined ? String(this._config.first_day_of_week) : "1",
+          orientation: this._config.orientation || "horizontal"
+        }}
               .schema=${[
-                  {
-                      name: "first_day_of_week",
-                      label: this._localize('cgc.editor.first_day_of_week'),
-                      selector: {
-                          select: {
-                              options: [
-                                  { value: "0", label: this._localize('cgc.editor.sunday') },
-                                  { value: "1", label: this._localize('cgc.editor.monday') },
-                                  { value: "2", label: this._localize('cgc.editor.tuesday') },
-                                  { value: "3", label: this._localize('cgc.editor.wednesday') },
-                                  { value: "4", label: this._localize('cgc.editor.thursday') },
-                                  { value: "5", label: this._localize('cgc.editor.friday') },
-                                  { value: "6", label: this._localize('cgc.editor.saturday') }
-                              ],
-                              mode: "dropdown"
-                          }
-                      }
-                  },
-                  {
-                      name: "orientation",
-                      label: this._localize('cgc.editor.orientation'),
-                      selector: {
-                          select: {
-                              options: [
-                                  { value: "horizontal", label: this._localize('cgc.editor.horizontal') },
-                                  { value: "vertical", label: this._localize('cgc.editor.vertical') }
-                              ],
-                              mode: "dropdown"
-                          }
-                      }
-                  }
-              ]}
+          {
+            name: "first_day_of_week",
+            label: this._localize('cgc.editor.first_day_of_week'),
+            selector: {
+              select: {
+                options: [
+                  { value: "0", label: this._localize('cgc.editor.sunday') },
+                  { value: "1", label: this._localize('cgc.editor.monday') },
+                  { value: "2", label: this._localize('cgc.editor.tuesday') },
+                  { value: "3", label: this._localize('cgc.editor.wednesday') },
+                  { value: "4", label: this._localize('cgc.editor.thursday') },
+                  { value: "5", label: this._localize('cgc.editor.friday') },
+                  { value: "6", label: this._localize('cgc.editor.saturday') }
+                ],
+                mode: "dropdown"
+              }
+            }
+          },
+          {
+            name: "orientation",
+            label: this._localize('cgc.editor.orientation'),
+            selector: {
+              select: {
+                options: [
+                  { value: "horizontal", label: this._localize('cgc.editor.horizontal') },
+                  { value: "vertical", label: this._localize('cgc.editor.vertical') }
+                ],
+                mode: "dropdown"
+              }
+            }
+          }
+        ]}
               .computeLabel=${(s) => s.label}
               @value-changed=${(ev) => this._formValueChanged(ev)}
           ></ha-form>
@@ -419,23 +419,23 @@ class CalendarGridCardEditor extends HAControlBase {
               .hass=${this.hass}
               .data=${{ sidebar_position: this._config.sidebar_position || 'right' }}
               .schema=${[
-                  {
-                      name: "sidebar_position",
-                      label: this._localize('cgc.editor.sidebar_position'),
-                      selector: {
-                          select: {
-                              options: [
-                                  { value: "right", label: this._localize('cgc.editor.pos_right') },
-                                  { value: "left", label: this._localize('cgc.editor.pos_left') },
-                                  { value: "top", label: this._localize('cgc.editor.pos_top') },
-                                  { value: "bottom", label: this._localize('cgc.editor.pos_bottom') },
-                                  { value: "hidden", label: this._localize('cgc.editor.pos_hidden') }
-                              ],
-                              mode: "dropdown"
-                          }
-                      }
-                  }
-              ]}
+          {
+            name: "sidebar_position",
+            label: this._localize('cgc.editor.sidebar_position'),
+            selector: {
+              select: {
+                options: [
+                  { value: "right", label: this._localize('cgc.editor.pos_right') },
+                  { value: "left", label: this._localize('cgc.editor.pos_left') },
+                  { value: "top", label: this._localize('cgc.editor.pos_top') },
+                  { value: "bottom", label: this._localize('cgc.editor.pos_bottom') },
+                  { value: "hidden", label: this._localize('cgc.editor.pos_hidden') }
+                ],
+                mode: "dropdown"
+              }
+            }
+          }
+        ]}
               .computeLabel=${(s) => s.label}
               @value-changed=${(ev) => this._formValueChanged(ev)}
           ></ha-form>
@@ -475,25 +475,25 @@ class CalendarGridCardEditor extends HAControlBase {
               <div class="heading">${this._localize('cgc.editor.entities')}</div>
               <div class="entities">
                   ${entities.map((entityConf, index) => {
-                      const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
-                      const name = typeof entityConf === "object" ? entityConf.name : "";
-                      const color = typeof entityConf === "object" ? entityConf.color : "";
-                      const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
-                      const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
-                      const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
-                      const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
-                      const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
+          const entityId = typeof entityConf === "object" ? entityConf.entity : entityConf;
+          const name = typeof entityConf === "object" ? entityConf.name : "";
+          const color = typeof entityConf === "object" ? entityConf.color : "";
+          const backgroundColor = typeof entityConf === "object" ? entityConf.backgroundColor : "";
+          const iconColor = typeof entityConf === "object" ? entityConf.iconColor : "";
+          const activeColor = typeof entityConf === "object" ? entityConf.activeColor : "";
+          const activeBackgroundColor = typeof entityConf === "object" ? entityConf.activeBackgroundColor : "";
+          const activeIconAnimation = typeof entityConf === "object" ? entityConf.activeIconAnimation : "";
 
-                      let filters = [];
-                      if (typeof entityConf === 'object') {
-                          if (entityConf.filters) {
-                              filters = entityConf.filters;
-                          } else if (entityConf.filter) {
-                              filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
-                          }
-                      }
+          let filters = [];
+          if (typeof entityConf === 'object') {
+            if (entityConf.filters) {
+              filters = entityConf.filters;
+            } else if (entityConf.filter) {
+              filters = [{ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false }];
+            }
+          }
 
-                      return html`
+          return html`
                           <div class="entity-row-container">
                               <div class="entity-row">
                                   <ha-entity-picker
@@ -544,21 +544,21 @@ class CalendarGridCardEditor extends HAControlBase {
                                       .hass=${this.hass}
                                       .data=${{ activeIconAnimation: activeIconAnimation || '' }}
                                       .schema=${[
-                                          {
-                                              name: "activeIconAnimation",
-                                              label: this._localize('cgc.editor.active_icon_animation'),
-                                              selector: {
-                                                  select: {
-                                                      options: [
-                                                          { value: "", label: "" },
-                                                          { value: "spinning", label: this._localize('cgc.editor.anim_spinning') },
-                                                          { value: "pulsing", label: this._localize('cgc.editor.anim_pulsing') }
-                                                      ],
-                                                      mode: "dropdown"
-                                                  }
-                                              }
-                                          }
-                                      ]}
+              {
+                name: "activeIconAnimation",
+                label: this._localize('cgc.editor.active_icon_animation'),
+                selector: {
+                  select: {
+                    options: [
+                      { value: "", label: "" },
+                      { value: "spinning", label: this._localize('cgc.editor.anim_spinning') },
+                      { value: "pulsing", label: this._localize('cgc.editor.anim_pulsing') }
+                    ],
+                    mode: "dropdown"
+                  }
+                }
+              }
+            ]}
                                       .computeLabel=${(s) => s.label}
                                       @value-changed=${(ev) => this._entityColorChanged({ target: { value: ev.detail.value.activeIconAnimation } }, index, 'activeIconAnimation')}
                                   ></ha-form>
@@ -588,7 +588,7 @@ class CalendarGridCardEditor extends HAControlBase {
                               </div>
                           </div>
                       `;
-                  })}
+        })}
                   <div class="separator"></div>
                   <div class="add-entity-header">${this._localize('cgc.editor.add_new_calendar')}</div>
                   <ha-entity-picker
@@ -620,8 +620,8 @@ class CalendarGridCardEditor extends HAControlBase {
    * 
    * @private
    */
-   _toggleDayNames() {
-      this._dayNamesExpanded = !this._dayNamesExpanded;
+  _toggleDayNames() {
+    this._dayNamesExpanded = !this._dayNamesExpanded;
   }
 
   _toggleEventFeature(type, checked) {
@@ -650,13 +650,13 @@ class CalendarGridCardEditor extends HAControlBase {
    * @private
    */
   _dayNameChanged(ev, index) {
-      const newValue = ev.target.value;
-      const dayNames = this._getDayNames();
-      const newDayNames = [...dayNames];
-      newDayNames[index] = newValue;
-      
-      this._config = { ...this._config, day_names: newDayNames };
-      this._fireConfigChanged();
+    const newValue = ev.target.value;
+    const dayNames = this._getDayNames();
+    const newDayNames = [...dayNames];
+    newDayNames[index] = newValue;
+
+    this._config = { ...this._config, day_names: newDayNames };
+    this._fireConfigChanged();
   }
 
   /**
@@ -670,9 +670,9 @@ class CalendarGridCardEditor extends HAControlBase {
   _updateEntity(index, updateFn) {
     const newEntities = [...(this._config.entities || [])];
     let entityConf = newEntities[index];
-    
-    entityConf = typeof entityConf === 'string' 
-      ? { entity: entityConf } 
+
+    entityConf = typeof entityConf === 'string'
+      ? { entity: entityConf }
       : { ...entityConf };
 
     const updatedConf = updateFn(entityConf);
@@ -716,10 +716,10 @@ class CalendarGridCardEditor extends HAControlBase {
    * @private
    */
   _removeEntity(index) {
-      const newEntities = [...(this._config.entities || [])];
-      newEntities.splice(index, 1);
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
+    const newEntities = [...(this._config.entities || [])];
+    newEntities.splice(index, 1);
+    this._config = { ...this._config, entities: newEntities };
+    this._fireConfigChanged();
   }
 
   /**
@@ -732,13 +732,13 @@ class CalendarGridCardEditor extends HAControlBase {
   _addFilter(index) {
     this._updateEntity(index, (entityConf) => {
       const filters = entityConf.filters ? [...entityConf.filters] : [];
-      
+
       if (entityConf.filter) {
         filters.push({ pattern: entityConf.filter, case_sensitive: entityConf.case_sensitive !== false });
         delete entityConf.filter;
         delete entityConf.case_sensitive;
       }
-      
+
       filters.push({ pattern: '', case_sensitive: true });
       return { ...entityConf, filters };
     });
@@ -803,15 +803,15 @@ class CalendarGridCardEditor extends HAControlBase {
    * @private
    */
   _addEntity(ev) {
-      const newValue = ev.detail.value;
-      if (!newValue) return;
-      
-      const newEntities = [...(this._config.entities || [])];
-      newEntities.push(newValue);
-      this._config = { ...this._config, entities: newEntities };
-      this._fireConfigChanged();
-      
-      ev.target.value = "";
+    const newValue = ev.detail.value;
+    if (!newValue) return;
+
+    const newEntities = [...(this._config.entities || [])];
+    newEntities.push(newValue);
+    this._config = { ...this._config, entities: newEntities };
+    this._fireConfigChanged();
+
+    ev.target.value = "";
   }
 }
 

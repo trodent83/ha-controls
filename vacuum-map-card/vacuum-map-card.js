@@ -47,8 +47,8 @@ class VacuumMapCard extends HAControlBase {
    * @static
    * @returns {HTMLElement} The vacuum-map-card-editor configuration element
    */
-  static getConfigElement() { 
-    return document.createElement("vacuum-map-card-editor"); 
+  static getConfigElement() {
+    return document.createElement("vacuum-map-card-editor");
   }
 
   _getRoomName(roomId, defaultName) {
@@ -69,10 +69,10 @@ class VacuumMapCard extends HAControlBase {
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
     const output = this.hass.states[this.config.output_entity];
-    
+
     // Fetch the entity tracking the active room
     const cleaningStatusEntity = this.config.currently_cleaning_entity ? this.hass.states[this.config.currently_cleaning_entity] : null;
-    
+
     // Convert state like "4.0" to integer 4
     const currentRoomBeingCleaned = cleaningStatusEntity && cleaningStatusEntity.state !== 'unknown' && cleaningStatusEntity.state !== 'unavailable'
       ? Math.floor(parseFloat(cleaningStatusEntity.state))
@@ -83,14 +83,14 @@ class VacuumMapCard extends HAControlBase {
     const isReadonly = this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on';
     const isEditMode = this.config.edit_mode === true &&
       (this.closest('hui-card-preview') !== null || this.closest('dialog-edit-card') !== null);
-    
+
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
 
     const currentMap = vacuum.attributes.selected_map;
     const allRooms = vacuum.attributes.rooms?.[currentMap] || [];
-    
+
     const combinedRoomsMap = new Map();
-    
+
     // First, populate with state rooms from vacuum attributes
     allRooms.forEach(room => {
       const roomIdStr = room.id.toString();
@@ -102,7 +102,7 @@ class VacuumMapCard extends HAControlBase {
         });
       }
     });
-    
+
     // Then, merge config overrides on top, or add manual config-only rooms
     if (this.config.rooms && typeof this.config.rooms === 'object') {
       for (const [id, r] of Object.entries(this.config.rooms)) {
@@ -119,7 +119,7 @@ class VacuumMapCard extends HAControlBase {
         }
       }
     }
-    
+
     let rooms = Array.from(combinedRoomsMap.values());
 
     const sortBySequence = this.config.sort_by_sequence !== false;
@@ -155,31 +155,31 @@ class VacuumMapCard extends HAControlBase {
         
         <div class="map-container">
           ${rooms.map(room => {
-            const isSelected = selectedRooms.includes(room.id);
-            const customConfig = this.config.rooms?.[room.id] || {};
-            
-            const x = customConfig.x !== undefined ? customConfig.x : 0;
-            const y = customConfig.y !== undefined ? customConfig.y : 0;
-            const w = customConfig.w !== undefined ? customConfig.w : 15;
-            const h = customConfig.h !== undefined ? customConfig.h : 15;
-            const color = customConfig.color || '';
-            const roomColorStyle = color ? `--room-color: ${color};` : '';
-            const posStyle = `left: ${x}%; top: ${y}%; width: ${w}%; height: ${h}%; ${roomColorStyle}`;
+      const isSelected = selectedRooms.includes(room.id);
+      const customConfig = this.config.rooms?.[room.id] || {};
 
-            const roomIdInt = Math.floor(parseFloat(room.id));
-            const showActiveCleaning = isMarkingEnabled && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
-            
-            let activeCleaningClass = '';
-            let animationClass = '';
-            if (showActiveCleaning) {
-                activeCleaningClass = 'cleaning';
-                const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
-                animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
-            }
-            
-            const extraShapes = Array.isArray(customConfig.shapes) ? customConfig.shapes : [];
-            
-            return html`
+      const x = customConfig.x !== undefined ? customConfig.x : 0;
+      const y = customConfig.y !== undefined ? customConfig.y : 0;
+      const w = customConfig.w !== undefined ? customConfig.w : 15;
+      const h = customConfig.h !== undefined ? customConfig.h : 15;
+      const color = customConfig.color || '';
+      const roomColorStyle = color ? `--room-color: ${color};` : '';
+      const posStyle = `left: ${x}%; top: ${y}%; width: ${w}%; height: ${h}%; ${roomColorStyle}`;
+
+      const roomIdInt = Math.floor(parseFloat(room.id));
+      const showActiveCleaning = isMarkingEnabled && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
+
+      let activeCleaningClass = '';
+      let animationClass = '';
+      if (showActiveCleaning) {
+        activeCleaningClass = 'cleaning';
+        const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
+        animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
+      }
+
+      const extraShapes = Array.isArray(customConfig.shapes) ? customConfig.shapes : [];
+
+      return html`
               <div class="room-block ${isSelected ? 'selected' : ''} ${activeCleaningClass}" 
                    data-room-id="${room.id}"
                    style="${posStyle}"
@@ -201,13 +201,13 @@ class VacuumMapCard extends HAControlBase {
               </div>
               
               ${extraShapes.map((shape, idx) => {
-                const sx = shape.x !== undefined ? shape.x : 0;
-                const sy = shape.y !== undefined ? shape.y : 0;
-                const sw = shape.w !== undefined ? shape.w : 15;
-                const sh = shape.h !== undefined ? shape.h : 15;
-                const shapePosStyle = `left: ${sx}%; top: ${sy}%; width: ${sw}%; height: ${sh}%; ${roomColorStyle}`;
-                
-                return html`
+        const sx = shape.x !== undefined ? shape.x : 0;
+        const sy = shape.y !== undefined ? shape.y : 0;
+        const sw = shape.w !== undefined ? shape.w : 15;
+        const sh = shape.h !== undefined ? shape.h : 15;
+        const shapePosStyle = `left: ${sx}%; top: ${sy}%; width: ${sw}%; height: ${sh}%; ${roomColorStyle}`;
+
+        return html`
                   <div class="room-block extra-shape ${isSelected ? 'selected' : ''} ${activeCleaningClass}"
                        data-room-id="${room.id}"
                        style="${shapePosStyle}"
@@ -216,9 +216,9 @@ class VacuumMapCard extends HAControlBase {
                        @click="${(e) => this._handleRoomClick(e, room.id, selectedRooms, cleanSequence, isReadonly, isEditMode)}">
                   </div>
                 `;
-              })}
+      })}
             `;
-          })}
+    })}
         </div>
 
         <!-- Toggle All Button - Defaults to Visible -->
@@ -264,47 +264,47 @@ class VacuumMapCard extends HAControlBase {
   _handleMouseDown(e, roomId) {
     if (!this.config.edit_mode) return;
     if (e.target.closest('.resize-handle') || e.target.closest('.delete-handle')) return;
-    
+
     e.stopPropagation();
-    
+
     const blockEl = e.target.closest('.room-block');
     if (!blockEl) return;
     const mapContainer = this.shadowRoot.querySelector('.map-container');
     const rect = mapContainer.getBoundingClientRect();
-    
+
     const startClientX = e.touches ? e.touches[0].clientX : e.clientX;
     const startClientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
+
     const customConfig = this.config.rooms?.[roomId] || {};
     const rawX = parseFloat(customConfig.x);
     const rawY = parseFloat(customConfig.y);
     const rawW = parseFloat(customConfig.w);
     const rawH = parseFloat(customConfig.h);
-    
+
     const startX = !isNaN(rawX) ? rawX : 0;
     const startY = !isNaN(rawY) ? rawY : 0;
     const w = !isNaN(rawW) ? rawW : 15;
     const h = !isNaN(rawH) ? rawH : 15;
-    
+
     let finalX = startX;
     let finalY = startY;
-    
+
     const handleMouseMove = (ev) => {
       const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
       const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-      
+
       const deltaX = clientX - startClientX;
       const deltaY = clientY - startClientY;
-      
+
       const pctDeltaX = (deltaX / rect.width) * 100;
       const pctDeltaY = (deltaY / rect.height) * 100;
-      
+
       finalX = Math.round(startX + pctDeltaX);
       finalY = Math.round(startY + pctDeltaY);
-      
+
       finalX = Math.max(0, Math.min(100 - w, finalX));
       finalY = Math.max(0, Math.min(100 - h, finalY));
-      
+
       const deltaXShift = finalX - startX;
       const deltaYShift = finalY - startY;
 
@@ -326,13 +326,13 @@ class VacuumMapCard extends HAControlBase {
         }
       });
     };
-    
+
     const handleMouseUp = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('touchmove', handleMouseMove);
       window.removeEventListener('touchend', handleMouseUp);
-      
+
       const event = new CustomEvent("room-layout-changed", {
         detail: {
           roomId: roomId,
@@ -346,7 +346,7 @@ class VacuumMapCard extends HAControlBase {
       });
       this.dispatchEvent(event);
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('touchmove', handleMouseMove, { passive: true });
@@ -368,9 +368,9 @@ class VacuumMapCard extends HAControlBase {
   _toggleAll(rooms, selectedRooms, cleanSequence) {
     if (this.config.edit_mode) return;
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
-    
+
     let newSelection = [];
-    
+
     if (!allVisibleSelected) {
       newSelection = rooms.map(r => r.id);
       newSelection.sort((a, b) => {
@@ -415,7 +415,7 @@ class VacuumMapCard extends HAControlBase {
 
     const entityId = this.config.output_entity;
     const [domain] = entityId.split(".");
-    
+
     // Select service based on entity domain
     const service = domain === "input_text" ? "set_value" : "select_option";
     const dataField = domain === "input_text" ? "value" : "option";

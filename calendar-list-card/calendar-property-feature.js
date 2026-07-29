@@ -138,13 +138,13 @@ class CalendarPropertyFeature extends HAControlBase {
     switch (prop) {
       case "summary":
         return event.summary || "";
-      
+
       case "location":
         return origin.location || "";
-      
+
       case "description":
         return origin.description || "";
-      
+
       case "calendar_name": {
         const entityId = event.entity_id;
         const state = this.hass.states[entityId];
@@ -166,10 +166,10 @@ class CalendarPropertyFeature extends HAControlBase {
           return this._localize("all_day") || "All day";
         }
         if (!event.start || !event.end) return "";
-        
+
         const startStr = event.start.toLocaleTimeString(locale.language, { hour: '2-digit', minute: '2-digit' });
         const endStr = event.end.toLocaleTimeString(locale.language, { hour: '2-digit', minute: '2-digit' });
-        
+
         // If it ends on a different day, display that day too
         if (event.start.toDateString() !== event.end.toDateString()) {
           const endDateStr = event.end.toLocaleDateString(locale.language, { month: 'short', day: 'numeric' });

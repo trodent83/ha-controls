@@ -111,29 +111,29 @@ class RoomStatusCard extends HAControlBase {
           </div>
           <div class="status_badges">
           ${badges.map(badgeConfig => {
-            const entityId = badgeConfig.entity;
-            const stateObj = entityId ? this.hass.states[entityId] : null;
+      const entityId = badgeConfig.entity;
+      const stateObj = entityId ? this.hass.states[entityId] : null;
 
-            const finalColor = badgeConfig.color || 'var(--primary-text-color)';
+      const finalColor = badgeConfig.color || 'var(--primary-text-color)';
 
-            return html`
+      return html`
               <div class="status_badge" style="--badge-color: ${finalColor}">
                 ${(badgeConfig.features && Array.isArray(badgeConfig.features)) ? html`
                   ${badgeConfig.features.filter(featureConfig => {
-                    if (featureConfig.condition) {
-                      try {
-                        const hass = this.hass;
-                        const entity = stateObj;
-                        const state = stateObj?.state;
-                        const attributes = stateObj?.attributes;
-                        return eval(featureConfig.condition);
-                      } catch (e) {
-                        console.error("Error evaluating condition for feature", featureConfig, e);
-                        return false;
-                      }
-                    }
-                    return true;
-                  }).map(featureConfig => html`
+        if (featureConfig.condition) {
+          try {
+            const hass = this.hass;
+            const entity = stateObj;
+            const state = stateObj?.state;
+            const attributes = stateObj?.attributes;
+            return eval(featureConfig.condition);
+          } catch (e) {
+            console.error("Error evaluating condition for feature", featureConfig, e);
+            return false;
+          }
+        }
+        return true;
+      }).map(featureConfig => html`
                     <feature-renderer-card
                       .hass=${this.hass}
                       .config=${featureConfig}
@@ -144,7 +144,7 @@ class RoomStatusCard extends HAControlBase {
                 ` : ''}
               </div>
             `;
-          })}
+    })}
           </div>
         </div>
       </ha-card>

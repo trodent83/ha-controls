@@ -46,8 +46,8 @@ class VacuumSelectCard extends HAControlBase {
    * @static
    * @returns {HTMLElement} The vacuum-select-card-editor configuration element
    */
-  static getConfigElement() { 
-    return document.createElement("vacuum-select-card-editor"); 
+  static getConfigElement() {
+    return document.createElement("vacuum-select-card-editor");
   }
 
 
@@ -62,10 +62,10 @@ class VacuumSelectCard extends HAControlBase {
   render() {
     const vacuum = this.hass.states[this.config.vacuum_entity];
     const output = this.hass.states[this.config.output_entity];
-    
+
     // Fetch the entity tracking the active room
     const cleaningStatusEntity = this.config.currently_cleaning_entity ? this.hass.states[this.config.currently_cleaning_entity] : null;
-    
+
     // Convert state like "4.0" to integer 4
     const currentRoomBeingCleaned = cleaningStatusEntity && cleaningStatusEntity.state !== 'unknown' && cleaningStatusEntity.state !== 'unavailable'
       ? Math.floor(parseFloat(cleaningStatusEntity.state))
@@ -78,7 +78,7 @@ class VacuumSelectCard extends HAControlBase {
     let rooms = allRooms.filter(room => !this.config.rooms?.[room.id]?.disabled);
 
     const isReadonly = this.config.readonly_entity && this.hass.states[this.config.readonly_entity]?.state === 'on';
-    
+
     const cleanSequence = (vacuum.attributes.cleaning_sequence || "").toString().split(",").map(id => id.trim());
 
     const sortBySequence = this.config.sort_by_sequence !== false;
@@ -107,25 +107,25 @@ class VacuumSelectCard extends HAControlBase {
         
         <div class="room-grid">
           ${rooms.map(room => {
-            const isSelected = selectedRooms.includes(room.id);
-            const customConfig = this.config.rooms?.[room.id] || {};
-            
-            const roomIdInt = Math.floor(parseFloat(room.id));
-            const showActiveCleaning = isMarkingEnabled && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
-            
-            let animationClass = '';
-            let animationStyle = '';
-            if (showActiveCleaning) {
-                const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
-                animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
-                const bgColor = this.config.mark_animation_background;
-                const fgColor = this.config.mark_animation_foreground;
-                if (bgColor || fgColor) {
-                    animationStyle = `${bgColor ? `background-color: ${bgColor} !important;` : ''} ${fgColor ? `color: ${fgColor} !important;` : ''}`;
-                }
-            }
-            
-            return html`
+      const isSelected = selectedRooms.includes(room.id);
+      const customConfig = this.config.rooms?.[room.id] || {};
+
+      const roomIdInt = Math.floor(parseFloat(room.id));
+      const showActiveCleaning = isMarkingEnabled && currentRoomBeingCleaned !== null && currentRoomBeingCleaned === roomIdInt;
+
+      let animationClass = '';
+      let animationStyle = '';
+      if (showActiveCleaning) {
+        const markingAnimation = customConfig.animation || this.config.mark_animation || 'none';
+        animationClass = markingAnimation.toLowerCase() === 'none' ? '' : markingAnimation;
+        const bgColor = this.config.mark_animation_background;
+        const fgColor = this.config.mark_animation_foreground;
+        if (bgColor || fgColor) {
+          animationStyle = `${bgColor ? `background-color: ${bgColor} !important;` : ''} ${fgColor ? `color: ${fgColor} !important;` : ''}`;
+        }
+      }
+
+      return html`
               <div class="room-button ${isSelected ? 'active' : ''} ${showActiveCleaning ? 'cleaning' : ''}" 
                    style="${animationStyle}"
                    @click="${() => !isReadonly && this._toggleRoom(room.id, selectedRooms, cleanSequence)}">
@@ -136,7 +136,7 @@ class VacuumSelectCard extends HAControlBase {
                 <div class="name">${customConfig.label || room.name}</div>
               </div>
             `;
-          })}
+    })}
         </div>
 
         <!-- Toggle All Button - Defaults to Visible -->
@@ -168,9 +168,9 @@ class VacuumSelectCard extends HAControlBase {
    */
   _toggleAll(rooms, selectedRooms, cleanSequence) {
     const allVisibleSelected = rooms.length > 0 && rooms.every(r => selectedRooms.includes(r.id));
-    
+
     let newSelection = [];
-    
+
     if (!allVisibleSelected) {
       newSelection = rooms.map(r => r.id);
       newSelection.sort((a, b) => {
@@ -215,7 +215,7 @@ class VacuumSelectCard extends HAControlBase {
 
     const entityId = this.config.output_entity;
     const [domain] = entityId.split(".");
-    
+
     // Select service based on entity domain
     const service = domain === "input_text" ? "set_value" : "select_option";
     const dataField = domain === "input_text" ? "value" : "option";

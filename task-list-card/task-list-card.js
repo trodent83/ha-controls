@@ -204,7 +204,7 @@ class TaskListCard extends HAControlBase {
   updated(changedProps) {
     super.updated(changedProps);
     if (!changedProps.has("hass")) { return; }
-    
+
     const oldHass = changedProps.get("hass");
     if (!oldHass) {
       // First update cycle - hass set for the first time, trigger initial fetch
@@ -372,14 +372,14 @@ class TaskListCard extends HAControlBase {
         <div class="task-list-wrapper">
           <div class="task-list">
             ${groups.map((group) => {
-        if (!group.isVisible) return html``;
-        const taskDate = group.date;
-        const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
-          ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
-          : html``;
-        lastDate = taskDate;
+      if (!group.isVisible) return html``;
+      const taskDate = group.date;
+      const daySeparator = this._shouldShowSeparator(lastDate, taskDate)
+        ? html`<div class="day-separator" style="border-top-color: ${this.config.day_separator_color};"></div>`
+        : html``;
+      lastDate = taskDate;
 
-        return html`
+      return html`
                 ${daySeparator}
                 <task-list-card-row
                   .hass=${this.hass}
@@ -389,7 +389,7 @@ class TaskListCard extends HAControlBase {
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
                 ></task-list-card-row>
               `;
-      })}
+    })}
             ${(!isLoading && groups.length === 0) ? html`<div class="task-row">${this._localize('no_tasks')}</div>` : ''}
           </div>
           ${isLoading ? html`

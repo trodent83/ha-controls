@@ -22,8 +22,8 @@ class VacuumSelectCardEditor extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { 
-      ...super.properties, 
+    return {
+      ...super.properties,
       _config: { type: Object },
       _activeTab: { type: String }
     };
@@ -99,11 +99,11 @@ class VacuumSelectCardEditor extends HAControlBase {
       { name: "currently_cleaning_entity", label: this._localize('currently_cleaning'), selector: { entity: {} } },
       { name: "readonly_entity", label: this._localize('lock_entity'), selector: { entity: { domain: "binary_sensor" } } },
       { name: "mark_active_room", label: this._localize('display_active_room'), selector: { entity: { domain: "binary_sensor" } } },
-      { 
-        name: "mark_animation", 
-        label: this._localize('animation_selected_room'), 
-        selector: { 
-          select: { 
+      {
+        name: "mark_animation",
+        label: this._localize('animation_selected_room'),
+        selector: {
+          select: {
             options: [
               { value: "none", label: this._localize('none_static') },
               { value: "spinning", label: this._localize('spinning') },
@@ -115,37 +115,37 @@ class VacuumSelectCardEditor extends HAControlBase {
               { value: "spin-slow", label: this._localize('slow_spin') }
             ],
             mode: "list"
-          } 
-        } 
+          }
+        }
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "mark_animation_background", label: this._localize('animation_bg_color'), selector: { text: {} } },
           { name: "mark_animation_foreground", label: this._localize('animation_fg_color'), selector: { text: {} } }
-        ] 
+        ]
       },
-      { 
-        name: "columns", 
-        label: this._localize('columns'), 
-        selector: { number: { min: 2, max: 6, mode: "slider" } } 
+      {
+        name: "columns",
+        label: this._localize('columns'),
+        selector: { number: { min: 2, max: 6, mode: "slider" } }
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "show_toggle", label: this._localize('show_toggle_all'), selector: { boolean: {} } },
           { name: "sort_by_sequence", label: this._localize('sort_by_sequence'), selector: { boolean: {} } }
-        ] 
+        ]
       },
-      { 
-        name: "", 
-        type: "grid", 
+      {
+        name: "",
+        type: "grid",
         schema: [
           { name: "selection_color", label: this._localize('active_color'), selector: { text: {} } },
           { name: "selection_foreground", label: this._localize('active_text_color'), selector: { text: {} } }
-        ] 
+        ]
       }
     ];
   }
@@ -175,24 +175,24 @@ class VacuumSelectCardEditor extends HAControlBase {
           schema: [
             { name: "label", label: this._localize('custom_name'), selector: { text: {} } },
             { name: "icon", label: this._localize('custom_icon'), selector: { icon: {} } },
-            { 
-              name: "animation", 
-              label: this._localize('animation_class'), 
-              selector: { 
-                select: { 
+            {
+              name: "animation",
+              label: this._localize('animation_class'),
+              selector: {
+                select: {
                   options: [
-                      { value: "none", label: this._localize('none_static') },
-                      { value: "spinning", label: this._localize('spinning') },
-                      { value: "pulsing", label: this._localize('pulsing') },
-                      { value: "flash", label: this._localize('flashing') },
-                      { value: "bounce", label: this._localize('bouncing') },
-                      { value: "shake", label: this._localize('shaking') },
-                      { value: "float", label: this._localize('floating') },
-                      { value: "spin-slow", label: this._localize('slow_spin') }
-                    ],
+                    { value: "none", label: this._localize('none_static') },
+                    { value: "spinning", label: this._localize('spinning') },
+                    { value: "pulsing", label: this._localize('pulsing') },
+                    { value: "flash", label: this._localize('flashing') },
+                    { value: "bounce", label: this._localize('bouncing') },
+                    { value: "shake", label: this._localize('shaking') },
+                    { value: "float", label: this._localize('floating') },
+                    { value: "spin-slow", label: this._localize('slow_spin') }
+                  ],
                   mode: "list"
-                } 
-              } 
+                }
+              }
             },
             { name: "disabled", label: this._localize('disable_room'), selector: { boolean: {} } }
           ]
@@ -231,7 +231,7 @@ class VacuumSelectCardEditor extends HAControlBase {
     addIfDiff("sort_by_sequence", true);
     if (this._config.selection_color !== undefined) cleaned.selection_color = this._config.selection_color;
     if (this._config.selection_foreground !== undefined) cleaned.selection_foreground = this._config.selection_foreground;
-    
+
     if (this._config.rooms && typeof this._config.rooms === 'object') {
       cleaned.rooms = {};
       for (const [roomId, roomConf] of Object.entries(this._config.rooms)) {
@@ -243,7 +243,7 @@ class VacuumSelectCardEditor extends HAControlBase {
         cleaned.rooms[roomId] = r;
       }
     }
-    
+
     this._config = cleaned;
     this._fireConfigChanged();
   }
