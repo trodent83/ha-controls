@@ -1,0 +1,113 @@
+/* VGN Departure Card Editor Styles */
+
+.vgn-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.vgn-editor-section {
+  background: var(--secondary-background-color, rgba(0,0,0,0.05));
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid var(--divider-color, rgba(0,0,0,0.1));
+}
+
+.vgn-editor-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--secondary-text-color);
+  margin-bottom: 12px;
+}
+
+.vgn-editor-section-title ha-icon {
+  --mdc-icon-size: 16px;
+}
+
+.vgn-editor-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+ha-textfield,
+ha-select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Watch entry card */
+.vgn-watch-editor {
+  background: var(--card-background-color, #fff);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.vgn-watch-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.vgn-watch-editor-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-text-color);
+}
+
+/* Add watch button */
+.vgn-add-watch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px dashed var(--primary-color, #03a9f4);
+  border-radius: 8px;
+  color: var(--primary-color, #03a9f4);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  justify-content: center;
+}
+
+.vgn-add-watch-btn:hover {
+  background: rgba(3, 169, 244, 0.08);
+}
+
+.vgn-add-watch-btn ha-icon {
+  --mdc-icon-size: 16px;
+}
+
+/* YAML hint block */
+.vgn-yaml-hint {
+  opacity: 0.8;
+}
+
+.vgn-yaml-block {
+  background: #1a1a2e;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.vgn-yaml-block pre {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #a8d8ea;
+  white-space: pre;
+  line-height: 1.6;
+}

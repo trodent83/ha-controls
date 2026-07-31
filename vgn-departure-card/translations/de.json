@@ -1,0 +1,11 @@
+{
+  "now": "Jetzt",
+  "loading": "Lädt...",
+  "refresh": "Aktualisieren",
+  "updated": "Aktuell",
+  "outside_window": "Außerhalb",
+  "no_departures": "Keine Abfahrten gefunden",
+  "not_available": "n/v",
+  "unrecognized_settings": "Unbekannte Konfigurationseinstellungen: {keys}",
+  "clean_settings_desc": "Bitte verwenden Sie den Editor um Ihre Konfiguration zu bereinigen."
+}
