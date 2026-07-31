@@ -29,6 +29,7 @@ Unlike basic custom cards, this repository implements a unified framework design
 | [**`multi-state-card`**](docs/multi-state-card.md) | Interactive grid layout representing various entity buttons entirely driven by features. | Interactive tap/hold actions, conditional feature rendering, and dynamic configuration via nested features. |
 | [**`navigation-bar-card`**](docs/navigation-bar-card.md) | A custom horizontal navigation bar with dynamic alerts, colors, and badge counters. | Auto-detects active dashboard tab, watches entity states with priority thresholds, and shows notification counters. |
 | [**`light-control-card`**](docs/light-control-card.md) | A premium glassmorphic control card for smart lights. | Vertical/horizontal layouts, inline brightness sliders, warm-to-cool Kelvin temperature ranges, and rainbow hue sliders. |
+| [**`vgn-departure-card`**](docs/vgn-departure-card.md) | Real-time bus departure tracking card for the VGN/VAG public transit network. | Live EFA/VAG API polling, automatic input_number helper countdown synchronization for automations, time window & weekday filtering, and visual configuration editor. |
 | [**`fit-grid-layout`**](docs/fit-grid-layout.md) | A custom viewport-fitting layout engine using CSS Grid with dynamic popup overlays. | Dynamic auto-scaling down using CSS transforms to fit viewports, built-in visual editor, and centered 1:1 scale popup overlays with background dim/blur blocking. |
 
 ---

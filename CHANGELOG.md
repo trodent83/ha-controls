@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`vgn-departure-card`)**:
+  - Added custom Lovelace card and visual editor (`vgn-departure-card-editor`) for monitoring real-time VGN/VAG bus departures.
+  - Implemented real-time polling with fallback strategy across VAG API and VGN EFA rapidJSON endpoints.
+  - Added support for monitoring time windows (`time_from`, `time_to`), weekday filtering (`days`), custom alert thresholds (`alert_minutes`), and automatic countdown synchronization to `input_number` helper entities (`-1` written when out of window or unscheduled).
+  - Added full English and German translations (`en.json`, `de.json`).
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:
