@@ -164,6 +164,7 @@ class VGNDepartureCard extends HAControlBase {
     this._loading = false;
     this._pollTimer = null;
     this._nextDepartures = {}; // cache of { [line]: minutesUntil }
+    this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
   }
 
   setConfig(config) {
@@ -189,6 +190,7 @@ class VGNDepartureCard extends HAControlBase {
     super.connectedCallback();
     this._restoreFromCache();
     this._startPolling();
+    document.addEventListener('visibilitychange', this._handleVisibilityChange);
   }
 
   _restoreFromCache() {
@@ -220,16 +222,68 @@ class VGNDepartureCard extends HAControlBase {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._stopPolling();
+    document.removeEventListener('visibilitychange', this._handleVisibilityChange);
+  }
+
+  _handleVisibilityChange() {
+    if (document.hidden) {
+      // Screen off / tab hidden -> pause timer to save battery & CPU
+      this._stopPolling();
+    } else {
+      // Screen on / tab restored -> fetch immediately & resume polling
+      this._startPolling();
+    }
+  }
+
+  /**
+   * Calculates an adaptive polling interval based on how far away the next departure is.
+   * - Next bus <= 30 mins: poll every 60s (or config.poll_interval)
+   * - Next bus 30-60 mins: poll every 3 mins (180s)
+   * - Next bus > 60 mins or no upcoming bus: poll every 5 mins (300s)
+   * @returns {number} Interval in milliseconds
+   */
+  _getAdaptiveInterval() {
+    const baseInterval = (this.config?.poll_interval || 60) * 1000;
+    if (!this._nextDepartures) return baseInterval;
+
+    let minMinutes = null;
+    for (const line in this._nextDepartures) {
+      const val = this._nextDepartures[line];
+      if (val !== null && val !== undefined && val >= 0) {
+        if (minMinutes === null || val < minMinutes) {
+          minMinutes = val;
+        }
+      }
+    }
+
+    if (minMinutes === null || minMinutes > 60) {
+      return Math.max(baseInterval, 300000); // 5 mins
+    } else if (minMinutes > 30) {
+      return Math.max(baseInterval, 180000); // 3 mins
+    }
+
+    return baseInterval;
   }
 
   _startPolling() {
+    this._stopPolling();
+    if (document.hidden) return; // Do not start timer if screen is asleep/hidden
+
     this._fetchDepartures();
-    const interval = (this.config?.poll_interval || 60) * 1000;
-    this._pollTimer = setInterval(() => this._fetchDepartures(), interval);
+    const scheduleNext = () => {
+      const interval = this._getAdaptiveInterval();
+      this._pollTimer = setTimeout(() => {
+        this._fetchDepartures().finally(() => {
+          if (this._pollTimer) scheduleNext();
+        });
+      }, interval);
+    };
+    scheduleNext();
   }
 
   _stopPolling() {
     if (this._pollTimer) {
+      clearTimeout(this._pollTimer);
       clearInterval(this._pollTimer);
       this._pollTimer = null;
     }
