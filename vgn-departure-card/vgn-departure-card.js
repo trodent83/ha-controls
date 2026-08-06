@@ -91,12 +91,14 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   setConfig(config) {
-    if (!config.stop_dhid) throw new Error("stop_dhid is required");
+    if (!config.stop_dhid && (!config.watches || !config.watches.some(w => w.stop_dhid))) {
+      throw new Error("stop_dhid is required in card config or watches");
+    }
     if (!config.watches || !Array.isArray(config.watches) || config.watches.length === 0) {
       throw new Error("At least one watch entry is required");
     }
     this.config = {
-      stop_name: config.stop_dhid,
+      stop_name: config.stop_name || config.stop_dhid || "VGN Abfahrten",
       time_from: "00:00",
       time_to: "23:59",
       poll_interval: 60,
@@ -166,9 +168,7 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   /**
-   * Fetches real-time departures from the VGN/VAG API.
-   * Tries the VAG API first (works for inner Nürnberg network),
-   * falls back to VGN EFA for outer network stops (e.g. Sulzbach-Rosenberg).
+   * Fetches real-time departures from the VGN/VAG API for all stops configured across watches.
    */
   async _fetchDepartures() {
     if (!this.config) return;
@@ -177,44 +177,28 @@ class VGNDepartureCard extends HAControlBase {
     this._error = null;
 
     try {
-      const dhid = this.config.stop_dhid;
-      let data = null;
+      const defaultDhid = this.config.stop_dhid;
+      const dhids = new Set();
+      if (defaultDhid) dhids.add(defaultDhid);
 
-      // Strategy 1: Try VAG API with numeric part of DHID
-      const numericId = dhid.split(':').pop();
-      try {
-        const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus`;
-        const resp = await fetch(vagUrl);
-        if (resp.ok) {
-          data = await resp.json();
-          if (data?.Abfahrten?.length > 0) {
-            this._processDepartures(data.Abfahrten, 'vag');
-            return;
-          }
+      for (const watch of (this.config.watches || [])) {
+        if (watch.stop_dhid) {
+          dhids.add(watch.stop_dhid);
         }
-      } catch (e) {
-        // Fall through to EFA strategy
       }
 
-      // Strategy 2: VGN EFA API (handles outer network via DHID)
-      const efaParams = new URLSearchParams({
-        outputFormat: 'rapidJSON',
-        coordOutputFormat: 'WGS84[DD.DDDDD]',
-        mode: 'direct',
-        type_dm: 'stop',
-        name_dm: dhid,
-        itdDate: this._formatEFADate(new Date()),
-        itdTime: this._formatEFATime(new Date()),
-        useRealtime: '1',
-        limit: '20',
-        useProxFootSearch: '0'
-      });
+      if (dhids.size === 0) {
+        throw new Error("No stop_dhid specified");
+      }
 
-      const efaResp = await fetch(`${VGN_EFA_BASE}?${efaParams}`);
-      if (!efaResp.ok) throw new Error(`EFA API returned ${efaResp.status}`);
-      const efaData = await efaResp.json();
-      this._processEFADepartures(efaData);
+      const results = {};
+      await Promise.all(
+        Array.from(dhids).map(async (dhid) => {
+          results[dhid] = await this._fetchSingleStopDepartures(dhid);
+        })
+      );
 
+      this._processAllWatches(results);
     } catch (err) {
       console.error('[VGNDepartureCard] Fetch error:', err);
       this._error = err.message || 'Failed to fetch departures';
@@ -223,6 +207,42 @@ class VGNDepartureCard extends HAControlBase {
       this._lastUpdated = new Date();
       this.requestUpdate();
     }
+  }
+
+  async _fetchSingleStopDepartures(dhid) {
+    // Strategy 1: Try VAG API with numeric part of DHID
+    const numericId = dhid.split(':').pop();
+    try {
+      const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus`;
+      const resp = await fetch(vagUrl);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data?.Abfahrten?.length > 0) {
+          return { type: 'vag', data: data.Abfahrten };
+        }
+      }
+    } catch (e) {
+      // Fall through to EFA strategy
+    }
+
+    // Strategy 2: VGN EFA API (handles outer network via DHID)
+    const efaParams = new URLSearchParams({
+      outputFormat: 'rapidJSON',
+      coordOutputFormat: 'WGS84[DD.DDDDD]',
+      mode: 'direct',
+      type_dm: 'stop',
+      name_dm: dhid,
+      itdDate: this._formatEFADate(new Date()),
+      itdTime: this._formatEFATime(new Date()),
+      useRealtime: '1',
+      limit: '30',
+      useProxFootSearch: '0'
+    });
+
+    const efaResp = await fetch(`${VGN_EFA_BASE}?${efaParams}`);
+    if (!efaResp.ok) throw new Error(`EFA API returned ${efaResp.status}`);
+    const efaData = await efaResp.json();
+    return { type: 'efa', data: efaData?.stopEvents || efaData?.departureList || [] };
   }
 
   _formatEFADate(date) {
@@ -238,11 +258,7 @@ class VGNDepartureCard extends HAControlBase {
     return `${h}${m}`;
   }
 
-  /**
-   * Processes departures from VAG API format.
-   * @param {Array} abfahrten - Array of departure objects from VAG API
-   */
-  _processDepartures(abfahrten, source) {
+  _processAllWatches(stopResults) {
     const now = new Date();
     const newDepartures = {};
     const newNext = {};
@@ -250,64 +266,47 @@ class VGNDepartureCard extends HAControlBase {
     for (const watch of (this.config.watches || [])) {
       const line = watch.line;
       const dir = (watch.direction || '').toLowerCase();
+      const stopDhid = watch.stop_dhid || this.config.stop_dhid;
+      const stopResult = stopResults[stopDhid] || { type: 'efa', data: [] };
 
-      const matching = abfahrten.filter(a => {
-        const matchLine = String(a.Linienname || a.line || '') === String(line);
-        const matchDir = !dir || (a.Richtungstext || a.direction || '').toLowerCase().includes(dir);
-        return matchLine && matchDir;
-      });
+      let upcoming = [];
+      if (stopResult.type === 'vag') {
+        const matching = stopResult.data.filter(a => {
+          const matchLine = String(a.Linienname || a.line || '') === String(line);
+          const matchDir = !dir || (a.Richtungstext || a.direction || '').toLowerCase().includes(dir);
+          return matchLine && matchDir;
+        });
 
-      const upcoming = matching.map(a => {
-        const planned = new Date(a.AbfahrtszeitSoll || a.plannedDeparture);
-        const delay = (a.Verspätung ?? a.delay ?? 0);
-        const realtime = new Date(planned.getTime() + delay * 60000);
-        const minutesUntil = Math.round((realtime - now) / 60000);
-        return { planned, realtime, minutesUntil, delay, direction: a.Richtungstext || a.direction };
-      }).filter(d => d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        upcoming = matching.map(a => {
+          const planned = new Date(a.AbfahrtszeitSoll || a.plannedDeparture);
+          const delay = (a.Verspätung ?? a.delay ?? 0);
+          const realtime = new Date(planned.getTime() + delay * 60000);
+          const minutesUntil = Math.round((realtime - now) / 60000);
+          return { planned, realtime, minutesUntil, delay, direction: a.Richtungstext || a.direction };
+        }).filter(d => d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+      } else {
+        const stopEvents = stopResult.data;
+        const matching = stopEvents.filter(e => {
+          const transportation = e.transportation || e;
+          const lineName = transportation?.number || transportation?.disassembledName || '';
+          const destination = transportation?.destination?.name || e.routeDescription || '';
+          const matchLine = String(lineName) === String(line);
+          const matchDir = !dir || destination.toLowerCase().includes(dir);
+          return matchLine && matchDir;
+        });
 
-      newDepartures[line] = upcoming;
-      newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
-    }
-
-    this._departures = newDepartures;
-    this._nextDepartures = newNext;
-    this._writeHelpers();
-  }
-
-  /**
-   * Processes departures from VGN EFA rapidJSON format.
-   * @param {Object} efaData - The EFA response object
-   */
-  _processEFADepartures(efaData) {
-    const now = new Date();
-    const stopEvents = efaData?.stopEvents || efaData?.departureList || [];
-    const newDepartures = {};
-    const newNext = {};
-
-    for (const watch of (this.config.watches || [])) {
-      const line = watch.line;
-      const dir = (watch.direction || '').toLowerCase();
-
-      const matching = stopEvents.filter(e => {
-        const transportation = e.transportation || e;
-        const lineName = transportation?.number || transportation?.disassembledName || '';
-        const destination = transportation?.destination?.name || e.routeDescription || '';
-        const matchLine = String(lineName) === String(line);
-        const matchDir = !dir || destination.toLowerCase().includes(dir);
-        return matchLine && matchDir;
-      });
-
-      const upcoming = matching.map(e => {
-        const depTime = e.departureTimePlanned || e.dateTime?.departure;
-        const realTime = e.departureTimeEstimated || depTime;
-        const planned = depTime ? new Date(depTime) : null;
-        const realtime = realTime ? new Date(realTime) : planned;
-        if (!realtime) return null;
-        const minutesUntil = Math.round((realtime - now) / 60000);
-        const delay = planned ? Math.round((realtime - planned) / 60000) : 0;
-        const destination = e.transportation?.destination?.name || e.routeDescription || '';
-        return { planned, realtime, minutesUntil, delay, direction: destination };
-      }).filter(d => d && d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        upcoming = matching.map(e => {
+          const depTime = e.departureTimePlanned || e.dateTime?.departure;
+          const realTime = e.departureTimeEstimated || depTime;
+          const planned = depTime ? new Date(depTime) : null;
+          const realtime = realTime ? new Date(realTime) : planned;
+          if (!realtime) return null;
+          const minutesUntil = Math.round((realtime - now) / 60000);
+          const delay = planned ? Math.round((realtime - planned) / 60000) : 0;
+          const destination = e.transportation?.destination?.name || e.routeDescription || '';
+          return { planned, realtime, minutesUntil, delay, direction: destination };
+        }).filter(d => d && d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+      }
 
       newDepartures[line] = upcoming;
       newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;

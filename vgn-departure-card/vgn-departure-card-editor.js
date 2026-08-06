@@ -48,6 +48,7 @@ class VGNDepartureCardEditor extends HAControlBase {
     const watches = [...(this.config.watches || []), {
       line: '',
       direction: '',
+      stop_dhid: '',
       helper: '',
       alert_minutes: 10
     }];
@@ -166,6 +167,13 @@ class VGNDepartureCardEditor extends HAControlBase {
                   @change="${e => this._watchChanged(idx, 'direction', e.target.value)}"
                 ></ha-textfield>
               </div>
+
+              <ha-textfield
+                label="Haltestelle DHID (optional)"
+                .value="${watch.stop_dhid || ''}"
+                @change="${e => this._watchChanged(idx, 'stop_dhid', e.target.value)}"
+                helper="Optionale abweichende Haltestelle für diese Linie (z.B. de:09371:18002)"
+              ></ha-textfield>
 
               <ha-select
                 label="input_number Helfer (optional)"
