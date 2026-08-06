@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:
+  - Fixed time window guard bug where `_fetchDepartures()` was clearing `_departures = {}` on automatic poll cycles outside the active window, erasing cached/downloaded departures when navigating between dashboard views.
   - Added persistent module-level response cache (`DEPARTURES_CACHE`), preserving previously fetched departure data across view navigation and tab switches for instant 0 ms rendering upon returning to a view.
   - Added support for per-watch `stop_dhid` overrides in `watches`, enabling multi-stop real-time departure polling within a single card.
   - Implemented shared in-flight request de-duplication (`IN_FLIGHT_FETCHES`), preventing duplicate network calls when multiple cards exist across dashboard views.
@@ -14,7 +15,7 @@ All notable changes to this project will be documented in this file.
   - Enhanced manual **Refresh** button action to bypass time window guards and fetch live departures on-demand regardless of time of day, while safely preserving `-1` states on helper entities.
   - Added visual configuration editor fields for per-line stop DHIDs in `vgn-departure-card-editor.js`.
   - Updated default stop DHID configuration to `de:09371:18017` (Bischof-Heckel-Str. for Line 486) and `de:09371:18085` (Sparkasse for Line 456).
-  - Bumped version string to `1.0.8`.
+  - Bumped version string to `1.0.9`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:

@@ -278,8 +278,7 @@ class VGNDepartureCard extends HAControlBase {
     if (!this.config) return;
 
     if (!manualRefresh && !this._isInTimeWindow()) {
-      this._departures = {};
-      this._nextDepartures = {};
+      this._restoreFromCache();
       this._writeHelpers();
       this._loading = false;
       this.requestUpdate();
