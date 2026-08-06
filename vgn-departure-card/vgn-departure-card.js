@@ -14,6 +14,72 @@ const VGN_EFA_BASE = "https://efa.vgn.de/vgnExt_oeffi/XML_DM_REQUEST";
 const VAG_API_BASE = "https://start.vag.de/dm/api/v1/abfahrten/VGN";
 
 /**
+ * Shared in-flight fetch Promise cache across multiple card instances.
+ */
+const IN_FLIGHT_FETCHES = new Map();
+
+function _fmtDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+}
+
+function _fmtTime(date) {
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}${m}`;
+}
+
+async function fetchStopDeparturesShared(dhid, dateObj) {
+  const cacheKey = `${dhid}_${_fmtDate(dateObj)}_${_fmtTime(dateObj)}`;
+  if (IN_FLIGHT_FETCHES.has(cacheKey)) {
+    return IN_FLIGHT_FETCHES.get(cacheKey);
+  }
+
+  const promise = (async () => {
+    try {
+      const numericId = dhid.split(':').pop();
+      try {
+        const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus`;
+        const resp = await fetch(vagUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data?.Abfahrten?.length > 0) {
+            return { type: 'vag', data: data.Abfahrten };
+          }
+        }
+      } catch (e) {
+        // Fall through
+      }
+
+      const efaParams = new URLSearchParams({
+        outputFormat: 'rapidJSON',
+        coordOutputFormat: 'WGS84[DD.DDDDD]',
+        mode: 'direct',
+        type_dm: 'stop',
+        name_dm: dhid,
+        itdDate: _fmtDate(dateObj),
+        itdTime: _fmtTime(dateObj),
+        useRealtime: '1',
+        limit: '30',
+        useProxFootSearch: '0'
+      });
+
+      const efaResp = await fetch(`${VGN_EFA_BASE}?${efaParams}`);
+      if (!efaResp.ok) throw new Error(`EFA API returned ${efaResp.status}`);
+      const efaData = await efaResp.json();
+      return { type: 'efa', data: efaData?.stopEvents || efaData?.departureList || [] };
+    } finally {
+      IN_FLIGHT_FETCHES.delete(cacheKey);
+    }
+  })();
+
+  IN_FLIGHT_FETCHES.set(cacheKey, promise);
+  return promise;
+}
+
+/**
  * VGNDepartureCard
  * A custom Lovelace card that polls the VGN/VAG real-time departure API and
  * displays upcoming bus departures for configured lines at a given stop.
@@ -220,39 +286,7 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   async _fetchSingleStopDepartures(dhid) {
-    // Strategy 1: Try VAG API with numeric part of DHID
-    const numericId = dhid.split(':').pop();
-    try {
-      const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus`;
-      const resp = await fetch(vagUrl);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data?.Abfahrten?.length > 0) {
-          return { type: 'vag', data: data.Abfahrten };
-        }
-      }
-    } catch (e) {
-      // Fall through to EFA strategy
-    }
-
-    // Strategy 2: VGN EFA API (handles outer network via DHID)
-    const efaParams = new URLSearchParams({
-      outputFormat: 'rapidJSON',
-      coordOutputFormat: 'WGS84[DD.DDDDD]',
-      mode: 'direct',
-      type_dm: 'stop',
-      name_dm: dhid,
-      itdDate: this._formatEFADate(new Date()),
-      itdTime: this._formatEFATime(new Date()),
-      useRealtime: '1',
-      limit: '30',
-      useProxFootSearch: '0'
-    });
-
-    const efaResp = await fetch(`${VGN_EFA_BASE}?${efaParams}`);
-    if (!efaResp.ok) throw new Error(`EFA API returned ${efaResp.status}`);
-    const efaData = await efaResp.json();
-    return { type: 'efa', data: efaData?.stopEvents || efaData?.departureList || [] };
+    return fetchStopDeparturesShared(dhid, new Date());
   }
 
   _formatEFADate(date) {
@@ -480,7 +514,7 @@ class VGNDepartureCard extends HAControlBase {
           </div>
         ` : html`
           <div class="vgn-no-departures">
-            ${this._loading
+            ${this._loading && !this._lastUpdated
               ? (this._localize('loading') || 'Lädt...')
               : (this._localize('no_departures') || 'Keine Abfahrten gefunden')}
           </div>
