@@ -169,11 +169,12 @@ class VGNDepartureCard extends HAControlBase {
 
   /**
    * Fetches real-time departures from the VGN/VAG API for all stops configured across watches.
+   * @param {boolean} [manualRefresh=false] - If true, bypasses time window check.
    */
-  async _fetchDepartures() {
+  async _fetchDepartures(manualRefresh = false) {
     if (!this.config) return;
 
-    if (!this._isInTimeWindow()) {
+    if (!manualRefresh && !this._isInTimeWindow()) {
       this._departures = {};
       this._nextDepartures = {};
       this._writeHelpers();
@@ -416,7 +417,7 @@ class VGNDepartureCard extends HAControlBase {
         </div>
 
         <div class="vgn-footer">
-          <button class="vgn-refresh-btn" @click="${() => this._fetchDepartures()}">
+          <button class="vgn-refresh-btn" @click="${() => this._fetchDepartures(true)}">
             <ha-icon icon="mdi:refresh"></ha-icon>
             ${this._localize('refresh') || 'Aktualisieren'}
           </button>

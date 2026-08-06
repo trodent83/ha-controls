@@ -27,6 +27,7 @@ Below are the configuration parameters for the card:
 | :--- | :--- | :--- | :--- | :--- |
 | `line` | string | **Yes** | — | Bus line number (e.g. `"486"`, `"456"`). |
 | `direction` | string | No | — | Direction destination filter string (partial match, case-insensitive, e.g. `"Amberg"`). |
+| `stop_dhid` | string | No | main `stop_dhid` | Optional per-line stop DHID override (e.g. `"de:09371:18017"` or `"de:09371:18085"`). |
 | `helper` | string | No | — | Home Assistant `input_number` entity ID to receive the next departure countdown minutes. Writes `-1` when no bus is scheduled or outside the monitoring window. |
 | `alert_minutes` | number | No | `10` | Urgency highlight threshold in minutes. The line row and badge glow when minutes remaining $\le$ `alert_minutes`. |
 
@@ -35,8 +36,9 @@ Below are the configuration parameters for the card:
 ## 🤖 Helper Entity & Automation Integration
 
 When `helper` is configured on a watch entry:
-* Inside the monitored time window and active days, the card writes the rounded minutes until the next departure (e.g. `10`, `5`, `0`) to the target `input_number` entity.
-* Outside the active window or when no upcoming departure is found, `-1` is written to the helper entity.
+* Inside the monitored time window and active days, automatic background polling updates departure times and writes rounded minutes until departure (e.g. `10`, `5`, `0`) to the target `input_number` entity.
+* Outside the active window or when no upcoming departure is found, background polling is paused to conserve bandwidth and `-1` is written to the helper entity.
+* Clicking the **Refresh** button manually will always fetch and display live departures regardless of the active time window, while preserving the `-1` state on helper entities to avoid triggering off-hour audio alerts.
 * Automations can trigger on `numeric_state` changes (e.g. `below: 11` or `below: 26`) to broadcast verbal TTS departure warnings.
 
 ---
@@ -44,9 +46,9 @@ When `helper` is configured on a watch entry:
 ## 🛠️ Card Visual Editor
 
 The card includes a visual configuration editor (`vgn-departure-card-editor.js`):
-* **Haltestelle**: Configure the DHID stop ID and friendly stop name.
+* **Haltestelle**: Configure the default DHID stop ID and friendly stop name.
 * **Überwachungszeitraum**: Set start time, end time, active weekdays, and poll interval.
-* **Überwachte Linien**: Add, edit, or remove bus lines, direction filters, target `input_number` helpers, and alert thresholds.
+* **Überwachte Linien**: Add, edit, or remove bus lines, direction filters, optional per-line `stop_dhid` overrides, target `input_number` helpers, and alert thresholds.
 
 ---
 
@@ -54,8 +56,8 @@ The card includes a visual configuration editor (`vgn-departure-card-editor.js`)
 
 ```yaml
 type: custom:vgn-departure-card
-stop_dhid: "de:09371:18001"
-stop_name: "Sulzbach-Rosenberg, Bischof-Heckel-Str."
+stop_dhid: "de:09371:18017"
+stop_name: "Sulzbach-Rosenberg → Amberg"
 time_from: "06:00"
 time_to: "09:00"
 days:
@@ -68,10 +70,12 @@ poll_interval: 60
 watches:
   - line: "486"
     direction: "Amberg"
+    stop_dhid: "de:09371:18017"
     helper: "input_number.vgn_bus_486_minutes"
     alert_minutes: 10
   - line: "456"
     direction: "Amberg"
+    stop_dhid: "de:09371:18085"
     helper: "input_number.vgn_bus_456_minutes"
     alert_minutes: 25
 ```

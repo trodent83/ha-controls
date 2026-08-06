@@ -6,10 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:
-  - Added custom Lovelace card and visual editor (`vgn-departure-card-editor`) for monitoring real-time VGN/VAG bus departures.
-  - Implemented real-time polling with fallback strategy across VAG API and VGN EFA rapidJSON endpoints.
-  - Added support for monitoring time windows (`time_from`, `time_to`), weekday filtering (`days`), custom alert thresholds (`alert_minutes`), and automatic countdown synchronization to `input_number` helper entities (`-1` written when out of window or unscheduled).
-  - Added full English and German translations (`en.json`, `de.json`).
+  - Added support for per-watch `stop_dhid` overrides in `watches`, enabling multi-stop real-time departure polling within a single card.
+  - Optimized background polling to pause external API requests outside the configured time window (`time_from` / `time_to`), reducing unnecessary network traffic off-hours.
+  - Enhanced manual **Refresh** button action to bypass time window guards and fetch live departures on-demand regardless of time of day, while safely preserving `-1` states on helper entities.
+  - Added visual configuration editor fields for per-line stop DHIDs in `vgn-departure-card-editor.js`.
+  - Updated default stop DHID configuration to `de:09371:18017` (Bischof-Heckel-Str. for Line 486) and `de:09371:18085` (Sparkasse for Line 456).
+  - Bumped version string to `1.0.6`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:
