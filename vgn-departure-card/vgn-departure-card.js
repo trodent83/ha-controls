@@ -271,19 +271,28 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   /**
+   * Checks if a given departure Date falls within the configured time_from/time_to window.
+   * @param {Date} date
+   * @returns {boolean}
+   */
+  _isDepartureInTimeRange(date) {
+    if (!this.config?.time_from || !this.config?.time_to) return true;
+    const hm = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const depMin = date.getHours() * 60 + date.getMinutes();
+    const fromMin = hm(this.config.time_from);
+    const toMin = hm(this.config.time_to);
+    return depMin >= fromMin && depMin <= toMin;
+  }
+
+  /**
    * Fetches real-time departures from the VGN/VAG API for all stops configured across watches.
-   * @param {boolean} [manualRefresh=false] - If true, bypasses time window check.
+   * @param {boolean} [manualRefresh=false] - Optional parameter.
    */
   async _fetchDepartures(manualRefresh = false) {
     if (!this.config) return;
-
-    if (!manualRefresh && !this._isInTimeWindow()) {
-      this._restoreFromCache();
-      this._writeHelpers();
-      this._loading = false;
-      this.requestUpdate();
-      return;
-    }
 
     this._loading = true;
     this._error = null;
@@ -363,7 +372,7 @@ class VGNDepartureCard extends HAControlBase {
           const realtime = new Date(planned.getTime() + delay * 60000);
           const minutesUntil = Math.round((realtime - now) / 60000);
           return { planned, realtime, minutesUntil, delay, direction: a.Richtungstext || a.direction };
-        }).filter(d => d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        }).filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime)).sort((a, b) => a.minutesUntil - b.minutesUntil);
       } else {
         const stopEvents = stopResult.data;
         const matching = stopEvents.filter(e => {
@@ -385,7 +394,7 @@ class VGNDepartureCard extends HAControlBase {
           const delay = planned ? Math.round((realtime - planned) / 60000) : 0;
           const destination = e.transportation?.destination?.name || e.routeDescription || '';
           return { planned, realtime, minutesUntil, delay, direction: destination };
-        }).filter(d => d && d.minutesUntil >= -1).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        }).filter(d => d && d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime)).sort((a, b) => a.minutesUntil - b.minutesUntil);
       }
 
       newDepartures[line] = upcoming;
@@ -422,7 +431,7 @@ class VGNDepartureCard extends HAControlBase {
    */
   _formatMinutes(min) {
     if (min === null || min === undefined) return '—';
-    if (min <= 0) return this._localize('now') || 'Jetzt';
+    if (min <= 0) return this._localize('now') || 'Now';
     return `${min} min`;
   }
 
@@ -433,14 +442,14 @@ class VGNDepartureCard extends HAControlBase {
    */
   _formatTime(date) {
     if (!date) return '—';
-    return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
   _formatDays(days) {
     if (!days) return '';
     const list = Array.isArray(days) ? days : String(days).split(',').map(s => s.trim());
     if (list.length === 0) return '';
-    const map = { mon: 'Mo', tue: 'Di', wed: 'Mi', thu: 'Do', fri: 'Fr', sat: 'Sa', sun: 'So' };
+    const map = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
     const formatted = list.map(d => map[d.toLowerCase()] || d).join(', ');
     return `${formatted} `;
   }
@@ -465,13 +474,13 @@ class VGNDepartureCard extends HAControlBase {
               <div class="vgn-stop-name">${this.config.stop_name}</div>
               <div class="vgn-window-label">
                 ${this._formatDays(this.config.days)}${this.config.time_from} – ${this.config.time_to}
-                ${!inWindow ? html`<span class="vgn-outside-badge">${this._localize('outside_window') || 'Außerhalb'}</span>` : ''}
+                ${!inWindow ? html`<span class="vgn-outside-badge">${this._localize('outside_window') || 'Outside window'}</span>` : ''}
               </div>
             </div>
           </div>
           <div class="vgn-header-right">
             ${this._loading ? html`<ha-icon icon="mdi:loading" class="vgn-loading-icon spin"></ha-icon>` : ''}
-            <div class="vgn-updated">${this._localize('updated') || 'Aktuell'}: ${lastUpdatedStr}</div>
+            <div class="vgn-updated">${this._localize('updated') || 'Updated'}: ${lastUpdatedStr}</div>
           </div>
         </div>
 
@@ -489,7 +498,7 @@ class VGNDepartureCard extends HAControlBase {
         <div class="vgn-footer">
           <button class="vgn-refresh-btn" @click="${() => this._fetchDepartures(true)}">
             <ha-icon icon="mdi:refresh"></ha-icon>
-            ${this._localize('refresh') || 'Aktualisieren'}
+            ${this._localize('refresh') || 'Refresh'}
           </button>
         </div>
       </ha-card>
@@ -551,8 +560,8 @@ class VGNDepartureCard extends HAControlBase {
         ` : html`
           <div class="vgn-no-departures">
             ${this._loading && !this._lastUpdated
-              ? (this._localize('loading') || 'Lädt...')
-              : (this._localize('no_departures') || 'Keine Abfahrten gefunden')}
+              ? (this._localize('loading') || 'Loading...')
+              : (this._localize('no_departures') || 'No departures found')}
           </div>
         `}
       </div>
