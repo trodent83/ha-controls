@@ -31,6 +31,12 @@ function _fmtTime(date) {
   return `${h}${m}`;
 }
 
+/**
+ * Persistent module-level cache for fetched departure data per stop DHID.
+ * Preserves data across view navigation so switching back to a view renders instantly.
+ */
+const DEPARTURES_CACHE = new Map(); // dhid -> { result, timestamp }
+
 async function fetchStopDeparturesShared(dhid, dateObj) {
   const cacheKey = `${dhid}_${_fmtDate(dateObj)}_${_fmtTime(dateObj)}`;
   if (IN_FLIGHT_FETCHES.has(cacheKey)) {
@@ -46,7 +52,9 @@ async function fetchStopDeparturesShared(dhid, dateObj) {
         if (resp.ok) {
           const data = await resp.json();
           if (data?.Abfahrten?.length > 0) {
-            return { type: 'vag', data: data.Abfahrten };
+            const res = { type: 'vag', data: data.Abfahrten };
+            DEPARTURES_CACHE.set(dhid, { result: res, timestamp: new Date() });
+            return res;
           }
         }
       } catch (e) {
@@ -69,7 +77,9 @@ async function fetchStopDeparturesShared(dhid, dateObj) {
       const efaResp = await fetch(`${VGN_EFA_BASE}?${efaParams}`);
       if (!efaResp.ok) throw new Error(`EFA API returned ${efaResp.status}`);
       const efaData = await efaResp.json();
-      return { type: 'efa', data: efaData?.stopEvents || efaData?.departureList || [] };
+      const res = { type: 'efa', data: efaData?.stopEvents || efaData?.departureList || [] };
+      DEPARTURES_CACHE.set(dhid, { result: res, timestamp: new Date() });
+      return res;
     } finally {
       IN_FLIGHT_FETCHES.delete(cacheKey);
     }
@@ -177,7 +187,34 @@ class VGNDepartureCard extends HAControlBase {
 
   connectedCallback() {
     super.connectedCallback();
+    this._restoreFromCache();
     this._startPolling();
+  }
+
+  _restoreFromCache() {
+    if (!this.config) return;
+    const dhids = new Set();
+    if (this.config.stop_dhid) dhids.add(this.config.stop_dhid);
+    for (const w of (this.config.watches || [])) {
+      if (w.stop_dhid) dhids.add(w.stop_dhid);
+    }
+
+    const cachedResults = {};
+    let latestTs = null;
+    for (const dhid of dhids) {
+      const entry = DEPARTURES_CACHE.get(dhid);
+      if (entry) {
+        cachedResults[dhid] = entry.result;
+        if (!latestTs || entry.timestamp > latestTs) {
+          latestTs = entry.timestamp;
+        }
+      }
+    }
+
+    if (Object.keys(cachedResults).length > 0) {
+      this._processAllWatches(cachedResults);
+      if (latestTs) this._lastUpdated = latestTs;
+    }
   }
 
   disconnectedCallback() {
