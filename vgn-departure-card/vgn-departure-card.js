@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.3.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.4.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -182,10 +182,11 @@ class VGNDepartureCard extends HAControlBase {
       time_to: "23:59",
       poll_interval: 60,
       max_departures: 10,
+      rolling_hours: config.rolling_hours ? Number(config.rolling_hours) : null,
       ...config
     };
     this._unrecognizedKeys = this._validateConfigKeys(config, [
-      'stop_dhid', 'stop_name', 'time_from', 'time_to', 'days', 'poll_interval', 'max_departures', 'watches', 'debug'
+      'stop_dhid', 'stop_name', 'time_from', 'time_to', 'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug'
     ]);
   }
 
@@ -333,6 +334,11 @@ class VGNDepartureCard extends HAControlBase {
    * @returns {boolean}
    */
   _isDepartureInTimeRange(date) {
+    if (this.config?.rolling_hours && this.config.rolling_hours > 0) {
+      const now = new Date();
+      const diffMins = Math.round((date - now) / 60000);
+      return diffMins >= -1 && diffMins <= (this.config.rolling_hours * 60);
+    }
     if (!this.config?.time_from || !this.config?.time_to) return true;
     const hm = (t) => {
       const [h, m] = t.split(':').map(Number);
@@ -389,6 +395,9 @@ class VGNDepartureCard extends HAControlBase {
 
   async _fetchSingleStopDepartures(dhid) {
     const now = new Date();
+    if (this.config?.rolling_hours && this.config.rolling_hours > 0) {
+      return fetchStopDeparturesShared(dhid, now, null);
+    }
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const hm = (t) => {
       const [h, m] = t.split(':').map(Number);
@@ -396,7 +405,6 @@ class VGNDepartureCard extends HAControlBase {
     };
     const fromMin = hm(this.config?.time_from || "00:00");
 
-    // If current time is earlier than time_from (e.g. viewing afternoon window in morning), fetch starting at time_from
     let targetTimeStr = null;
     if (nowMin < fromMin) {
       targetTimeStr = (this.config.time_from || "00:00").replace(":", "");
@@ -482,7 +490,7 @@ class VGNDepartureCard extends HAControlBase {
         .sort((a, b) => a.minutesUntil - b.minutesUntil);
 
       // Flag as gone for the day if current time is past time_to and no upcoming departures remain in window
-      const isGoneForDay = upcoming.length === 0 && nowMin > toMin;
+      const isGoneForDay = upcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
 
       newDepartures[line] = upcoming;
       newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
@@ -562,7 +570,10 @@ class VGNDepartureCard extends HAControlBase {
             <div class="vgn-header-info">
               <div class="vgn-stop-name">${this.config.stop_name}</div>
               <div class="vgn-window-label">
-                ${this._formatDays(this.config.days)}${this.config.time_from} – ${this.config.time_to}
+                ${this.config.rolling_hours > 0
+                  ? `${this._formatDays(this.config.days)}${(this._localize('next_hours') || 'Next {hours}h').replace('{hours}', this.config.rolling_hours)}`
+                  : `${this._formatDays(this.config.days)}${this.config.time_from} – ${this.config.time_to}`
+                }
                 ${!inWindow ? html`<span class="vgn-outside-badge">${this._localize('outside_window') || 'Outside window'}</span>` : ''}
               </div>
             </div>

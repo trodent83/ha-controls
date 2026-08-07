@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.3.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.4.0';
 
 /**
  * VGNDepartureCardEditor
@@ -117,6 +117,17 @@ class VGNDepartureCardEditor extends HAControlBase {
               pattern="[0-2][0-9]:[0-5][0-9]"
             ></ha-textfield>
           </div>
+
+          <ha-textfield
+            label="Gleitendes Fenster in Stunden (z.B. 3, optional)"
+            type="number"
+            min="0"
+            max="24"
+            step="0.5"
+            .value="${this.config.rolling_hours || ''}"
+            @change="${e => this._valueChanged('rolling_hours', parseFloat(e.target.value) || 0)}"
+            helper="Zeigt z.B. Abfahrten der nächsten 3 Std. ab Jetzt (überschreibt Von/Bis)"
+          ></ha-textfield>
 
           <ha-textfield
             label="Wochentage (z.B. tue, wed, thu, fri)"

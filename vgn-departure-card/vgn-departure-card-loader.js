@@ -6,7 +6,7 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
 // Cache-busting version parameter for script loading
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 
 // Name of this loader module script
 const SCRIPT_NAME = "vgn-departure-card-loader.js";
