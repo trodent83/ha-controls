@@ -19,6 +19,7 @@ Below are the configuration parameters for the card:
 | `time_to` | string | No | `"23:59"` | End of the active monitoring window (`HH:MM`). |
 | `days` | list / string | No | — | Active weekdays for monitoring (e.g., `["mon", "tue", "wed", "thu", "fri"]` or `"mon,tue,wed,thu,fri"`). |
 | `poll_interval` | number | No | `60` | Polling interval in seconds (between 10 and 300). |
+| `max_departures` | number | No | `10` | Maximum number of departure rows to display on the card (between 1 and 30). |
 | `watches` | list | **Yes** | — | Array of line watch configuration objects (see below). |
 
 ### Watch Entry Settings (`watches`)

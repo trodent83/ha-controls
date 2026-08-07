@@ -267,6 +267,8 @@
   background: var(--vgn-surface);
   border-radius: var(--vgn-radius-sm);
   padding: 8px 10px;
+  max-height: 260px;
+  overflow-y: auto;
 }
 
 .vgn-dep-row {

@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.3.0';
 
 /**
  * VGNDepartureCardEditor
@@ -125,14 +125,26 @@ class VGNDepartureCardEditor extends HAControlBase {
             helper="Kommaseparierte Tage: mon, tue, wed, thu, fri, sat, sun"
           ></ha-textfield>
 
-          <ha-textfield
-            label="Abfrageintervall (Sekunden)"
-            type="number"
-            min="10"
-            max="300"
-            .value="${String(this.config.poll_interval || 60)}"
-            @change="${e => this._valueChanged('poll_interval', parseInt(e.target.value) || 60)}"
-          ></ha-textfield>
+          <div class="vgn-editor-row">
+            <ha-textfield
+              label="Abfrageintervall (Sekunden)"
+              type="number"
+              min="10"
+              max="300"
+              .value="${String(this.config.poll_interval || 60)}"
+              @change="${e => this._valueChanged('poll_interval', parseInt(e.target.value) || 60)}"
+            ></ha-textfield>
+
+            <ha-textfield
+              label="Max. Abfahrten (z.B. 10)"
+              type="number"
+              min="1"
+              max="30"
+              .value="${String(this.config.max_departures || 10)}"
+              @change="${e => this._valueChanged('max_departures', parseInt(e.target.value) || 10)}"
+              helper="Maximale Anzahl angezeigter Abfahrtszeilen"
+            ></ha-textfield>
+          </div>
         </div>
 
         <!-- Watch Entries -->

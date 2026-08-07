@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.2.1';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.3.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -71,7 +71,7 @@ async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
         itdDate: _fmtDate(dateObj),
         itdTime: timeQuery,
         useRealtime: '1',
-        limit: '40',
+        limit: '200',
         useProxFootSearch: '0'
       });
 
@@ -181,10 +181,11 @@ class VGNDepartureCard extends HAControlBase {
       time_from: "00:00",
       time_to: "23:59",
       poll_interval: 60,
+      max_departures: 10,
       ...config
     };
     this._unrecognizedKeys = this._validateConfigKeys(config, [
-      'stop_dhid', 'stop_name', 'time_from', 'time_to', 'days', 'poll_interval', 'watches', 'debug'
+      'stop_dhid', 'stop_name', 'time_from', 'time_to', 'days', 'poll_interval', 'max_departures', 'watches', 'debug'
     ]);
   }
 
@@ -631,7 +632,7 @@ class VGNDepartureCard extends HAControlBase {
 
         ${departures.length > 0 ? html`
           <div class="vgn-departures">
-            ${departures.slice(0, 4).map((dep, i) => html`
+            ${departures.slice(0, watch.max_departures || this.config?.max_departures || 12).map((dep, i) => html`
               <div class="vgn-dep-row ${i === 0 ? 'first' : ''}">
                 <div class="vgn-dep-time">
                   <span class="vgn-dep-planned">${this._formatTime(dep.planned)}</span>

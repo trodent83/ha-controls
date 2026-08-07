@@ -10,7 +10,8 @@ All notable changes to this project will be documented in this file.
   - **Strict Window Bounds Enforcement**: Enforces `[time_from, time_to]` filtering per card. Departures outside a card's configured window are excluded, preventing morning cards from displaying afternoon buses and vice versa.
   - **Gone for the Day Status Differentiation**: Implemented `isGoneForDay` detection. When current local time is past `time_to` and all window departures for today have completed, the card renders `"All departures completed for today"` (`gone_for_day` in `en.json` / `"Alle Abfahrten für heute beendet"` in `de.json`), distinguishing it clearly from `"No departures found"`.
   - **Page Visibility API & Adaptive Polling**: Pauses polling when off-screen and scales poll intervals dynamically.
-  - Bumped version string to `1.2.1` in `vgn-departure-card-loader.js` and `vgn-departure-card.js`.
+  - **Configurable `max_departures` & Visual Editor Integration**: Added `max_departures` card parameter (default `10`) and visual editor input control ("Max. Abfahrten"), allowing users to customize the maximum number of departure rows displayed per card.
+  - Bumped version string to `1.3.0` in `vgn-departure-card-loader.js`, `vgn-departure-card.js`, and `vgn-departure-card-editor.js`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:
