@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.2.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -164,6 +164,7 @@ class VGNDepartureCard extends HAControlBase {
     this._loading = false;
     this._pollTimer = null;
     this._nextDepartures = {}; // cache of { [line]: minutesUntil }
+    this._goneForDay = {}; // cache of { [line]: isGoneForDayBoolean }
     this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
   }
 
@@ -405,6 +406,7 @@ class VGNDepartureCard extends HAControlBase {
     const now = new Date();
     const newDepartures = {};
     const newNext = {};
+    const newGoneForDay = {};
 
     for (const watch of (this.config.watches || [])) {
       const line = watch.line;
@@ -412,7 +414,7 @@ class VGNDepartureCard extends HAControlBase {
       const stopDhid = watch.stop_dhid || this.config.stop_dhid;
       const stopResult = stopResults[stopDhid] || { type: 'efa', data: [] };
 
-      let upcoming = [];
+      let allMapped = [];
       if (stopResult.type === 'vag') {
         const matching = stopResult.data.filter(a => {
           const matchLine = String(a.Linienname || a.line || '') === String(line);
@@ -420,13 +422,13 @@ class VGNDepartureCard extends HAControlBase {
           return matchLine && matchDir;
         });
 
-        upcoming = matching.map(a => {
+        allMapped = matching.map(a => {
           const planned = new Date(a.AbfahrtszeitSoll || a.plannedDeparture);
           const delay = (a.Verspätung ?? a.delay ?? 0);
           const realtime = new Date(planned.getTime() + delay * 60000);
           const minutesUntil = Math.round((realtime - now) / 60000);
           return { planned, realtime, minutesUntil, delay, direction: a.Richtungstext || a.direction };
-        }).filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime)).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        });
       } else {
         const stopEvents = stopResult.data;
         const matching = stopEvents.filter(e => {
@@ -438,7 +440,7 @@ class VGNDepartureCard extends HAControlBase {
           return matchLine && matchDir;
         });
 
-        upcoming = matching.map(e => {
+        allMapped = matching.map(e => {
           const depTime = e.departureTimePlanned || e.dateTime?.departure;
           const realTime = e.departureTimeEstimated || depTime;
           const planned = depTime ? new Date(depTime) : null;
@@ -448,15 +450,25 @@ class VGNDepartureCard extends HAControlBase {
           const delay = planned ? Math.round((realtime - planned) / 60000) : 0;
           const destination = e.transportation?.destination?.name || e.routeDescription || '';
           return { planned, realtime, minutesUntil, delay, direction: destination };
-        }).filter(d => d && d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime)).sort((a, b) => a.minutesUntil - b.minutesUntil);
+        }).filter(Boolean);
       }
+
+      // Upcoming departures for the day (minutesUntil >= -1) allow full day schedule planning
+      const upcoming = allMapped
+        .filter(d => d.minutesUntil >= -1)
+        .sort((a, b) => a.minutesUntil - b.minutesUntil);
+
+      // Flag as gone for the day if all scheduled departures for today have already completed
+      const isGoneForDay = allMapped.length > 0 && upcoming.length === 0;
 
       newDepartures[line] = upcoming;
       newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
+      newGoneForDay[line] = isGoneForDay;
     }
 
     this._departures = newDepartures;
     this._nextDepartures = newNext;
+    this._goneForDay = newGoneForDay;
     this._writeHelpers();
   }
 
@@ -615,7 +627,9 @@ class VGNDepartureCard extends HAControlBase {
           <div class="vgn-no-departures">
             ${this._loading && !this._lastUpdated
               ? (this._localize('loading') || 'Loading...')
-              : (this._localize('no_departures') || 'No departures found')}
+              : (this._goneForDay[line]
+                  ? (this._localize('gone_for_day') || 'All departures completed for today')
+                  : (this._localize('no_departures') || 'No departures found'))}
           </div>
         `}
       </div>

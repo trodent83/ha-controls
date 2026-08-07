@@ -6,15 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:
-  - Implemented **Page Visibility API (`visibilitychange`)** integration: automatically pauses polling timers when the wall tablet screen is turned off or when navigating to background tabs/apps. Eliminates CPU wakeups and battery drain off-screen.
-  - Implemented **Smart Adaptive Polling Backoff (`_getAdaptiveInterval`)**: polling frequency dynamically scales based on departure urgency:
-    - Next bus $\le 30$ mins: Standard polling (`60s`).
-    - Next bus 30–60 mins: Backs off to `180s` (3 mins).
-    - Next bus $> 60$ mins or no upcoming buses: Backs off to `300s` (5 mins).
-  - Replaced all German fallback strings (`Jetzt`, `Aktuell`, `Aktualisieren`, `Lädt...`, `Keine Abfahrten gefunden`, `Außerhalb`, day abbreviations) with English (`Now`, `Updated`, `Refresh`, `Loading...`, `No departures found`, `Outside window`, `Mon`-`Sun`) across the card UI.
-  - Enhanced departure filtering logic: `_fetchDepartures()` now continuously fetches live departures regardless of current time of day, filtering displayed events by `time_from` and `time_to`. This allows cards to display their target schedule (e.g. `13:00`–`20:00` for Return) even when viewed in the morning (`06:30`).
-  - Helper entities (`input_number`) remain strictly guarded by `_isInTimeWindow()`, writing positive countdown minutes only when local time is inside `time_from`–`time_to`.
-  - Bumped version string to `1.1.2`.
+  - **Day View Range Schedule Planning**: Updated departure processing so upcoming departures for the entire day (`minutesUntil >= -1`) remain visible when viewing the card outside narrow focus windows, enabling full day schedule planning.
+  - **Gone for the Day Status Differentiation**: Implemented `isGoneForDay` detection. When all scheduled departures for today have already completed, the card renders `"All departures completed for today"` (`gone_for_day` in `en.json` / `"Alle Abfahrten für heute beendet"` in `de.json`), distinguishing it clearly from `"No departures found"` when no service is scheduled.
+  - **Page Visibility API & Adaptive Polling**: Pauses polling when off-screen and scales poll intervals dynamically.
+  - Bumped version string to `1.2.0` in `vgn-departure-card-loader.js`, `vgn-departure-card.js`, and `vgn-departure-card-editor.js`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:

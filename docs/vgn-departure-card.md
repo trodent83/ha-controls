@@ -36,10 +36,10 @@ Below are the configuration parameters for the card:
 ## 🤖 Helper Entity & Automation Integration
 
 When `helper` is configured on a watch entry:
-* Inside the monitored time window and active days, automatic background polling updates departure times and writes rounded minutes until departure (e.g. `10`, `5`, `0`) to the target `input_number` entity.
-* Outside the active window or when no upcoming departure is found, background polling is paused to conserve bandwidth and `-1` is written to the helper entity.
-* Clicking the **Refresh** button manually will always fetch and display live departures regardless of the active time window, while preserving the `-1` state on helper entities to avoid triggering off-hour audio alerts.
-* Automations can trigger on `numeric_state` changes (e.g. `below: 11` or `below: 26`) to broadcast verbal TTS departure warnings.
+* **Background Backend Synchronization**: An automated Home Assistant backend script (`vgn_bus_departure_background_update.yaml`) periodically fetches departure times (every 5 minutes during peak commute hours 06:00-09:00 / 13:00-20:00, and 15 minutes off-peak) and writes rounded minutes until departure to helper entities (`input_number.vgn_bus_486_minutes` and `input_number.vgn_bus_456_minutes`) to reliably trigger verbal TTS alerts even without an open browser tab.
+* **Full Day Schedule Planning**: The card displays upcoming departures for the entire day so users can plan ahead even when viewing outside narrow focus windows.
+* **Status Differentiation**: When all scheduled departures for the current day have already completed, the card displays **"All departures completed for today"** (`gone_for_day`), distinguishing it clearly from **"No departures found"** when no bus service is scheduled.
+* Automations trigger on `numeric_state` changes (e.g. `below: 11` for Bus 486 or `below: 26` for Bus 456) to broadcast verbal TTS departure warnings.
 
 ---
 
