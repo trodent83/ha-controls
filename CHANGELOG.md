@@ -6,10 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:
-  - **Day View Range Schedule Planning**: Updated departure processing so upcoming departures for the entire day (`minutesUntil >= -1`) remain visible when viewing the card outside narrow focus windows, enabling full day schedule planning.
-  - **Gone for the Day Status Differentiation**: Implemented `isGoneForDay` detection. When all scheduled departures for today have already completed, the card renders `"All departures completed for today"` (`gone_for_day` in `en.json` / `"Alle Abfahrten für heute beendet"` in `de.json`), distinguishing it clearly from `"No departures found"` when no service is scheduled.
+  - **Window-Targeted API Querying (`itdTime`)**: Added dynamic time querying. When current local time is earlier than a card's configured `time_from` (e.g. viewing afternoon `13:00–20:00` return window in the morning), the card queries the VGN EFA API with `itdTime = time_from` (`1300`). Prevents API result limits from truncating future window schedules.
+  - **Strict Window Bounds Enforcement**: Enforces `[time_from, time_to]` filtering per card. Departures outside a card's configured window are excluded, preventing morning cards from displaying afternoon buses and vice versa.
+  - **Gone for the Day Status Differentiation**: Implemented `isGoneForDay` detection. When current local time is past `time_to` and all window departures for today have completed, the card renders `"All departures completed for today"` (`gone_for_day` in `en.json` / `"Alle Abfahrten für heute beendet"` in `de.json`), distinguishing it clearly from `"No departures found"`.
   - **Page Visibility API & Adaptive Polling**: Pauses polling when off-screen and scales poll intervals dynamically.
-  - Bumped version string to `1.2.0` in `vgn-departure-card-loader.js`, `vgn-departure-card.js`, and `vgn-departure-card-editor.js`.
+  - Bumped version string to `1.2.1` in `vgn-departure-card-loader.js` and `vgn-departure-card.js`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:

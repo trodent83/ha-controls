@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.2.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.2.1';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -37,8 +37,9 @@ function _fmtTime(date) {
  */
 const DEPARTURES_CACHE = new Map(); // dhid -> { result, timestamp }
 
-async function fetchStopDeparturesShared(dhid, dateObj) {
-  const cacheKey = `${dhid}_${_fmtDate(dateObj)}_${_fmtTime(dateObj)}`;
+async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
+  const timeQuery = targetTimeStr || _fmtTime(dateObj);
+  const cacheKey = `${dhid}_${_fmtDate(dateObj)}_${timeQuery}`;
   if (IN_FLIGHT_FETCHES.has(cacheKey)) {
     return IN_FLIGHT_FETCHES.get(cacheKey);
   }
@@ -68,9 +69,9 @@ async function fetchStopDeparturesShared(dhid, dateObj) {
         type_dm: 'stop',
         name_dm: dhid,
         itdDate: _fmtDate(dateObj),
-        itdTime: _fmtTime(dateObj),
+        itdTime: timeQuery,
         useRealtime: '1',
-        limit: '30',
+        limit: '40',
         useProxFootSearch: '0'
       });
 
@@ -386,7 +387,21 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   async _fetchSingleStopDepartures(dhid) {
-    return fetchStopDeparturesShared(dhid, new Date());
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const hm = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const fromMin = hm(this.config?.time_from || "00:00");
+
+    // If current time is earlier than time_from (e.g. viewing afternoon window in morning), fetch starting at time_from
+    let targetTimeStr = null;
+    if (nowMin < fromMin) {
+      targetTimeStr = (this.config.time_from || "00:00").replace(":", "");
+    }
+
+    return fetchStopDeparturesShared(dhid, now, targetTimeStr);
   }
 
   _formatEFADate(date) {
@@ -404,6 +419,13 @@ class VGNDepartureCard extends HAControlBase {
 
   _processAllWatches(stopResults) {
     const now = new Date();
+    const hm = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = hm(this.config?.time_to || "23:59");
+
     const newDepartures = {};
     const newNext = {};
     const newGoneForDay = {};
@@ -453,13 +475,13 @@ class VGNDepartureCard extends HAControlBase {
         }).filter(Boolean);
       }
 
-      // Upcoming departures for the day (minutesUntil >= -1) allow full day schedule planning
+      // Upcoming departures within the card's target window [time_from, time_to]
       const upcoming = allMapped
-        .filter(d => d.minutesUntil >= -1)
+        .filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime))
         .sort((a, b) => a.minutesUntil - b.minutesUntil);
 
-      // Flag as gone for the day if all scheduled departures for today have already completed
-      const isGoneForDay = allMapped.length > 0 && upcoming.length === 0;
+      // Flag as gone for the day if current time is past time_to and no upcoming departures remain in window
+      const isGoneForDay = upcoming.length === 0 && nowMin > toMin;
 
       newDepartures[line] = upcoming;
       newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
