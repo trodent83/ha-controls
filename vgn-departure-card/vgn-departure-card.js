@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.4.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.5.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -48,7 +48,7 @@ async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
     try {
       const numericId = dhid.split(':').pop();
       try {
-        const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus`;
+        const vagUrl = `${VAG_API_BASE}/${numericId}?product=Bus,Tram,UBahn,SBahn,Train`;
         const resp = await fetch(vagUrl);
         if (resp.ok) {
           const data = await resp.json();
@@ -616,12 +616,12 @@ class VGNDepartureCard extends HAControlBase {
     return html`
       <div class="vgn-watch ${isAlert ? 'alert' : ''} ${isEmpty ? 'empty' : ''}">
         <div class="vgn-watch-header">
-          <div class="vgn-line-badge" style="background: ${this._lineColor(line)}">
+          <div class="vgn-line-badge" style="background: ${this._lineColor(line, watch)}">
             ${line}
           </div>
           <div class="vgn-watch-info">
             <div class="vgn-watch-direction">
-              <ha-icon icon="mdi:arrow-right-circle-outline"></ha-icon>
+              <ha-icon icon="${this._modeIcon(line, watch.mode, watch.icon)}"></ha-icon>
               ${watch.direction || '—'}
             </div>
             ${watch.helper ? html`
@@ -671,17 +671,45 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   /**
-   * Returns a consistent color for a given line number.
+   * Returns an appropriate Material Design icon for the given line and transport mode.
    * @param {string} line
+   * @param {string} [mode]
+   * @param {string} [watchIcon]
+   * @returns {string} MDI icon identifier
+   */
+  _modeIcon(line, mode, watchIcon) {
+    if (watchIcon) return watchIcon;
+    const l = String(line || '').toUpperCase();
+    const m = String(mode || '').toLowerCase();
+    if (l.startsWith('U') || m === 'ubahn') return 'mdi:subway';
+    if (l.startsWith('S') || m === 'sbahn') return 'mdi:train-variant';
+    if (l.startsWith('RE') || l.startsWith('RB') || l.startsWith('IC') || l.startsWith('ICE') || m === 'train' || m === 'regionalzug') return 'mdi:train';
+    if (l.startsWith('TRAM') || m === 'tram') return 'mdi:tram';
+    return 'mdi:bus';
+  }
+
+  /**
+   * Returns a consistent color for a given line number and transport mode.
+   * @param {string} line
+   * @param {Object} [watch]
    * @returns {string} CSS color
    */
-  _lineColor(line) {
+  _lineColor(line, watch) {
+    if (watch?.color) return watch.color;
+    const l = String(line || '').toUpperCase();
     const colors = {
       '486': '#e8501a',
       '456': '#1a78e8',
-      default: '#555'
+      'U1': '#d01e38',
+      'U2': '#cd126b',
+      'U3': '#00893b'
     };
-    return colors[line] || colors['default'];
+    if (colors[l]) return colors[l];
+    if (l.startsWith('U')) return '#00509a';
+    if (l.startsWith('S')) return '#008e4e';
+    if (l.startsWith('RE') || l.startsWith('RB') || l.startsWith('IC') || l.startsWith('ICE')) return '#991b1b';
+    if (l.startsWith('TRAM')) return '#dc2626';
+    return '#475569';
   }
 }
 

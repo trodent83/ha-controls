@@ -27,8 +27,11 @@ Below are the configuration parameters for the card:
 
 | Property | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `line` | string | **Yes** | — | Bus line number (e.g. `"486"`, `"456"`). |
+| `line` | string | **Yes** | — | Line number or train identifier (e.g. `"486"`, `"456"`, `"RE30"`, `"S1"`, `"U2"`). |
 | `direction` | string | No | — | Direction destination filter string (partial match, case-insensitive, e.g. `"Amberg"`). |
+| `mode` | string | No | `"all"` | Transport mode filter (`"bus"`, `"tram"`, `"ubahn"`, `"sbahn"`, `"train"`, `"all"`). Enables automatic MDI icons and network color branding. |
+| `icon` | string | No | auto | Custom MDI icon override for the line row (e.g. `"mdi:train"`). |
+| `color` | string | No | auto | Custom badge CSS background color (e.g. `"#d01e38"`). |
 | `stop_dhid` | string | No | main `stop_dhid` | Optional per-line stop DHID override (e.g. `"de:09371:18017"` or `"de:09371:18085"`). |
 | `helper` | string | No | — | Home Assistant `input_number` entity ID to receive the next departure countdown minutes. Writes `-1` when no bus is scheduled or outside the monitoring window. |
 | `alert_minutes` | number | No | `10` | Urgency highlight threshold in minutes. The line row and badge glow when minutes remaining $\le$ `alert_minutes`. |

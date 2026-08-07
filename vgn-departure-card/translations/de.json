@@ -7,6 +7,12 @@
   "no_departures": "Keine Abfahrten gefunden",
   "gone_for_day": "Alle Abfahrten für heute beendet",
   "next_hours": "Nächste {hours} Std.",
+  "mode_all": "Alle Verkehrsmittel",
+  "mode_bus": "Bus",
+  "mode_tram": "Tram",
+  "mode_ubahn": "U-Bahn",
+  "mode_sbahn": "S-Bahn",
+  "mode_train": "Regionalzug",
   "not_available": "n/v",
   "unrecognized_settings": "Unbekannte Konfigurationseinstellungen: {keys}",
   "clean_settings_desc": "Bitte verwenden Sie den Editor um Ihre Konfiguration zu bereinigen."

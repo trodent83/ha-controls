@@ -7,6 +7,12 @@
   "no_departures": "No departures found",
   "gone_for_day": "All departures completed for today",
   "next_hours": "Next {hours}h",
+  "mode_all": "All Transports",
+  "mode_bus": "Bus",
+  "mode_tram": "Tram",
+  "mode_ubahn": "U-Bahn",
+  "mode_sbahn": "S-Bahn",
+  "mode_train": "Regional Train",
   "not_available": "n/a",
   "unrecognized_settings": "Unrecognized configuration settings: {keys}",
   "clean_settings_desc": "You can use the editor to clean your configuration."

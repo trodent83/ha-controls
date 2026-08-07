@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
   - **Page Visibility API & Adaptive Polling**: Pauses polling when off-screen and scales poll intervals dynamically.
   - **Configurable `max_departures` & Visual Editor Integration**: Added `max_departures` card parameter (default `10`) and visual editor input control ("Max. Abfahrten"), allowing users to customize the maximum number of departure rows displayed per card.
   - **Moving / Rolling Time Window (`rolling_hours`)**: Added relative moving time window option (`rolling_hours: 3`). When configured, displays all upcoming departures within the next N hours relative to current local time (e.g. next 3 hours), overriding fixed `time_from`/`time_to` constraints. Included `rolling_hours` field in visual card editor and dynamic localized header label (`Next 3h` / `Nächste 3 Std.`).
-  - Bumped version string to `1.4.0` in `vgn-departure-card-loader.js`, `vgn-departure-card.js`, and `vgn-departure-card-editor.js`.
+  - **Multimodal Transport Support (Bus, Tram, U-Bahn, S-Bahn, Regionaltrain)**: Expanded card and VAG/VGN API integrations to support all public transport modes. Added dynamic MDI mode icons (`mdi:subway`, `mdi:train-variant`, `mdi:train`, `mdi:tram`, `mdi:bus`), VGN network color branding for U-Bahn, S-Bahn, Tram, and Regional trains, custom `color` and `icon` overrides, and visual editor transport mode selectors.
+  - Bumped version string to `1.5.0` in `vgn-departure-card-loader.js`, `vgn-departure-card.js`, and `vgn-departure-card-editor.js`.
 - **HTML Formatting Utility (`utilities/html-parser.js`)**:
   - Added a new safe client-side HTML parser that parses and sanitizes text with formatting tags (e.g., `<b>`, `<i>`, `<u>`, `<br>`) to support styled descriptions.
 - **State Value Feature (`state-value-feature`)**:

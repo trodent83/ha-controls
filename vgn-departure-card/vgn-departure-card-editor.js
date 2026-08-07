@@ -179,7 +179,7 @@ class VGNDepartureCardEditor extends HAControlBase {
 
               <div class="vgn-editor-row">
                 <ha-textfield
-                  label="Liniennummer (z.B. 486)"
+                  label="Liniennummer (z.B. 486, RE30, S1, U2)"
                   .value="${watch.line || ''}"
                   @change="${e => this._watchChanged(idx, 'line', e.target.value)}"
                 ></ha-textfield>
@@ -188,6 +188,27 @@ class VGNDepartureCardEditor extends HAControlBase {
                   label="Richtung (Teilname)"
                   .value="${watch.direction || ''}"
                   @change="${e => this._watchChanged(idx, 'direction', e.target.value)}"
+                ></ha-textfield>
+              </div>
+
+              <div class="vgn-editor-row">
+                <ha-select
+                  label="Verkehrsmittel"
+                  .value="${watch.mode || 'all'}"
+                  @selected="${e => this._watchChanged(idx, 'mode', e.target.value)}"
+                >
+                  <mwc-list-item value="all">Alle / Auto</mwc-list-item>
+                  <mwc-list-item value="bus">Bus (mdi:bus)</mwc-list-item>
+                  <mwc-list-item value="tram">Tram (mdi:tram)</mwc-list-item>
+                  <mwc-list-item value="ubahn">U-Bahn (mdi:subway)</mwc-list-item>
+                  <mwc-list-item value="sbahn">S-Bahn (mdi:train-variant)</mwc-list-item>
+                  <mwc-list-item value="train">Regionalzug (mdi:train)</mwc-list-item>
+                </ha-select>
+
+                <ha-textfield
+                  label="Icon (optional, z.B. mdi:train)"
+                  .value="${watch.icon || ''}"
+                  @change="${e => this._watchChanged(idx, 'icon', e.target.value)}"
                 ></ha-textfield>
               </div>
 
