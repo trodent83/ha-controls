@@ -29,6 +29,8 @@ ha-card {
   padding: 0px !important;
   margin: 0px !important;
   overflow: hidden;
+  border-radius: var(--ha-card-border-radius, 18px);
+  border: var(--ha-card-border, 1px solid rgba(255, 255, 255, 0.08));
 }
 
 /* Vertical layout display mode */
@@ -62,6 +64,14 @@ ha-card {
   cursor: pointer;
   text-align: center;
   flex: 1; /* Distributes buttons evenly inside container lines */
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.96);
+  background-color: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.12);
 }
 
 /* Textual labels displayed beneath icons */

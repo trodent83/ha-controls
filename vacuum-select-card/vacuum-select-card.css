@@ -28,17 +28,23 @@
     cursor: pointer;
     
     /* Design Tokens: Inherit Home Assistant theme variables for cards */
-    border-radius: var(--ha-card-border-radius, 12px);
+    border-radius: var(--ha-card-border-radius, 16px);
     background: var(--ha-card-background, var(--card-background-color, white));
-    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
+    border: var(--ha-card-border, 1px solid rgba(255, 255, 255, 0.08));
     box-shadow: var(--ha-card-box-shadow, none);
     
     padding: 8px;
     box-sizing: border-box;
-    transition: all 0.2s ease-in-out;
+    transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease, border-color 0.15s ease;
+    will-change: transform;
     text-align: center;
     overflow: hidden;
     color: var(--primary-text-color);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.room-button:active, .tile-button:active {
+    transform: scale(0.96);
 }
 
 /* Toggle All Button - Styled like a Home Assistant Tile Card */
@@ -51,10 +57,12 @@
     cursor: pointer;
     
     /* Design Tokens: Inherit Home Assistant card variables */
-    border-radius: var(--ha-card-border-radius, 12px);
+    border-radius: var(--ha-card-border-radius, 16px);
     background: var(--ha-card-background, var(--card-background-color, white));
-    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color));
-    transition: all 0.2s ease-in-out;
+    border: var(--ha-card-border, 1px solid rgba(255, 255, 255, 0.08));
+    transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Circular icon badge within the Tile button */

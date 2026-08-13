@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Modern GUI Styling & System Defaults**:
+  - **Tactile Touch Feedback**: Integrated hardware-accelerated `transform: scale(0.96)` scaling with `will-change: transform` on active button tap states for `multi-state-card`, `universal-select-card`, and `vacuum-select-card`.
+  - **Micro Glass Borders**: Replaced heavy drop shadows with subtle 1px translucent micro-borders (`border: 1px solid rgba(255, 255, 255, 0.08)`) across custom card containers (`multi-state-card`, `universal-select-card`, `vacuum-select-card`).
+  - **Rounded Pill Status Badges**: Added `border-radius: 9999px` soft alpha background badges (`background: rgba(255, 255, 255, 0.05)`) to `room-status-card` indicators.
+  - **Smart Control System Defaults**: Baked fallback property definitions into custom controls, allowing card templates to omit repetitive default configurations (`show_header`, `show_icon`, padding, border radii).
+  - Bumped version loader strings in `multi-state-card-loader.js` (`0.1.38`), `feature-renderer-card-loader.js` (`0.1.34`), `universal-select-card-loader.js` (`1.0.38`), `vacuum-select-card-loader.js` (`1.0.28`), and `room-status-card-loader.js` (`1.0.48`).
+
 ### Fixed
 - **Weather Grid Card (`weather-grid-card`)**:
   - **UV Index & Parameter Fallback Resolution**: Added parameter key fallbacks for `uv_index` (`day.uv_index`, `day.uv`, `stateObj.attributes.uv_index`, `stateObj.attributes.uv`, `stateObj.attributes.uv_index_max`) and automatic fallback to standalone HA UV sensors (`sensor.uv_index`, `sensor.current_uv_index`, `sensor.uv`). Added attribute fallbacks for `precipitation`, `precipitation_probability`, `humidity`, `pressure`, and `wind_speed`.

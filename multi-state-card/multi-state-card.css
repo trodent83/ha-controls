@@ -5,7 +5,8 @@
 
 /* Main card outer wrapper */
 ha-card {
-  border-radius: var(--ha-card-border-radius, 12px);
+  border-radius: var(--ha-card-border-radius, 18px);
+  border: var(--ha-card-border, 1px solid rgba(255, 255, 255, 0.08));
   overflow: hidden;
   padding: 0px !important;
   display: flex;
@@ -23,7 +24,8 @@ ha-card {
   justify-content: center;
   cursor: pointer;
   padding: 8px 4px;
-  transition: background 0.2s ease;
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
+  will-change: transform;
   -webkit-tap-highlight-color: transparent; /* Cleaner mobile tap response */
   min-width: 60px;
 }
@@ -31,8 +33,9 @@ ha-card {
 
 /* Active click states overlay */
 .btn:active {
-  background: rgba(var(--rgb-primary-text-color), 0.1);
-  border-radius: 4px;
+  transform: scale(0.96);
+  background: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.12);
+  border-radius: 8px;
 }
 
 /* Grayed out locked state styling */

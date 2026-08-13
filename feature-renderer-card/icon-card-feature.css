@@ -13,6 +13,6 @@
 
 .icon-feature-container ha-icon {
   display: inline-block;
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out, transform 0.15s ease-in-out;
   transform: translateZ(0);
 }

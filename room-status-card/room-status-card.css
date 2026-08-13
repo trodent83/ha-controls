@@ -92,24 +92,31 @@ ha-card {
   margin: 0;
   font-size: inherit;
   line-height: inherit;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 /* Right aligned row container for sensors badges */
 .status_badges {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 /* Individual status badge style */
 .status_badge {
-  font-size: 0.95rem;
-  font-weight: 400;
+  font-size: 0.9rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   /* Uses dynamic --badge-color variable determined by threshold configs in JS logic */
   color: var(--badge-color);
-  transition: color 0.3s ease-in-out;
+  transition: color 0.3s ease-in-out, background 0.3s ease-in-out;
   transform: translateZ(0); /* Added GPU layer composite loading */
 }
 
