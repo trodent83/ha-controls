@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Fit Grid Layout Card (`fit-grid-layout`)**:
+  - **State Update & Observer Lockup Fix**: Fixed `updated()` hook to prevent DOM observer re-registration, shadow DOM tree traversals, and stacked timer execution loops on `hass` state updates.
+  - **Mutation Observer Scope Restriction**: Restricted `MutationObserver` to structural DOM changes (`{ childList: true, subtree: true }`) without `attributes` or `characterData` watching, preventing clock ticks or attribute changes from triggering layout thrashing.
+  - **Single-Pass Wake-Up Recalculation**: Refactored `_handleVisibilityChange` on screen wake-up (`visibilityState === 'visible'`) to execute a single debounced scale recalculation via `requestAnimationFrame`.
+  - Bumped `VERSION` string to `1.1.17` in `fit-grid-layout.js` and `fit-grid-layout-loader.js`.
+
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:
   - **Window-Targeted API Querying (`itdTime`)**: Added dynamic time querying. When current local time is earlier than a card's configured `time_from` (e.g. viewing afternoon `13:00–20:00` return window in the morning), the card queries the VGN EFA API with `itdTime = time_from` (`1300`). Prevents API result limits from truncating future window schedules.
