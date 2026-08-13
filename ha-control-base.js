@@ -38,13 +38,18 @@ export class HAControlBase extends LitElement {
   }
 
   _getWatchedEntities(config) {
-    if (this._watchedEntities) return this._watchedEntities;
+    if (this._watchedEntities && (!this.stateObj?.entity_id || this._watchedEntities.includes(this.stateObj.entity_id))) {
+      return this._watchedEntities;
+    }
 
     const entities = new Set();
     if (this.stateObj?.entity_id) {
       entities.add(this.stateObj.entity_id);
     }
-    if (!config) return Array.from(entities);
+    if (!config) {
+      this._watchedEntities = Array.from(entities);
+      return this._watchedEntities;
+    }
 
     const entityRegex = /(?:^|['"/\s(\[{])([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)(?:$|['"/\s)\]}])/g;
 
@@ -87,12 +92,13 @@ export class HAControlBase extends LitElement {
    * @returns {boolean} True if the control should update and re-render, false otherwise
    */
   shouldUpdate(changedProps) {
+    if (changedProps.has('config') || changedProps.has('stateObj')) {
+      this._watchedEntities = null;
+    }
+
     // If any property other than 'hass' changed, we must update
     const hasOtherChanges = Array.from(changedProps.keys()).some(key => key !== 'hass');
     if (hasOtherChanges) {
-      if (changedProps.has('config') || changedProps.has('stateObj')) {
-        this._watchedEntities = null;
-      }
       return true;
     }
 

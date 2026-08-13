@@ -19,6 +19,12 @@ All notable changes to this project will be documented in this file.
 - **State Value Feature (`state-value-feature`)**:
   - Added support for Javascript-based expressions (`prefix_expression`, `suffix_expression`, `color_expression`, and `animation_expression`) to allow fully dynamic renderings and style assignments.
 
+### Fixed
+- **Base Control Class (`ha-control-base.js`)**:
+  - Fixed watched entity caching bug in `_getWatchedEntities()`: when `this.stateObj` was assigned after initial card instantiation, components (e.g. `icon-card-feature` and `state-value-feature` inside `multi-state-card`) cached an empty watched entity list (`[]`), causing `shouldUpdate()` to reject reactive state changes until manual browser reload.
+  - Added dynamic `this.stateObj.entity_id` validation and automatic cache invalidation in `shouldUpdate()` whenever `stateObj` or `config` properties update.
+  - Bumped cache-busting version strings across all control loaders (`multi-state-card`, `feature-renderer-card`, `calendar-grid-card`, `calendar-list-card`, `fit-grid-layout`, `light-control-card`, `multi-property-card`, `navigation-bar-card`, `radiator-control-card`, `room-status-card`, `task-list-card`, `universal-select-card`, `vacuum-map-card`, `vacuum-select-card`, `vgn-departure-card`, `weather-grid-card`).
+
 ### Optimized
 - **Base Control Class (`ha-control-base.js`)**:
   - Refactored the translation loading system to run inside `willUpdate` instead of `updated`. Cached translation strings are now resolved synchronously *before* rendering, rendering translation text on the very first frame and eliminating a duplicate rendering pass.
