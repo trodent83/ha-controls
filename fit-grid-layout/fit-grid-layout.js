@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.14';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.17';
 
 /**
  * FitGridLayout
@@ -48,6 +48,7 @@ class FitGridLayout extends HAControlBase {
     this._lastContentWidth = null;
     this._lastContentHeight = null;
     this._lastScale = null;
+    this._postUpdateTimers = [];
     this._calculateScaleDebounced = this._debounce(() => this._calculateScale(), 30);
 
     // Document visibility change listener to clear cached dimensions and recalculate on wakeup
@@ -58,7 +59,7 @@ class FitGridLayout extends HAControlBase {
         this._lastContentWidth = null;
         this._lastContentHeight = null;
         this._lastScale = null;
-        this._schedulePostUpdateCalculations();
+        requestAnimationFrame(() => this._calculateScaleDebounced());
       }
     };
   }
@@ -101,6 +102,7 @@ class FitGridLayout extends HAControlBase {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._clearPostUpdateCalculations();
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
     }
@@ -113,7 +115,10 @@ class FitGridLayout extends HAControlBase {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    if (changedProperties.has("cards") || changedProperties.has("config") || changedProperties.has("hass")) {
+    const hasCardsOrConfig = changedProperties.has("cards") || changedProperties.has("config");
+    const hasHass = changedProperties.has("hass");
+
+    if (hasCardsOrConfig || hasHass) {
       // Dynamically apply configured layout height to the host element
       if (this.config && this.config.layout && this.config.layout.height) {
         this.style.height = this.config.layout.height;
@@ -127,13 +132,24 @@ class FitGridLayout extends HAControlBase {
           if (card) card.hass = this.hass;
         });
       }
+    }
+
+    if (hasCardsOrConfig) {
       this._observeElements();
       this._setupMutationObserver();
       this._schedulePostUpdateCalculations();
     }
+
     // Propagate state object updates to the active popup card if one is open
-    if (changedProperties.has("hass") && this._popupEl) {
+    if (hasHass && this._popupEl) {
       this._popupEl.hass = this.hass;
+    }
+  }
+
+  _clearPostUpdateCalculations() {
+    if (this._postUpdateTimers && this._postUpdateTimers.length > 0) {
+      this._postUpdateTimers.forEach(id => clearTimeout(id));
+      this._postUpdateTimers = [];
     }
   }
 
@@ -142,16 +158,16 @@ class FitGridLayout extends HAControlBase {
    * card renders, and font/image loading.
    */
   _schedulePostUpdateCalculations() {
+    this._clearPostUpdateCalculations();
     this._calculateScaleDebounced();
-    [50, 150, 400, 800, 1500, 3000].forEach(delay => {
+    const delays = [50, 150, 400, 800, 1500];
+    this._postUpdateTimers = delays.map(delay =>
       setTimeout(() => {
         if (this.isConnected) {
-          this._observeElements();
-          this._setupMutationObserver();
           this._calculateScaleDebounced();
         }
-      }, delay);
-    });
+      }, delay)
+    );
   }
 
   /**
@@ -189,7 +205,6 @@ class FitGridLayout extends HAControlBase {
   _setupMutationObserver() {
     if (!this._mutationObserver) {
       this._mutationObserver = new MutationObserver(() => {
-        this._observeElements();
         this._calculateScaleDebounced();
       });
     } else {
@@ -201,9 +216,7 @@ class FitGridLayout extends HAControlBase {
       try {
         this._mutationObserver.observe(container, {
           childList: true,
-          subtree: true,
-          attributes: true,
-          characterData: true
+          subtree: true
         });
       } catch (e) { }
     }
@@ -215,9 +228,7 @@ class FitGridLayout extends HAControlBase {
         try {
           this._mutationObserver.observe(card.shadowRoot, {
             childList: true,
-            subtree: true,
-            attributes: true,
-            characterData: true
+            subtree: true
           });
         } catch (e) { }
       }
