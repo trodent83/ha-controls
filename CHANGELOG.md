@@ -5,11 +5,21 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **Weather Grid Card (`weather-grid-card`)**:
+  - **UV Index & Parameter Fallback Resolution**: Added parameter key fallbacks for `uv_index` (`day.uv_index`, `day.uv`, `stateObj.attributes.uv_index`, `stateObj.attributes.uv`, `stateObj.attributes.uv_index_max`) and automatic fallback to standalone HA UV sensors (`sensor.uv_index`, `sensor.current_uv_index`, `sensor.uv`). Added attribute fallbacks for `precipitation`, `precipitation_probability`, `humidity`, `pressure`, and `wind_speed`.
+  - **Hourly Dialog Runtime Exception Fix**: Fixed `this._getConditionIcon` and `this._getConditionColor` scoping bug in `WeatherGridCardDialog` that caused runtime `TypeError` crashes when rendering the hourly timeline.
+  - **Summary Mode Next Days Detail & Instant Load**: Enhanced summary mode (`mode: summary`) to render High / Low temperature ranges (e.g. `24° / 14°`) and rain probability percentages (e.g. `40%`). Added immediate initial attribute population from `stateObj.attributes.forecast` in `_subscribeForecasts()` for instant rendering without waiting on WebSocket responses. Respected `max_days` configuration parameter in summary mode.
+  - Bumped `VERSION` string to `1.2.0` in `weather-grid-card-loader.js`.
+
+- **Feature Renderer Card (`feature-renderer-card`)**:
+  - **Translation Path Compliance**: Implemented `translationPath` and `translationVersion` getters in `FeatureRendererCard`, `FeatureRendererEditorCard`, and `FeatureSelector` classes per control rules.
+  - Bumped `VERSION` string to `0.1.33` in `feature-renderer-card-loader.js`.
+
 - **Fit Grid Layout Card (`fit-grid-layout`)**:
-  - **State Update & Observer Lockup Fix**: Fixed `updated()` hook to prevent DOM observer re-registration, shadow DOM tree traversals, and stacked timer execution loops on `hass` state updates.
-  - **Mutation Observer Scope Restriction**: Restricted `MutationObserver` to structural DOM changes (`{ childList: true, subtree: true }`) without `attributes` or `characterData` watching, preventing clock ticks or attribute changes from triggering layout thrashing.
-  - **Single-Pass Wake-Up Recalculation**: Refactored `_handleVisibilityChange` on screen wake-up (`visibilityState === 'visible'`) to execute a single debounced scale recalculation via `requestAnimationFrame`.
-  - Bumped `VERSION` string to `1.1.17` in `fit-grid-layout.js` and `fit-grid-layout-loader.js`.
+  - **Transform Reset & Premature Guard Fix**: Fixed a measurement bug in `_calculateScale()` where step 2 temporarily reset `container.style.transform = 'none'` to measure natural content size, but an early return guard check evaluated `true` and returned *before* re-applying the calculated CSS `scale(...)` transform, leaving the container unscaled and causing layout overflow off-screen.
+  - **Kiosk Mode Vertical Space Offset Calculation**: Fixed `topOffset` computation when `rect.top === 0` (e.g. wall tablets running non-admin kiosk mode with hidden headers), preventing unnecessary 56px fallback subtractions from available viewport height.
+  - **Host Width Fallback**: Enhanced width measurement fallback (`this.clientWidth || rect.width || window.innerWidth`).
+  - Bumped `VERSION` string to `1.1.18` in `fit-grid-layout.js` and `fit-grid-layout-loader.js`.
 
 ### Added
 - **VGN Departure Card (`vgn-departure-card`)**:

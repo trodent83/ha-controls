@@ -1,6 +1,10 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.33';
+
 class FeatureSelector extends HAControlBase {
+  get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
+  get translationVersion() { return VERSION; }
   static get properties() {
     return {
       hass: { attribute: false },

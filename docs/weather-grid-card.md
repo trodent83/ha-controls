@@ -15,8 +15,8 @@ Below are the configuration parameters for the card. Define these fields in your
 | `type` | string | **Yes** | — | Must be `custom:weather-grid-card`. |
 | `entity` | string | **Yes** | — | The entity ID of the weather forecast sensor (e.g. `weather.forecast_home`). |
 | `name` | string | No | Friendly Name | Custom header title override for the summary or grid headers. |
-| `mode` | string | No | `grid` | Renders either `grid` (full daily columns layout) or `summary` (compact 5-day horizontal forecast bar). |
-| `max_days` | number | No | `7` | The maximum number of forecast days to display in the grid columns. |
+| `mode` | string | No | `grid` | Renders either `grid` (full daily columns layout) or `summary` (compact multi-day horizontal bar with high/low temps & rain chance). |
+| `max_days` | number | No | `7` | The maximum number of forecast days to display in grid or summary columns. |
 | `warning_entity` | string | No | — | Optional entity ID containing weather warnings (e.g., severe weather sensors). Displays a highlighted banner alert at the top of the card if active. |
 
 ---
@@ -25,7 +25,7 @@ Below are the configuration parameters for the card. Define these fields in your
 Clicking on any day cell in either **grid** or **summary** mode opens a details dialog modal overlay with:
 * Large condition icon (colored by weather condition state).
 * Temperatures (high and low).
-* Parameters grid (precipitation amount, rain chance percentage, humidity, wind speed, barometric pressure, and UV index).
+* Parameters grid (precipitation amount, rain chance percentage, humidity, wind speed, barometric pressure, and UV index with support for `sensor.uv_index` fallbacks).
 * **Hourly Forecast Timeline**: Horizontally scrollable row containing hourly weather slots for the clicked calendar day, resolving local offsets automatically.
 
 ---

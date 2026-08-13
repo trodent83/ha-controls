@@ -161,6 +161,17 @@ class WeatherGridCard extends HAControlBase {
     if (!this.hass || !this.config?.entity) return;
     const entityId = this.config.entity;
 
+    // Check entity attributes fallback immediately before waiting for WebSocket subscription updates
+    const stateObj = this.hass.states[entityId];
+    if (stateObj) {
+      if (!this._forecast && stateObj.attributes?.forecast) {
+        this._forecast = stateObj.attributes.forecast;
+      }
+      if (!this._hourlyForecast) {
+        this._hourlyForecast = stateObj.attributes?.hourly_forecast || stateObj.attributes?.forecast_hourly || stateObj.attributes?.hourly || null;
+      }
+    }
+
     this._useSubscription = true;
 
     try {
@@ -356,7 +367,8 @@ class WeatherGridCard extends HAControlBase {
    * Renders the next 5 days.
    */
   _renderSummary(stateObj) {
-    const forecastDays = this._forecast ? this._forecast.slice(0, 5) : [];
+    const maxDays = parseInt(this.config?.max_days || 5, 10);
+    const forecastDays = this._forecast ? this._forecast.slice(0, maxDays) : [];
     const locale = this.hass.locale || { language: 'en' };
 
     return html`
@@ -370,6 +382,7 @@ class WeatherGridCard extends HAControlBase {
             const dayName = date.toLocaleDateString(locale.language, { weekday: 'short' });
             const icon = getConditionIcon(day.condition);
             const iconColor = getConditionColor(day.condition);
+            const rainProb = day.precipitation_probability ?? day.cloud_coverage;
             
             return html`
               <div class="multi-state-entity" @click="${() => this._openDetails(day)}">
@@ -379,7 +392,9 @@ class WeatherGridCard extends HAControlBase {
                     <span class="label">${dayName}</span>
                     <div class="value-container">
                       <span class="value-text">${day.temperature}°</span>
+                      ${day.templow !== undefined ? html`<span class="value-low">/ ${day.templow}°</span>` : ''}
                     </div>
+                    ${rainProb !== undefined && rainProb !== null && rainProb > 0 ? html`<span class="rain-text">${rainProb}%</span>` : ''}
                   </div>
                 </div>
               </div>
@@ -531,6 +546,21 @@ class WeatherGridCardDialog extends HAControlBase {
     const precipUnit = stateObj.attributes.precipitation_unit || "mm";
     const pressureUnit = stateObj.attributes.pressure_unit || "hPa";
 
+    // Parameter value resolution with fallback keys and sensor entity fallbacks
+    const precipVal = day.precipitation ?? stateObj.attributes.precipitation;
+    const rainChance = day.precipitation_probability ?? day.cloud_coverage ?? stateObj.attributes.precipitation_probability;
+    const humidityVal = day.humidity ?? stateObj.attributes.humidity;
+    const windSpeedVal = day.wind_speed ?? stateObj.attributes.wind_speed;
+    const pressureVal = day.pressure ?? stateObj.attributes.pressure;
+
+    let uvVal = day.uv_index ?? day.uv ?? stateObj.attributes.uv_index ?? stateObj.attributes.uv ?? stateObj.attributes.uv_index_max;
+    if ((uvVal === undefined || uvVal === null) && this.hass.states) {
+      const uvSensor = this.hass.states["sensor.uv_index"] || this.hass.states["sensor.current_uv_index"] || this.hass.states["sensor.uv"];
+      if (uvSensor && !isNaN(parseFloat(uvSensor.state))) {
+        uvVal = uvSensor.state;
+      }
+    }
+
     const targetDateStr = getYYYYMMDD(day.datetime);
     const dayHours = this.hourlyForecast ? this.hourlyForecast.filter(hour => {
       return getYYYYMMDD(hour.datetime) === targetDateStr;
@@ -560,61 +590,61 @@ class WeatherGridCardDialog extends HAControlBase {
             </div>
 
             <div class="parameters-grid">
-              ${day.precipitation !== undefined && day.precipitation !== null ? html`
+              ${precipVal !== undefined && precipVal !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:weather-rainy" class="param-icon param-rain"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.precipitation} ${precipUnit}</span>
+                    <span class="param-value">${precipVal} ${precipUnit}</span>
                     <span class="param-label">Precipitation</span>
                   </div>
                 </div>
               ` : ''}
               
-              ${day.precipitation_probability !== undefined && day.precipitation_probability !== null ? html`
+              ${rainChance !== undefined && rainChance !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:water-percent" class="param-icon param-probability"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.precipitation_probability}%</span>
+                    <span class="param-value">${rainChance}%</span>
                     <span class="param-label">Rain Chance</span>
                   </div>
                 </div>
               ` : ''}
 
-              ${day.humidity !== undefined && day.humidity !== null ? html`
+              ${humidityVal !== undefined && humidityVal !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:water" class="param-icon param-humidity"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.humidity}%</span>
+                    <span class="param-value">${humidityVal}%</span>
                     <span class="param-label">Humidity</span>
                   </div>
                 </div>
               ` : ''}
 
-              ${day.wind_speed !== undefined && day.wind_speed !== null ? html`
+              ${windSpeedVal !== undefined && windSpeedVal !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:weather-windy" class="param-icon param-wind"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.wind_speed} ${windSpeedUnit}</span>
+                    <span class="param-value">${windSpeedVal} ${windSpeedUnit}</span>
                     <span class="param-label">Wind Speed</span>
                   </div>
                 </div>
               ` : ''}
 
-              ${day.pressure !== undefined && day.pressure !== null ? html`
+              ${pressureVal !== undefined && pressureVal !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:gauge" class="param-icon param-pressure"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.pressure} ${pressureUnit}</span>
+                    <span class="param-value">${pressureVal} ${pressureUnit}</span>
                     <span class="param-label">Pressure</span>
                   </div>
                 </div>
               ` : ''}
 
-              ${day.uv_index !== undefined && day.uv_index !== null ? html`
+              ${uvVal !== undefined && uvVal !== null ? html`
                 <div class="param-item">
                   <ha-icon icon="mdi:white-balance-sunny" class="param-icon param-uv"></ha-icon>
                   <div class="param-meta">
-                    <span class="param-value">${day.uv_index}</span>
+                    <span class="param-value">${uvVal}</span>
                     <span class="param-label">UV Index</span>
                   </div>
                 </div>
@@ -627,12 +657,12 @@ class WeatherGridCardDialog extends HAControlBase {
                 ${dayHours.map((hour) => {
                   const hourTimeObj = new Date(hour.datetime);
                   const timeLabel = hourTimeObj.toLocaleTimeString(this.locale?.language || 'en', { hour: '2-digit', minute: '2-digit' });
-                  const hourIcon = this._getConditionIcon(hour.condition);
+                  const hourIcon = getConditionIcon(hour.condition);
                   
                   return html`
                     <div class="hourly-slot">
                       <span class="slot-time">${timeLabel}</span>
-                      <ha-icon .icon="${hourIcon}" class="slot-icon" style="color: ${this._getConditionColor(hour.condition)};"></ha-icon>
+                      <ha-icon .icon="${hourIcon}" class="slot-icon" style="color: ${getConditionColor(hour.condition)};"></ha-icon>
                       <span class="slot-temp">${hour.temperature}${tempUnit}</span>
                       ${hour.precipitation_probability ? html`<span class="slot-rain">${hour.precipitation_probability}%</span>` : ''}
                     </div>

@@ -1,11 +1,10 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-/**
- * FeatureRendererEditorCard
- * Dynamically resolves and mounts the visual configuration editor for a specific card feature.
- * Automatically appends a generic text field to configure dynamic visibility condition logic.
- */
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.33';
+
 export class FeatureRendererEditorCard extends HAControlBase {
+  get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
+  get translationVersion() { return VERSION; }
   static get properties() {
     return {
       hass: { attribute: false },

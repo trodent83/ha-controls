@@ -106,10 +106,24 @@ ha-card.summary-card:hover {
   justify-content: center;
   font-size: 11px;
   font-weight: 500;
+  gap: 2px;
 }
 
 .value-text {
   color: var(--primary-text-color);
+}
+
+.value-low {
+  color: var(--secondary-text-color);
+  opacity: 0.65;
+  font-size: 10px;
+}
+
+.rain-text {
+  font-size: 9px;
+  color: #00bcd4;
+  font-weight: 600;
+  margin-top: 1px;
 }
 
 .multi-state-entity:hover .btn {

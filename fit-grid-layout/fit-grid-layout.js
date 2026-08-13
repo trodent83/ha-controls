@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.17';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.1.18';
 
 /**
  * FitGridLayout
@@ -363,16 +363,15 @@ class FitGridLayout extends HAControlBase {
     if (!container) return;
 
     // 1. Get host's actual available dimensions
-    const availableWidth = this.clientWidth || window.innerWidth;
-
-    // Determine exact remaining viewport height below card top
     const rect = this.getBoundingClientRect();
-    const headerHeight = parseInt(getComputedStyle(this).getPropertyValue('--header-height')) || 56;
-    const topOffset = rect.top > 0 ? rect.top : headerHeight;
+    const availableWidth = this.clientWidth || (rect.width > 0 ? rect.width : window.innerWidth);
+
+    // Determine exact remaining viewport height below card top (handling kiosk mode rect.top === 0)
+    const topOffset = rect.top > 0 ? rect.top : 0;
     const viewportRemaining = Math.max(100, window.innerHeight - topOffset);
 
     // Available height capped strictly at viewport remaining space to prevent vertical scrolling
-    const availableHeight = this.clientHeight > 0
+    let availableHeight = this.clientHeight > 0
       ? Math.min(this.clientHeight, viewportRemaining)
       : viewportRemaining;
 
@@ -445,19 +444,23 @@ class FitGridLayout extends HAControlBase {
 
     const roundedScale = Math.round(scale * 1000) / 1000;
 
-    // Prevent ResizeObserver loops by skipping if host size and content size haven't changed
-    if (
-      this._lastWidth === availableWidth &&
-      this._lastHeight === availableHeight &&
-      this._lastContentWidth === contentWidth &&
-      this._lastContentHeight === contentHeight &&
-      this._lastScale === roundedScale
-    ) {
-      container.style.transition = originalTransition;
-      container.style.overflow = originalOverflow;
-      return;
+    // 5. Apply scale transforms and size corrections ALWAYS so scaling is never stripped by measurement resets
+    if (roundedScale < 1.0) {
+      container.style.width = `${availableWidth / roundedScale}px`;
+      container.style.height = `${availableHeight / roundedScale}px`;
+      container.style.transform = `scale(${roundedScale})`;
+      container.style.transformOrigin = "top left";
+    } else {
+      container.style.width = "100%";
+      container.style.height = "100%";
+      container.style.transform = "none";
     }
 
+    // Re-enable original transition and overflow
+    container.style.transition = originalTransition;
+    container.style.overflow = originalOverflow;
+
+    // Cache latest dimensions after scaling has been applied
     this._lastWidth = availableWidth;
     this._lastHeight = availableHeight;
     this._lastContentWidth = contentWidth;
@@ -481,22 +484,6 @@ class FitGridLayout extends HAControlBase {
     document.documentElement.style.setProperty('--fit-popup-max-height', popupMaxHeight);
     document.documentElement.style.setProperty('--fit-popup-overlay-width', overlayWidth);
     document.documentElement.style.setProperty('--fit-popup-overlay-height', overlayHeight);
-
-    // 5. Apply scale transforms and size corrections
-    if (roundedScale < 1.0) {
-      container.style.width = `${availableWidth / roundedScale}px`;
-      container.style.height = `${availableHeight / roundedScale}px`;
-      container.style.transform = `scale(${roundedScale})`;
-      container.style.transformOrigin = "top left";
-    } else {
-      container.style.width = "100%";
-      container.style.height = "100%";
-      container.style.transform = "none";
-    }
-
-    // Re-enable original transition and overflow
-    container.style.transition = originalTransition;
-    container.style.overflow = originalOverflow;
   }
 
   _isConfigMatch(c1, c2) {
