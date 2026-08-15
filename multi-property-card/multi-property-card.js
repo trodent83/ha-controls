@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.25';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
 
 /**
  * MultiPropertyCard

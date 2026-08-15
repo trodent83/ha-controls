@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
-const VERSION = "0.1.34";
+const VERSION = "0.1.35";
 
 const SCRIPT_NAME = "feature-renderer-card-loader.js";
 
@@ -13,7 +13,8 @@ loader.loadModules(
     "state-value-feature.css",
     "attribute-value-feature.css",
     "image-card-feature.css",
-    "icon-card-feature.css"
+    "icon-card-feature.css",
+    "progress-bar-feature.css"
   ],
   [
     "feature-renderer-card.js",
@@ -30,6 +31,8 @@ loader.loadModules(
     "image-card-feature.js",
     "image-card-feature-editor.js",
     "icon-card-feature.js",
-    "icon-card-feature-editor.js"
+    "icon-card-feature-editor.js",
+    "progress-bar-feature.js",
+    "progress-bar-feature-editor.js"
   ]
 );

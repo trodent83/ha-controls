@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **New Custom Feature Module: Progress Bar Feature (`custom:progress-bar-feature`)**:
+  - Created first-class custom feature module `progress-bar-feature.js`, `progress-bar-feature.css`, and `progress-bar-feature-editor.js` under `ha-controls/feature-renderer-card/`.
+  - Supports nesting inside `multi-state-card`, `multi-property-card`, `room-status-card`, or native Tile cards via `features: [{ type: "custom:progress-bar-feature" }]`.
+  - Renders a sleek full-width progress bar track (`.progress-bar-track`) with animated fill (`.progress-bar-fill`), icon, title label, and live numeric value display (`.progress-value`).
+  - Supports `min`, `max`, `reverse`, custom icons, threshold coloring/animations, and conditional visibility expressions.
+  - Registered in `feature-renderer-card-loader.js` (bumped `VERSION` to `0.1.35`).
+
 - **Modern GUI Styling & System Defaults**:
   - **Tactile Touch Feedback**: Integrated hardware-accelerated `transform: scale(0.96)` scaling with `will-change: transform` on active button tap states for `multi-state-card`, `universal-select-card`, and `vacuum-select-card`.
   - **Micro Glass Borders**: Replaced heavy drop shadows with subtle 1px translucent micro-borders (`border: 1px solid rgba(255, 255, 255, 0.08)`) across custom card containers (`multi-state-card`, `universal-select-card`, `vacuum-select-card`).
