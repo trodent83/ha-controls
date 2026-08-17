@@ -12,7 +12,7 @@ class ProgressBarFeatureEditor extends HAControlBase {
   }
 
   get translationPath() { return "/local/ha-controls/feature-renderer-card/translations"; }
-  get translationVersion() { return "1.0.0"; }
+  get translationVersion() { return "0.1.36"; }
 
   setConfig(config) {
     this._config = config;
@@ -43,8 +43,18 @@ class ProgressBarFeatureEditor extends HAControlBase {
           { name: "max", label: "Max Value", selector: { number: {} } }
         ]
       },
+      { name: "unit", label: "Unit of Measurement Override (e.g. %)", selector: { text: {} } },
       { name: "color", label: "Color (empty to inherit)", selector: { text: {} } },
-      { name: "reverse", label: "Reverse Progress Direction", selector: { boolean: {} } }
+      {
+        name: "",
+        type: "grid",
+        schema: [
+          { name: "show_icon", label: "Show Icon", selector: { boolean: {} } },
+          { name: "show_label", label: "Show Label", selector: { boolean: {} } },
+          { name: "show_value", label: "Show Value", selector: { boolean: {} } },
+          { name: "reverse", label: "Reverse Direction", selector: { boolean: {} } }
+        ]
+      }
     ];
 
     return html`

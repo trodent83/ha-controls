@@ -1,6 +1,6 @@
 import { HAControlLoader } from "../ha-control-loader.js?v=0.6.0";
 
-const VERSION = "1.0.18";
+const VERSION = "1.0.19";
 const SCRIPT_NAME = "radiator-control-card-loader.js";
 
 const loader = new HAControlLoader(SCRIPT_NAME, VERSION);

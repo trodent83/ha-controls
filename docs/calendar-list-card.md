@@ -25,6 +25,8 @@ Below is the complete configuration schema for the card. Define these fields in 
 | `show_description` | boolean | No | `false` | Displays the event description text (if available). |
 | `show_due_in_days` | boolean | No | `true` | Displays the relative day count (e.g. "Tomorrow", "In 5 days"). |
 | `show_source` | boolean | No | `false` | Displays the source calendar friendly name badge. |
+| `show_color_badges` | boolean | No | `true` | Displays category color indicator badges next to event titles. |
+| `show_grouping_headers` | boolean | No | `true` | Renders date grouping boundary headers ("Today", "Tomorrow", etc.). |
 | `default_due_date_color` | string | No | — | Custom default CSS color code for the event dates. |
 | `date_separator_color` | string | No | `transparent` | CSS color code for separators between consecutive dates. |
 | `day_separator_color` | string | No | — | CSS color code for visual separator lines. |

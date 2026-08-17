@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Comprehensive Visual Card Editor Coverage & Version Loader Bumps**:
+  - **Radiator Control Card (`custom:radiator-control-card-editor` v1.0.19)**: Added missing `dehumidifier_entity` (switch / fan domain picker) to editor schema, `knownKeys`, and clean config handler. Bumped `radiator-control-card-loader.js` to `1.0.19`.
+  - **Calendar List Card (`custom:calendar-list-card-editor` v1.0.28)**: Added missing `show_color_badges` ("Show category color badges") and `show_grouping_headers` ("Show date grouping headers") switches to Appearance tab, and `start_date` to `knownKeys`. Bumped `calendar-list-card-loader.js` to `1.0.28`.
+  - **Navigation Bar Card (`custom:navigation-bar-card-editor` v1.0.7)**: Added missing `max_items` (number box) and `show_finished_events` (boolean switch) to navigation item schema grid and clean config handler. Bumped `navigation-bar-card-loader.js` to `1.0.7`.
+  - **Calendar Grid Card (`custom:calendar-grid-card-editor` v0.4.59)**: Added missing `rolling_month` (30-day rolling view switch), `month_start` (month starting day input), `day_tap_action`, and `popup_config` to `knownKeys` and settings form. Bumped `calendar-grid-card-loader.js` to `0.4.59`.
+  - **Progress Bar Feature (`custom:progress-bar-feature-editor` v0.1.36)**: Added missing `unit` (unit override text input), `show_icon`, `show_label`, and `show_value` boolean switches to feature schema form. Bumped `feature-renderer-card-loader.js` to `0.1.36`.
+
+### Added
 - **VGN Departure Card (`custom:vgn-departure-card` v1.6.0 & `custom:vgn-departure-card-editor`)**:
   - Added support for `alerts_enabled_switch` configuration parameter per watch row (e.g. `alerts_enabled_switch: "input_boolean.vgn_bus_486_alerts_enabled"`).
   - Renders an interactive, glassmorphism speaker toggle button (`mdi:volume-high` / `mdi:volume-off`) directly inside the watch row header to enable or mute verbal TTS departure warnings for each bus line.

@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.21';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.4.59';
 
 /**
  * CalendarGridCardEditor
@@ -92,7 +92,11 @@ class CalendarGridCardEditor extends HAControlBase {
       "show_refresh_button",
       "sidebar_position",
       "entities",
-      "event_features"
+      "event_features",
+      "month_start",
+      "rolling_month",
+      "day_tap_action",
+      "popup_config"
     ];
     this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
   }
@@ -397,6 +401,20 @@ class CalendarGridCardEditor extends HAControlBase {
               label="${this._localize('cgc.editor.today_border')}"
               .value=${this._config.today_border || ''}
               .configValue=${"today_border"}
+              @input=${(ev) => this._valueChanged(ev)}
+          ></ha-input>
+          <ha-formfield label="Rolling Month View (30 Days)">
+              <ha-switch
+                  .checked=${this._config.rolling_month === true}
+                  .configValue=${"rolling_month"}
+                  .value=${"on"}
+                  @change=${(ev) => this._valueChanged(ev)}
+              ></ha-switch>
+          </ha-formfield>
+          <ha-input
+              label="Month Start Day (z.B. 01)"
+              .value=${this._config.month_start || ''}
+              .configValue=${"month_start"}
               @input=${(ev) => this._valueChanged(ev)}
           ></ha-input>
           <ha-formfield label="${this._localize('cgc.editor.show_finished_events')}">

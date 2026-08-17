@@ -29,6 +29,8 @@ The **Navigation Bar Card** (`custom:navigation-bar-card`) displays a horizontal
 | `navigation_path` | `string` | **Yes** | The Lovelace page URL path (e.g. `/eg-dashboard/0`). |
 | `entity` | `string` | No | Entity ID to watch for counter status and default thresholds (e.g. `todo.german_home`). |
 | `show_counter` | `boolean` | No | Show a notification count badge when the entity value is greater than zero (default `false`). |
+| `max_items` | `number` | No | Limit maximum number of counted events/tasks (default unlimited). |
+| `show_finished_events` | `boolean` | No | Include completed/finished tasks and past events in counter badge (default `false`). |
 | `color` | `string` | No | Default badge outline/icon color when not active. |
 | `thresholds` | `array` | No | List of priority matched styling thresholds. |
 

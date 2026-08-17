@@ -118,6 +118,25 @@ When using expression parameters (`icon_expression`, `color_expression`, `animat
 
 ---
 
+### 7. Progress Bar Feature (`custom:progress-bar-feature`)
+Renders entity states or numerical attributes as a sleek, animated progress bar track with full visual editor support.
+
+| Property | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `type` | string | **Yes** | — | Must be `custom:progress-bar-feature`. |
+| `name` | string | No | Friendly Name | Custom label display override for the progress header. |
+| `icon` | string | No | `mdi:progress-clock` | Icon shown in the progress header. |
+| `min` | number | No | `0` | Minimum numerical value bound. |
+| `max` | number | No | `100` | Maximum numerical value bound. |
+| `unit` | string | No | `%` | Unit of measurement string override appended after numeric value. |
+| `color` | string | No | Inherit | Default progress fill bar color. |
+| `reverse` | boolean | No | `false` | Reverses progress fill calculation (100% - value). |
+| `show_icon` | boolean | No | `true` | Toggles icon visibility in header. |
+| `show_label` | boolean | No | `true` | Toggles title label visibility in header. |
+| `show_value` | boolean | No | `true` | Toggles numeric state value display in header. |
+
+---
+
 ## 💡 YAML Configuration Example
 
 ```yaml

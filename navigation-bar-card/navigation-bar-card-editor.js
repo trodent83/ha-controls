@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.7';
 
 /**
  * NavigationBarCardEditor
@@ -250,7 +250,9 @@ class NavigationBarCardEditor extends HAControlBase {
         if (item.show_counter !== undefined) i.show_counter = item.show_counter;
         if (item.color !== undefined) i.color = item.color;
         if (item.max_days !== undefined) i.max_days = item.max_days;
+        if (item.max_items !== undefined) i.max_items = item.max_items;
         if (item.show_completed !== undefined) i.show_completed = item.show_completed;
+        if (item.show_finished_events !== undefined) i.show_finished_events = item.show_finished_events;
         if (item.show_no_due_date !== undefined) i.show_no_due_date = item.show_no_due_date;
 
         if (item.filters && Array.isArray(item.filters)) {
@@ -360,7 +362,15 @@ class NavigationBarCardEditor extends HAControlBase {
           type: "grid",
           schema: [
             { name: "max_days", label: this._localize('max_days') || 'Max Days (Offset Limit)', selector: { number: { min: 1, max: 30, mode: "box" } } },
-            { name: "show_no_due_date", label: this._localize('show_no_due_date') || 'Show Tasks Without Due Date', selector: { boolean: {} } }
+            { name: "max_items", label: 'Max Items to Count', selector: { number: { min: 1, max: 100, mode: "box" } } }
+          ]
+        },
+        {
+          name: "",
+          type: "grid",
+          schema: [
+            { name: "show_no_due_date", label: this._localize('show_no_due_date') || 'Show Tasks Without Due Date', selector: { boolean: {} } },
+            { name: "show_finished_events", label: 'Show Finished Events', selector: { boolean: {} } }
           ]
         }
       ];

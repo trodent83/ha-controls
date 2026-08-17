@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.28";
 
 /**
  * CalendarListCardEditor
@@ -73,12 +73,15 @@ class CalendarListCardEditor extends HAControlBase {
       "icon",
       "max_days",
       "max_items",
+      "start_date",
       "show_due_date",
       "show_description",
       "show_due_in_days",
       "show_source",
       "show_refresh_button",
       "show_finished_events",
+      "show_color_badges",
+      "show_grouping_headers",
       "default_due_date_color",
       "date_separator_color",
       "day_separator_color",
@@ -578,6 +581,20 @@ class CalendarListCardEditor extends HAControlBase {
           <ha-expansion-panel header="${this._localize('appearance') || 'Appearance'}" outlined expanded class="panel">
             <div class="options">
               <div class="switches-grid">
+                <ha-formfield label="${this._localize('show_color_badges') || 'Show category color badges'}">
+                  <ha-switch
+                    .checked="${this._config.show_color_badges !== false}"
+                    .configValue="${'show_color_badges'}"
+                    @change="${(e) => this._valueChanged(e)}"
+                  ></ha-switch>
+                </ha-formfield>
+                <ha-formfield label="${this._localize('show_grouping_headers') || 'Show date grouping headers'}">
+                  <ha-switch
+                    .checked="${this._config.show_grouping_headers !== false}"
+                    .configValue="${'show_grouping_headers'}"
+                    @change="${(e) => this._valueChanged(e)}"
+                  ></ha-switch>
+                </ha-formfield>
                 <ha-formfield label="${this._localize('show_due_date') || 'Show event date'}">
                   <ha-switch
                     .checked="${this._config.show_due_date !== false}"

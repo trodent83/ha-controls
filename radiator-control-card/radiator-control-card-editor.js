@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.19';
 
 /**
  * RadiatorControlCardEditor
@@ -60,6 +60,7 @@ class RadiatorControlCardEditor extends HAControlBase {
       "sensor_entity",
       "select_entity",
       "timer_entity",
+      "dehumidifier_entity",
       "timer_hold_action",
       "temperature_thresholds",
       "heating_animation",
@@ -108,6 +109,7 @@ class RadiatorControlCardEditor extends HAControlBase {
       { name: "sensor_entity", label: this._localize('sensor_entity'), selector: { entity: { domain: "sensor" } } },
       { name: "select_entity", label: this._localize('select_entity'), selector: { entity: { domain: "input_select" } } },
       { name: "timer_entity", label: this._localize('timer_entity'), selector: { entity: { domain: "timer" } } },
+      { name: "dehumidifier_entity", label: "Dehumidifier Entity (switch / fan)", selector: { entity: {} } },
       { name: "dehumidifier_run_time_entity", label: "Dehumidifier Run Time Entity", selector: { entity: { domain: "input_number" } } },
       { name: "dehumidifier_threshold_entity", label: "Dehumidifier Threshold Entity", selector: { entity: { domain: "input_number" } } }
     ];
@@ -129,6 +131,7 @@ class RadiatorControlCardEditor extends HAControlBase {
     if (this._config.sensor_entity !== undefined) cleaned.sensor_entity = this._config.sensor_entity;
     if (this._config.select_entity !== undefined) cleaned.select_entity = this._config.select_entity;
     if (this._config.timer_entity !== undefined) cleaned.timer_entity = this._config.timer_entity;
+    if (this._config.dehumidifier_entity !== undefined) cleaned.dehumidifier_entity = this._config.dehumidifier_entity;
     if (this._config.timer_hold_action !== undefined) cleaned.timer_hold_action = this._config.timer_hold_action;
     if (this._config.temperature_thresholds !== undefined) cleaned.temperature_thresholds = this._config.temperature_thresholds;
     if (this._config.heating_animation !== undefined) cleaned.heating_animation = this._config.heating_animation;
