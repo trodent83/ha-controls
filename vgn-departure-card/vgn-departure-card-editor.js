@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.4.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.0';
 
 /**
  * VGNDepartureCardEditor
@@ -65,10 +65,16 @@ class VGNDepartureCardEditor extends HAControlBase {
     return Object.keys(this.hass.states).filter(id => id.startsWith('input_number.')).sort();
   }
 
+  _getInputBooleanEntities() {
+    if (!this.hass) return [];
+    return Object.keys(this.hass.states).filter(id => id.startsWith('input_boolean.')).sort();
+  }
+
   render() {
     if (!this.config) return html``;
     const watches = this.config.watches || [];
     const inputNumbers = this._getInputNumberEntities();
+    const inputBooleans = this._getInputBooleanEntities();
 
     return html`
       ${this.renderStyle('vgn-departure-card-editor.css')}
@@ -227,6 +233,18 @@ class VGNDepartureCardEditor extends HAControlBase {
               >
                 <mwc-list-item value="">— kein Helfer —</mwc-list-item>
                 ${inputNumbers.map(id => html`
+                  <mwc-list-item value="${id}">${id}</mwc-list-item>
+                `)}
+              </ha-select>
+
+              <ha-select
+                label="Sprachwarnungs-Schalter (input_boolean, optional)"
+                .value="${watch.alerts_enabled_switch || ''}"
+                @selected="${e => this._watchChanged(idx, 'alerts_enabled_switch', e.detail.value)}"
+                @closed="${e => e.stopPropagation()}"
+              >
+                <mwc-list-item value="">— kein Schalter —</mwc-list-item>
+                ${inputBooleans.map(id => html`
                   <mwc-list-item value="${id}">${id}</mwc-list-item>
                 `)}
               </ha-select>

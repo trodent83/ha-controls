@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.5.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -605,9 +605,18 @@ class VGNDepartureCard extends HAControlBase {
     `;
   }
 
+  _toggleAlerts(entityId) {
+    if (!this.hass || !entityId) return;
+    this.hass.callService('input_boolean', 'toggle', { entity_id: entityId });
+  }
+
   _renderWatch(watch) {
     const line = watch.line;
     const alertMin = watch.alert_minutes ?? 15;
+    const alertSwitchEntity = watch.alerts_enabled_switch;
+    const isAlertsEnabled = alertSwitchEntity
+      ? (this.hass?.states[alertSwitchEntity]?.state !== 'off')
+      : true;
     const departures = this._departures[line] || [];
     const nextMin = this._nextDepartures[line];
     const isAlert = nextMin !== null && nextMin !== undefined && nextMin <= alertMin;
@@ -631,6 +640,13 @@ class VGNDepartureCard extends HAControlBase {
               </div>
             ` : ''}
           </div>
+          ${alertSwitchEntity ? html`
+            <button class="vgn-alert-toggle-btn ${isAlertsEnabled ? 'enabled' : 'muted'}"
+              @click="${(e) => { e.stopPropagation(); this._toggleAlerts(alertSwitchEntity); }}"
+              title="${isAlertsEnabled ? 'Sprachwarnungen aktiviert' : 'Sprachwarnungen stummgeschaltet'}">
+              <ha-icon icon="${isAlertsEnabled ? 'mdi:volume-high' : 'mdi:volume-off'}"></ha-icon>
+            </button>
+          ` : ''}
           <div class="vgn-next-time ${isAlert ? 'alert-pulse' : ''}">
             ${isEmpty
               ? html`<span class="vgn-no-service">—</span>`

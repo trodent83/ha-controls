@@ -379,3 +379,44 @@
 .vgn-card.out-window {
   opacity: 0.65;
 }
+
+/* === Alert toggle button === */
+.vgn-alert-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--vgn-border);
+  background: var(--vgn-surface);
+  color: var(--vgn-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 6px;
+  margin-right: 4px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.vgn-alert-toggle-btn ha-icon {
+  --mdc-icon-size: 16px;
+}
+
+.vgn-alert-toggle-btn.enabled {
+  color: var(--vgn-ok);
+  background: rgba(45, 211, 111, 0.15);
+  border-color: rgba(45, 211, 111, 0.35);
+  box-shadow: 0 0 10px rgba(45, 211, 111, 0.2);
+}
+
+.vgn-alert-toggle-btn.muted {
+  color: #ff6b9d;
+  background: rgba(255, 61, 113, 0.15);
+  border-color: rgba(255, 61, 113, 0.35);
+  opacity: 0.85;
+}
+
+.vgn-alert-toggle-btn:hover {
+  transform: scale(1.1);
+}

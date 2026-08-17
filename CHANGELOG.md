@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.6.0 & `custom:vgn-departure-card-editor`)**:
+  - Added support for `alerts_enabled_switch` configuration parameter per watch row (e.g. `alerts_enabled_switch: "input_boolean.vgn_bus_486_alerts_enabled"`).
+  - Renders an interactive, glassmorphism speaker toggle button (`mdi:volume-high` / `mdi:volume-off`) directly inside the watch row header to enable or mute verbal TTS departure warnings for each bus line.
+  - Added `input_boolean` helper dropdown selector for `alerts_enabled_switch` in the visual card editor (`vgn-departure-card-editor.js`).
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.6.0`.
+
 - **New Custom Feature Module: Progress Bar Feature (`custom:progress-bar-feature`)**:
   - Created first-class custom feature module `progress-bar-feature.js`, `progress-bar-feature.css`, and `progress-bar-feature-editor.js` under `ha-controls/feature-renderer-card/`.
   - Supports nesting inside `multi-state-card`, `multi-property-card`, `room-status-card`, or native Tile cards via `features: [{ type: "custom:progress-bar-feature" }]`.
