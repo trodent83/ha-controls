@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.49';
 
 /**
  * RoomStatusCard
@@ -85,6 +85,23 @@ class RoomStatusCard extends HAControlBase {
   }
 
   /**
+   * Dispatches hass-more-info event to open entity detail dialogs.
+   * 
+   * @param {Event} ev - Click event
+   * @param {string} entityId - Target entity ID
+   * @private
+   */
+  _handleTap(ev, entityId) {
+    if (ev) ev.stopPropagation();
+    if (!entityId) return;
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: { entityId },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  /**
    * Renders the custom card's HTML template.
    * Generates header blocks and parses status badges list applying dynamic child features.
    * 
@@ -103,9 +120,9 @@ class RoomStatusCard extends HAControlBase {
 
     return html`
       ${this.renderStyle('room-status-card.css')}
-      <ha-card>
+      <ha-card class="${this.config.no_background ? 'no-background' : ''}">
         <div class="card-content ${heading_style}">
-          <div class="header_container ${heading_style}">
+          <div class="header_container ${heading_style} ${this.config.entity ? 'clickable' : ''}" @click=${(e) => this._handleTap(e, this.config.entity)}>
           ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}
           ${show_header ? html`<span class="room_title">${this.config.name}</span>` : ''}
           </div>
@@ -117,7 +134,7 @@ class RoomStatusCard extends HAControlBase {
       const finalColor = badgeConfig.color || 'var(--primary-text-color)';
 
       return html`
-              <div class="status_badge" style="--badge-color: ${finalColor}">
+              <div class="status_badge ${entityId ? 'clickable' : ''}" style="--badge-color: ${finalColor}" @click=${(e) => this._handleTap(e, entityId)}>
                 ${(badgeConfig.features && Array.isArray(badgeConfig.features)) ? html`
                   ${badgeConfig.features.filter(featureConfig => {
         if (featureConfig.condition) {
