@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.49';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.50';
 
 /**
  * RoomStatusCard
@@ -116,11 +116,12 @@ class RoomStatusCard extends HAControlBase {
     const show_icon = header_settings.show_icon !== false;     // Default true
     const heading_style = header_settings.heading_style || 'subtitle'; // Default subtitle
 
+    const show_background = this.config.show_background === true || this.config.has_background === true;
     const badges = this.config.badges || [];
 
     return html`
       ${this.renderStyle('room-status-card.css')}
-      <ha-card class="${this.config.no_background ? 'no-background' : ''}">
+      <ha-card class="${show_background ? 'has-background' : 'no-background'}">
         <div class="card-content ${heading_style}">
           <div class="header_container ${heading_style} ${this.config.entity ? 'clickable' : ''}" @click=${(e) => this._handleTap(e, this.config.entity)}>
           ${show_icon ? html`<ha-icon .icon="${this.config.icon || 'mdi:home'}"></ha-icon>` : ''}

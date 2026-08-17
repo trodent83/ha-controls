@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.50';
 
 /**
  * RoomStatusCardEditor
@@ -66,6 +66,8 @@ class RoomStatusCardEditor extends HAControlBase {
       "header_settings",
       "show_header",
       "show_icon",
+      "show_background",
+      "has_background",
       "badges"
     ];
     this._unrecognizedKeys = this._validateConfigKeys(config, knownKeys);
@@ -254,6 +256,7 @@ class RoomStatusCardEditor extends HAControlBase {
         schema: [
           { name: "name", label: this._localize('room_name'), selector: { text: {} } },
           { name: "icon", label: this._localize('icon'), selector: { icon: {} } },
+          { name: "show_background", label: this._localize('show_background') || "Show Card Background", selector: { boolean: {} } },
         ]
       },
       {
@@ -299,6 +302,7 @@ class RoomStatusCardEditor extends HAControlBase {
     };
     addIfDiff("name", "Room");
     addIfDiff("icon", "mdi:home");
+    addIfDiff("show_background", false);
     if (this._config.header_settings !== undefined) {
       cleaned.header_settings = {};
       if (this._config.header_settings.show_header !== undefined) {

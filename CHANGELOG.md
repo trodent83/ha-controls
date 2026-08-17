@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Room Status Card (`custom:room-status-card` v1.0.50)**:
+  - Added optional `show_background` boolean configuration flag (`default: false`). Keeps all existing room status cards transparent inline by default so existing views remain completely unchanged.
+  - Added glassmorphic background box styling (`background: var(--card-background-color, rgba(255, 255, 255, 0.04))`, border, backdrop blur, box shadow) when `show_background: true` is explicitly configured.
+  - Added `_handleTap(ev, entityId)` method and click handlers to status badges and card headers to trigger Home Assistant `more-info` entity detail dialogs on tap.
+  - Added `show_background` toggle switch to `room-status-card-editor.js` and `knownKeys`.
+  - Bumped `room-status-card-loader.js`, `room-status-card.js`, and `room-status-card-editor.js` to `1.0.50`.
+
+### Added
 - **Comprehensive Visual Card Editor Coverage & Version Loader Bumps**:
   - **Radiator Control Card (`custom:radiator-control-card-editor` v1.0.19)**: Added missing `dehumidifier_entity` (switch / fan domain picker) to editor schema, `knownKeys`, and clean config handler. Bumped `radiator-control-card-loader.js` to `1.0.19`.
   - **Calendar List Card (`custom:calendar-list-card-editor` v1.0.28)**: Added missing `show_color_badges` ("Show category color badges") and `show_grouping_headers` ("Show date grouping headers") switches to Appearance tab, and `start_date` to `knownKeys`. Bumped `calendar-list-card-loader.js` to `1.0.28`.

@@ -15,6 +15,7 @@ Below are the configuration parameters for the card. Define these fields in your
 | `type` | string | **Yes** | — | Must be `custom:room-status-card`. |
 | `name` | string | No | `Room` | The display name of the room printed in the card header. |
 | `icon` | string | No | `mdi:home` | Header icon to represent the room. |
+| `show_background` | boolean | No | `false` | When set to `true`, renders a standalone glassmorphic card background box and border. Default is `false` (transparent inline layout). |
 | `header_settings`| object | No | — | Visibility options for header elements. See [Header Settings](#header-settings). |
 | `badges` | array | No | `[]` | List of status badges to align horizontally. See [Badge Settings](#badge-settings). |
 
