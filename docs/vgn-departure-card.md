@@ -45,7 +45,7 @@ Below are the configuration parameters for the card:
 * **Window-Targeted API Querying (`itdTime`)**: When viewed before `time_from` (e.g. viewing afternoon return `13:00–20:00` in the morning), the card queries VGN EFA API starting at `time_from` (`13:00`), ensuring future window schedules display cleanly without getting truncated by API result limits.
 * **Strict Window Bounds**: Each card strictly filters departures to its target window `[time_from, time_to]`.
 * **Status Differentiation**: When current time is past `time_to` and all window departures for today have completed, the card displays **"All departures completed for today"** (`gone_for_day`), distinguishing it clearly from **"No departures found"** when no service is scheduled.
-* Automations trigger on `numeric_state` changes (e.g. `below: 11` for Bus 486 or `below: 26` for Bus 456) to broadcast verbal TTS departure warnings.
+* Automations trigger on `numeric_state` changes (e.g. `below: 11` for Bus 486) to broadcast verbal TTS departure warnings.
 
 ---
 

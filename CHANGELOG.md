@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **VGN Departure Card (`custom:vgn-departure-card` v1.6.2 & `vgn-departure-card-loader.js`)**:
+  - Updated visual alert logic (`isAlert`) to respect `isAlertsEnabled` status when `alerts_enabled_switch` is configured.
+  - Added support for interactive mute toggle buttons (`alerts_enabled_switch`) while keeping TTS verbal warnings decoupled.
+  - Bumped version in `vgn-departure-card.js` and `vgn-departure-card-loader.js` to `1.6.2`.
+
 ### Added
 - **Room Status Card (`custom:room-status-card` v1.0.50)**:
   - Added optional `show_background` boolean configuration flag (`default: false`). Keeps all existing room status cards transparent inline by default so existing views remain completely unchanged.

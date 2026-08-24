@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.2';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -612,14 +612,15 @@ class VGNDepartureCard extends HAControlBase {
 
   _renderWatch(watch) {
     const line = watch.line;
-    const alertMin = watch.alert_minutes ?? 15;
+    const hasAlertConfig = watch.alert_minutes !== undefined && watch.alert_minutes !== null && watch.alert_minutes !== false && watch.alert_minutes !== 0;
+    const alertMin = hasAlertConfig ? watch.alert_minutes : 0;
     const alertSwitchEntity = watch.alerts_enabled_switch;
     const isAlertsEnabled = alertSwitchEntity
       ? (this.hass?.states[alertSwitchEntity]?.state !== 'off')
       : true;
     const departures = this._departures[line] || [];
     const nextMin = this._nextDepartures[line];
-    const isAlert = nextMin !== null && nextMin !== undefined && nextMin <= alertMin;
+    const isAlert = hasAlertConfig && isAlertsEnabled && nextMin !== null && nextMin !== undefined && nextMin <= alertMin;
     const isEmpty = departures.length === 0;
 
     return html`
