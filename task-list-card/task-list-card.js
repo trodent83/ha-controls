@@ -4,11 +4,12 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
 
 import { Task } from "../utilities/task/task-dto-task.js?v=1.0.22";
 import { Day } from "../utilities/task/task-dto-day.js?v=1.0.22";
 import { TaskDataManager } from "../utilities/task/task-data-manager.js?v=1.0.22";
+import "./task-delay-card.js?v=1.0.35";
 
 /**
  * TaskListCard
@@ -27,7 +28,7 @@ class TaskListCard extends HAControlBase {
    * @returns {Object} LitElement properties definition
    */
   static get properties() {
-    return { ...super.properties, config: {}, _groups: { state: true }, _processing: { state: true } };
+    return { ...super.properties, config: {}, _groups: { state: true }, _processing: { state: true }, _fallbackPopupTask: { state: true } };
   }
 
   /**
@@ -97,6 +98,8 @@ class TaskListCard extends HAControlBase {
       separator_mode: 'day',
       icon: 'mdi:calendar-check',
       block_future_toggles: true,
+      hold_action: 'delay',
+      hold_delay_ms: 500,
       ...config
     };
     this._groups = null;
@@ -387,6 +390,7 @@ class TaskListCard extends HAControlBase {
                   .day=${group}
                   .readonly=${isLoading}
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
+                  @hold-task=${(e) => this._handleHoldTask(e.detail.task)}
                 ></task-list-card-row>
               `;
     })}
@@ -425,6 +429,27 @@ class TaskListCard extends HAControlBase {
             </div>
           </ha-card>
           ` : ''}
+      ${this._fallbackPopupTask ? html`
+        <div class="popup-scrim" @click="${() => { this._fallbackPopupTask = null; this.requestUpdate(); }}"></div>
+        <div class="popup-window-container">
+          <div class="popup-card-wrapper">
+            <div class="popup-header">
+              <h3>${this._localize('delay_task') || "Delay Task"}</h3>
+            </div>
+            <div class="popup-body">
+              <task-delay-card
+                .hass=${this.hass}
+                .config=${{
+                  type: "custom:task-delay-card",
+                  task: this._fallbackPopupTask
+                }}
+                @close-popup=${() => { this._fallbackPopupTask = null; this.requestUpdate(); }}
+              ></task-delay-card>
+            </div>
+            <button class="popup-close-btn" @click="${() => { this._fallbackPopupTask = null; this.requestUpdate(); }}">×</button>
+          </div>
+        </div>
+      ` : html``}
     `;
   }
 
@@ -546,6 +571,60 @@ class TaskListCard extends HAControlBase {
     } catch (e) {
       console.error("Error updating task status", e);
       task.status = oldStatus;
+      this.requestUpdate();
+    }
+  }
+
+  /**
+   * Handles long-press/hold interaction on a task.
+   * If hold_action is 'delay' (default), dispatches custom DOM event for FitGridLayout popup
+   * and falls back to rendering an inline modal dialog.
+   * 
+   * @param {Task} task - The task data transfer object being held
+   * @private
+   */
+  _handleHoldTask(task) {
+    if (this._processing) return;
+    const holdAction = this.config.hold_action || 'delay';
+    if (holdAction === 'none') return;
+    if (holdAction === 'toggle') {
+      this._toggleTask(task);
+      return;
+    }
+
+    const taskPayload = {
+      uid: task.uid,
+      summary: task.summary,
+      description: task.description,
+      status: task.status,
+      due: task.due,
+      entity_id: task.entity_id
+    };
+
+    // 1. Dispatch standard ll-custom event so FitGridLayout can display its full-screen popup
+    const heading = `${this._localize('delay_task') || 'Delay Task'}: ${task.summary || ''}`;
+    this.dispatchEvent(new CustomEvent("ll-custom", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        group_popup: {
+          heading: heading,
+          body: {
+            type: "custom:task-delay-card",
+            task: taskPayload
+          }
+        }
+      }
+    }));
+
+    // 2. Check if running inside FitGridLayout
+    const rootHost = this.getRootNode() && this.getRootNode().host;
+    const hasFitGrid = (rootHost && rootHost.tagName && rootHost.tagName.toLowerCase() === 'fit-grid-layout') ||
+                       !!this.closest?.('fit-grid-layout');
+
+    // If not inside FitGridLayout, display inline modal fallback
+    if (!hasFitGrid) {
+      this._fallbackPopupTask = taskPayload;
       this.requestUpdate();
     }
   }

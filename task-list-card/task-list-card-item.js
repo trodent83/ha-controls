@@ -5,7 +5,7 @@ import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
 
 /**
  * TaskListCardItem
@@ -39,16 +39,112 @@ class TaskListCardItem extends HAControlBase {
     this.requestUpdate();
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
+
   /**
-   * Click event handler. Dispatches a custom 'toggle-task' event to the card row/container
-   * if interactions are not blocked due to read-only mode or future task configuration limits.
+   * Starts long-press hold timer when pointer goes down on a task item.
+   * 
+   * @param {PointerEvent} e
+   * @private
+   */
+  _handleDown(e) {
+    if (this.readonly) return;
+    this._isHolding = false;
+    this._startX = e.clientX;
+    this._startY = e.clientY;
+    const holdDelay = parseInt(this.config.hold_delay_ms, 10) || 500;
+    this._longPressTimer = setTimeout(() => {
+      this._isHolding = true;
+      this._handleHold();
+    }, holdDelay);
+  }
+
+  /**
+   * Cleans up timer when pointer is lifted.
+   * 
+   * @param {PointerEvent} e
+   * @private
+   */
+  _handleUp(e) {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
+
+  /**
+   * Cancels long-press hold when pointer leaves or is interrupted.
+   * 
+   * @param {PointerEvent} e
+   * @private
+   */
+  _handleCancel(e) {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+    this._isHolding = false;
+  }
+
+  /**
+   * Cancels long-press hold if pointer moves more than 10px (e.g. during scroll).
+   * 
+   * @param {PointerEvent} e
+   * @private
+   */
+  _handleMove(e) {
+    if (this._longPressTimer && this._startX !== undefined && this._startY !== undefined) {
+      const dx = Math.abs(e.clientX - this._startX);
+      const dy = Math.abs(e.clientY - this._startY);
+      if (dx > 10 || dy > 10) {
+        this._handleCancel(e);
+      }
+    }
+  }
+
+  /**
+   * Dispatches custom 'hold-task' event when long-press threshold is reached.
    * 
    * @private
    */
-  _toggle() {
+  _handleHold() {
+    this.dispatchEvent(new CustomEvent('hold-task', {
+      bubbles: true,
+      composed: true,
+      detail: { task: this.task }
+    }));
+  }
+
+  /**
+   * Click event handler. Dispatches a custom 'toggle-task' event to the card row/container
+   * if interactions are not blocked due to read-only mode or future task configuration limits.
+   * Suppresses click if a hold action was completed.
+   * 
+   * @param {MouseEvent} [e]
+   * @private
+   */
+  _toggle(e) {
+    if (this._isHolding) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      this._isHolding = false;
+      return;
+    }
     const blockFuture = String(this.config.block_future_toggles) !== 'false';
     if (this.readonly || (blockFuture && this.task.isFuture)) return;
-    this.dispatchEvent(new CustomEvent('toggle-task', { detail: { task: this.task } }));
+    this.dispatchEvent(new CustomEvent('toggle-task', {
+      bubbles: true,
+      composed: true,
+      detail: { task: this.task }
+    }));
   }
 
   /**
@@ -89,7 +185,15 @@ class TaskListCardItem extends HAControlBase {
 
     return html`
       ${this.renderStyle('task-list-card-item.css')}
-      <div class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" @click="${this._toggle}" style="${separatorStyle}">
+      <div 
+        class="task-item ${done ? 'done' : ''} ${separatorClass} ${isDisabled ? 'readonly' : ''}" 
+        @pointerdown="${this._handleDown}"
+        @pointerup="${this._handleUp}"
+        @pointercancel="${this._handleCancel}"
+        @pointerleave="${this._handleCancel}"
+        @pointermove="${this._handleMove}"
+        @click="${this._toggle}" 
+        style="${separatorStyle}">
         <span class="task-name">${t.summary}</span>
         ${this.config.show_description && t.description ? html`<span class="task-description">${parseHtml(t.description)}</span>` : ''}
         ${this.config.show_source ? (() => {

@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
 
 /**
  * TaskListCardRow
@@ -146,6 +146,16 @@ class TaskListCardRow extends HAControlBase {
   }
 
   /**
+   * Dispatches custom 'hold-task' event to parent card container.
+   * 
+   * @param {Task} task - Task held
+   * @private
+   */
+  _holdTask(task) {
+    this.dispatchEvent(new CustomEvent('hold-task', { detail: { task } }));
+  }
+
+  /**
    * Renders the custom card row HTML template.
    * 
    * @protected
@@ -201,6 +211,7 @@ class TaskListCardRow extends HAControlBase {
                   .hasSeparator=${hasNextVisibleArray[index]}
                   .readonly=${this.readonly}
                   @toggle-task=${(e) => this._toggleTask(e.detail.task)}
+                  @hold-task=${(e) => this._holdTask(e.detail.task)}
                 ></task-list-card-item>
               `;
     })}

@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
 
 /**
  * TaskListCardEditor
@@ -84,6 +84,8 @@ class TaskListCardEditor extends HAControlBase {
       "show_refresh_button",
       "show_delete_completed_button",
       "block_future_toggles",
+      "hold_action",
+      "hold_delay_ms",
       "show_due_date",
       "show_description",
       "show_due_in_days",

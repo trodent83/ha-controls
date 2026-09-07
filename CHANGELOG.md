@@ -21,6 +21,13 @@ All notable changes to this project will be documented in this file.
   - Bumped version in `vgn-departure-card.js` and `vgn-departure-card-loader.js` to `1.6.2`.
 
 ### Added
+- **Task List Card (`custom:task-list-card` v1.0.35 & `task-list-card-loader.js`)**:
+  - Implemented hold-to-delay task popup functionality: holding/long-pressing a task for 500ms opens a popup modal to postpone/reschedule the task by days, weeks, or months.
+  - Added new `custom:task-delay-card` component with quick preset buttons (`+1 Day`, `+2 Days`, `+1 Week`, `+2 Weeks`, `+1 Month`), custom stepper/segmented unit selector (Days, Weeks, Months), dynamic date preview, and clear due date action.
+  - Integrated with `custom:fit-grid-layout` via `ll-custom` `group_popup` event for full-screen backdrop blur and centered dialog (matching vacuum details popup), plus inline modal fallback for views without `fit-grid-layout`.
+  - Added `hold_action` (`default: "delay"`) and `hold_delay_ms` (`default: 500`) configuration options.
+  - Bumped `task-list-card-loader.js`, `task-list-card.js`, `task-list-card-row.js`, `task-list-card-item.js`, and `task-list-card-editor.js` to `1.0.35`.
+
 - **Room Status Card (`custom:room-status-card` v1.0.50)**:
   - Added optional `show_background` boolean configuration flag (`default: false`). Keeps all existing room status cards transparent inline by default so existing views remain completely unchanged.
   - Added glassmorphic background box styling (`background: var(--card-background-color, rgba(255, 255, 255, 0.04))`, border, backdrop blur, box shadow) when `show_background: true` is explicitly configured.

@@ -28,6 +28,8 @@ Below are the configuration parameters for the card. Define these fields in your
 | `show_source` | boolean | No | `false` | Displays the friendly name of the source list when multiple entities are loaded. |
 | `merge_tasks_same_day`| boolean | No | `false` | Groups multiple tasks due on the exact same date under a single header segment. |
 | `block_future_toggles`| boolean | No | `true` | If set to `true`, checkbox clicking is ignored for tasks scheduled ahead of the current day. |
+| `hold_action` | string | No | `delay` | Action executed when holding/long-pressing a task. Supported: `delay` (opens postpone popup with days/weeks/months options), `toggle` (completes task), `none`. |
+| `hold_delay_ms` | number | No | `500` | Long-press duration in milliseconds required to trigger hold action. |
 | `separator_mode` | string | No | `day` | Grouping division mode for headers/lines. Supported values: `day`, `week`, `month`. |
 | `day_separator_color` | string | No | — | CSS color applied to the horizontal dividing lines between day groups. |
 | `date_separator_color`| string | No | `transparent` | Color of separator header labels. |
@@ -91,14 +93,27 @@ due_date_colors:
 
 ---
 
+## ⏳ Task Delay Popup (Hold Action)
+
+Holding or long-pressing on any task row for 500ms (configurable via `hold_delay_ms`) opens the **Task Delay Popup**:
+
+* **Quick Postpone**: Tap chips for instant postponement: `+1 Day`, `+2 Days`, `+3 Days`, `+1 Week`, `+2 Weeks`, `+1 Month`.
+* **Custom Delay Adjuster**: Step through quantities (`-` / `+`) and select the time unit (**Days**, **Weeks**, **Months**).
+* **Live Date Preview**: Dynamically calculates and displays the new target date in real time.
+* **FitGridLayout Integration**: If the card is running within [`custom:fit-grid-layout`](fit-grid-layout.md), it dispatches an `ll-custom` DOM event with `group_popup`, dimming the entire screen and showing a centered modal with heading and close button (identical to the vacuum details popup).
+* **Fallback Overlay**: When loaded in standard Lovelace views, the card renders its own centered modal dialog overlay.
+
+---
+
 ## 🏗️ Architecture & Interaction Flow
 
-The interaction sequence for listing and checking off tasks:
+The interaction sequence for listing, completing, and postponing tasks:
 
 ```plantuml
 @startuml
 participant "User UI" as UI
 participant "Task List Card" as Card
+participant "Task Delay Popup" as Popup
 database "Home Assistant Services" as HASvc
 participant "Task Data Manager" as TaskMgr
 database "HA Core API" as HACore
@@ -114,7 +129,8 @@ deactivate TaskMgr
 Card -> Card : Group & sort tasks chronologically
 Card -> UI : Renders grouped tasks
 
-UI -> Card : Clicks checkbox to complete Task
+== Task Completion (Click) ==
+UI -> Card : Clicks task to complete
 alt block_future_toggles = true AND task.isFuture = true
     Card -> UI : Rejects toggle action (ignores click)
 else Normal case
@@ -122,6 +138,18 @@ else Normal case
     Card -> HASvc : callService("todo.update_item", { entity_id, item_id, status: "completed" })
     HASvc -> HACore : Commits task status change
 end
+
+== Task Postponement (Hold) ==
+UI -> Card : Long-presses task (>500ms)
+Card -> UI : Suppresses click, dispatches popup modal
+UI -> Popup : Selects delay (+1 Day, +1 Week, +1 Month, etc.)
+Popup -> Popup : Dynamically renders new due date preview
+UI -> Popup : Clicks "Postpone Task"
+Popup -> HASvc : callService("todo.update_item", { entity_id, item_id, due_date })
+HASvc -> HACore : Commits new scheduled due date
+Popup -> UI : Dismisses popup modal
+Card -> Card : Refetches items and updates UI view
 deactivate Card
 @enduml
 ```
+

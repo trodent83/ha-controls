@@ -1,0 +1,274 @@
+.delay-card-container {
+  box-sizing: border-box;
+  padding: 8px 4px;
+  font-family: var(--paper-font-body1_-_font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  color: var(--primary-text-color, #ffffff);
+}
+
+/* Header & Current Status */
+.task-header {
+  margin-bottom: 16px;
+}
+
+.task-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--primary-text-color, #ffffff);
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.task-current-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--secondary-text-color, #9e9e9e);
+}
+
+.task-current-due ha-icon {
+  --mdc-icon-size: 16px;
+  color: var(--secondary-text-color, #9e9e9e);
+}
+
+.section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  color: var(--secondary-text-color, #8e8e93);
+  margin-bottom: 8px;
+}
+
+/* Presets */
+.presets-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.preset-chip {
+  background: var(--secondary-background-color, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-text-color, #ffffff);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.preset-chip:hover {
+  background: var(--primary-color, #03a9f4);
+  border-color: var(--primary-color, #03a9f4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.preset-chip.active {
+  background: var(--primary-color, #03a9f4);
+  border-color: var(--primary-color, #03a9f4);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(3, 169, 244, 0.35);
+}
+
+.error-banner {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid #ef5350;
+  color: #ef5350;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+/* Custom Adjuster */
+.adjuster-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--secondary-background-color, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--primary-text-color, #ffffff);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stepper-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stepper-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stepper-val {
+  min-width: 32px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-text-color, #ffffff);
+  user-select: none;
+}
+
+.unit-selector {
+  display: inline-flex;
+  flex: 1;
+  background: var(--secondary-background-color, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.unit-tab {
+  flex: 1;
+  padding: 8px 4px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--secondary-text-color, #8e8e93);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.unit-tab:hover:not(.active) {
+  color: var(--primary-text-color, #ffffff);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.unit-tab.active {
+  background: var(--primary-color, #03a9f4);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(3, 169, 244, 0.35);
+}
+
+/* Date Preview Badge */
+.date-preview {
+  background: rgba(3, 169, 244, 0.08);
+  border: 1px solid rgba(3, 169, 244, 0.28);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.preview-label {
+  font-size: 12px;
+  color: var(--secondary-text-color, #a0a0a0);
+}
+
+.preview-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-color, #03a9f4);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preview-value ha-icon {
+  --mdc-icon-size: 16px;
+}
+
+/* Action Buttons */
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.2));
+  color: var(--primary-text-color, #ffffff);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-clear {
+  margin-right: auto;
+  background: transparent;
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  color: #ef5350;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear:hover {
+  background: rgba(244, 67, 54, 0.12);
+  border-color: #ef5350;
+}
+
+.btn-postpone {
+  background: var(--primary-color, #03a9f4);
+  border: none;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(3, 169, 244, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-postpone ha-icon {
+  --mdc-icon-size: 16px;
+}
+
+.btn-postpone:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-postpone:active {
+  transform: translateY(0);
+}
