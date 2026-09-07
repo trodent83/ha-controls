@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.26';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.44';
 
 /**
  * MultiPropertyCard
@@ -170,33 +170,36 @@ class MultiPropertyCard extends HAControlThresholdBase {
           }
           if (entConf.label_bold) labelStyle += `font-weight: bold;`;
 
-          const showValue = entConf.show_value !== undefined ? entConf.show_value : this.config.show_value;
-          const showLabel = entConf.show_label !== undefined ? entConf.show_label : this.config.show_label;
-          const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : this.config.show_icon;
+          const hasFeatures = Array.isArray(entConf.features) && entConf.features.length > 0;
+          const showValue = entConf.show_value !== undefined ? entConf.show_value : (hasFeatures ? false : this.config.show_value);
+          const showLabel = entConf.show_label !== undefined ? entConf.show_label : (hasFeatures ? false : this.config.show_label);
+          const showIcon = entConf.show_icon !== undefined ? entConf.show_icon : (hasFeatures ? false : this.config.show_icon);
 
           return html`
-            <div class="btn ${isUnavailable ? 'is-unavailable' : ''}" 
+            <div class="btn ${isUnavailable ? 'is-unavailable' : ''} ${hasFeatures ? 'has-features' : ''}" 
                 style="color: ${finalColor};" 
                 @click="${() => this._runAction(entConf, 'tap')}"
                 @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}">
               
               ${showIcon !== false ? html`<ha-icon .icon="${icon}" class="${finalAnim}"></ha-icon>` : ''}
 
-              <div class="info-container">
-                ${showLabel ? html`
-                  <div class="label" style="${labelStyle}">
-                    ${entConf.name || stateObj?.attributes?.friendly_name || entityId || ''}
-                  </div>
-                ` : ''}
-                ${showValue ? html`
-                  <div class="value-container">
-                      <span class="value-text">${state ?? (entityId ? this._localize('not_available') : '')}</span>
-                      ${unit ? html`<span class="unit-text">${unit}</span>` : ''}
-                  </div>
-                ` : ''}
-              </div>
+              ${(showLabel || showValue) ? html`
+                <div class="info-container">
+                  ${showLabel ? html`
+                    <div class="label" style="${labelStyle}">
+                      ${entConf.name || stateObj?.attributes?.friendly_name || entityId || ''}
+                    </div>
+                  ` : ''}
+                  ${showValue ? html`
+                    <div class="value-container">
+                        <span class="value-text">${state ?? (entityId ? this._localize('not_available') : '')}</span>
+                        ${unit ? html`<span class="unit-text">${unit}</span>` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              ` : ''}
 
-              ${(entConf.features && Array.isArray(entConf.features)) ? html`
+              ${hasFeatures ? html`
                 <div class="features-container">
                   ${entConf.features.filter(featureConfig => {
             if (featureConfig.condition) {

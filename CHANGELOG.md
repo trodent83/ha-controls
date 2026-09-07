@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
+### Fixed
+- **Multi Property Card (`custom:multi-property-card` v1.0.44 & `multi-property-card-loader.js`)**:
+  - Prevented duplicate rendering of property tile icon, label, and value when nested features (e.g. `custom:progress-bar-feature`) are defined on an entity, by defaulting `show_icon`, `show_label`, and `show_value` to `false` when features are present.
+  - Added full-width layout support (`.btn.has-features`, `.features-container`, and `.features-container feature-renderer-card`) so features span the full card width properly.
+  - Bumped version in `multi-property-card.js` and `multi-property-card-loader.js` to `1.0.44`.
+
+- **Progress Bar Feature (`custom:progress-bar-feature` v1.0.1 & `feature-renderer-card-loader.js` v0.1.37)**:
+  - Added `:host { display: block; width: 100%; }` to ensure custom element correctly expands across parent containers.
+  - Added `gap: 8px` to `.progress-header` and `margin-left: 8px; flex-shrink: 0; white-space: nowrap;` to `.progress-value` to guarantee a clear visual distance between the name label and the percentage value.
+  - Added fallback support for `this.config.title` when determining feature title name.
+  - Bumped `progress-bar-feature.js` to `1.0.1` and `feature-renderer-card-loader.js` to `0.1.37`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.6.2 & `vgn-departure-card-loader.js`)**:
   - Updated visual alert logic (`isAlert`) to respect `isAlertsEnabled` status when `alerts_enabled_switch` is configured.
   - Added support for interactive mute toggle buttons (`alerts_enabled_switch`) while keeping TTS verbal warnings decoupled.

@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /**
  * ProgressBarFeature
@@ -72,7 +72,7 @@ class ProgressBarFeature extends HAControlThresholdBase {
     const finalAnim = matchAnim || this.config.animation || '';
 
     const icon = this.config.icon || stateObj.attributes?.icon || 'mdi:progress-clock';
-    const name = this.config.name ?? this.config.label ?? stateObj.attributes?.friendly_name ?? '';
+    const name = this.config.name ?? this.config.label ?? this.config.title ?? stateObj.attributes?.friendly_name ?? '';
     const unit = this.config.unit !== undefined ? this.config.unit : (stateObj.attributes?.unit_of_measurement || '%');
     const showIcon = this.config.show_icon !== false;
     const showLabel = this.config.show_label !== false;

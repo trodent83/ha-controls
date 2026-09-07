@@ -2,6 +2,11 @@
    PROGRESS BAR FEATURE STYLESHEET
    ========================================================================== */
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .progress-bar-feature-container {
   width: 100%;
   display: flex;
@@ -23,11 +28,11 @@
   width: 100%;
   font-size: 12px;
   font-weight: 500;
+  gap: 8px;
 }
 
 .progress-title {
   flex: 1;
-  margin-left: 6px;
   font-size: 11px;
   opacity: 0.85;
   text-align: left;
@@ -36,6 +41,9 @@
 .progress-value {
   font-weight: bold;
   font-size: 12px;
+  margin-left: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .progress-bar-track {
