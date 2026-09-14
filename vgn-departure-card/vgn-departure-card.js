@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.2';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -18,6 +18,14 @@ const VAG_API_BASE = "https://start.vag.de/dm/api/v1/abfahrten/VGN";
  */
 const IN_FLIGHT_FETCHES = new Map();
 
+/**
+ * Shared module-level calendar event cache and in-flight request deduplication across card instances.
+ * When multiple cards (e.g. Card 1 for 486 and Card 2 for 456) are on the same view,
+ * they share a single fetch call to Home Assistant's local calendar API.
+ */
+const CALENDAR_CACHE = new Map(); // entityId -> { events, timestamp }
+const CALENDAR_IN_FLIGHT = new Map(); // entityId -> Promise
+
 function _fmtDate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -29,6 +37,13 @@ function _fmtTime(date) {
   const h = String(date.getHours()).padStart(2, '0');
   const m = String(date.getMinutes()).padStart(2, '0');
   return `${h}${m}`;
+}
+
+function _fmtTimeHM(date) {
+  if (!date) return '—';
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
 }
 
 /**
@@ -93,7 +108,8 @@ async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
  * VGNDepartureCard
  * A custom Lovelace card that displays upcoming bus departures from a local Home Assistant
  * calendar (calendar.bus_scedule) or fallback online VGN/VAG API.
- * Supports per-bus verbal notification indicators and interactive selection/deselection.
+ * Supports per-bus verbal notification indicators, interactive selection/deselection,
+ * and high-performance shared caching across dashboard card instances.
  *
  * @extends HAControlBase
  */
@@ -154,7 +170,37 @@ class VGNDepartureCard extends HAControlBase {
     this._nextDepartures = {};
     this._goneForDay = {};
     this._rawCalendarEvents = [];
+    this._cachedOverridesStr = null;
+    this._cachedTokensSet = null;
     this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
+  }
+
+  _getWatchedEntities(config) {
+    const watched = new Set(super._getWatchedEntities(config));
+    if (this.config?.calendar_entity) {
+      watched.add(this.config.calendar_entity);
+    }
+    if (this.config?.alert_overrides_helper) {
+      watched.add(this.config.alert_overrides_helper);
+    }
+    for (const watch of (this.config?.watches || [])) {
+      if (watch.helper) watched.add(watch.helper);
+      if (watch.alerts_enabled_switch) watched.add(watch.alerts_enabled_switch);
+    }
+    return Array.from(watched);
+  }
+
+  updated(changedProps) {
+    super.updated(changedProps);
+    if (changedProps.has('hass') && this.config?.calendar_entity) {
+      const oldHass = changedProps.get('hass');
+      const calEntity = this.config.calendar_entity;
+      if (oldHass && this.hass && oldHass.states[calEntity] !== this.hass.states[calEntity]) {
+        // Automatically invalidate cache and re-fetch when calendar state changes
+        CALENDAR_CACHE.delete(calEntity);
+        this._fetchCalendarDepartures();
+      }
+    }
   }
 
   setConfig(config) {
@@ -192,9 +238,15 @@ class VGNDepartureCard extends HAControlBase {
   _restoreFromCache() {
     if (!this.config) return;
     if (this.config.calendar_entity) {
-      // For calendar mode, initial fetch is performed in _startPolling
+      const entry = CALENDAR_CACHE.get(this.config.calendar_entity);
+      if (entry && entry.events?.length > 0) {
+        this._rawCalendarEvents = entry.events;
+        this._processCalendarWatches(entry.events);
+        this._lastUpdated = entry.timestamp;
+      }
       return;
     }
+
     const dhids = new Set();
     if (this.config.stop_dhid) dhids.add(this.config.stop_dhid);
     for (const w of (this.config.watches || [])) {
@@ -240,12 +292,21 @@ class VGNDepartureCard extends HAControlBase {
     // Immediate initial fetch
     this._fetchDepartures();
 
-    // 1. Local client ticker every 30 seconds to update countdown minutes with ZERO network calls
-    this._localTickTimer = setInterval(() => {
-      this._recomputeLocalTick();
-    }, 30000);
+    // Align local countdown ticker with wall clock half-minute marks (:00, :30)
+    // Ensures clean rollover of minutes without arbitrary timer phase drift
+    const scheduleNextTick = () => {
+      if (!this.isConnected) return;
+      const now = new Date();
+      const msToNextBoundary = (30 - (now.getSeconds() % 30)) * 1000 - now.getMilliseconds();
+      this._localTickTimer = setTimeout(() => {
+        if (!this.isConnected) return;
+        this._recomputeLocalTick();
+        scheduleNextTick();
+      }, Math.max(500, msToNextBoundary));
+    };
+    scheduleNextTick();
 
-    // 2. Schedule periodic refresh
+    // Schedule periodic background refresh from local calendar
     const interval = (this.config?.poll_interval || 600) * 1000;
     this._pollTimer = setInterval(() => {
       this._fetchDepartures();
@@ -258,15 +319,27 @@ class VGNDepartureCard extends HAControlBase {
       this._pollTimer = null;
     }
     if (this._localTickTimer) {
-      clearInterval(this._localTickTimer);
+      clearTimeout(this._localTickTimer);
       this._localTickTimer = null;
     }
   }
 
+  _getDeparturesSignature() {
+    return Object.entries(this._departures)
+      .map(([k, list]) => `${k}:${(list || []).map(d => d.minutesUntil).join(',')}`)
+      .join('|');
+  }
+
   _recomputeLocalTick() {
     if (this.config?.calendar_entity && this._rawCalendarEvents && this._rawCalendarEvents.length > 0) {
+      const prevSig = this._getDeparturesSignature();
       this._processCalendarWatches(this._rawCalendarEvents);
-      this.requestUpdate();
+      const newSig = this._getDeparturesSignature();
+
+      // Only trigger a LitElement DOM re-render if visible countdown minutes actually changed
+      if (prevSig !== newSig) {
+        this.requestUpdate();
+      }
     }
   }
 
@@ -327,7 +400,7 @@ class VGNDepartureCard extends HAControlBase {
 
     try {
       if (this.config.calendar_entity) {
-        await this._fetchCalendarDepartures();
+        await this._fetchCalendarDepartures(manualRefresh);
       } else {
         await this._fetchOnlineDepartures();
       }
@@ -341,19 +414,54 @@ class VGNDepartureCard extends HAControlBase {
     }
   }
 
-  async _fetchCalendarDepartures() {
+  async _fetchCalendarDepartures(manualRefresh = false) {
     if (!this.hass || !this.config.calendar_entity) return;
     const calEntity = this.config.calendar_entity;
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const ttl = 30000; // 30-second cross-instance deduplication cache
 
-    const startStr = startOfDay.toISOString();
-    const endStr = endOfDay.toISOString();
+    if (manualRefresh) {
+      CALENDAR_CACHE.delete(calEntity);
+    }
 
-    const path = `calendars/${calEntity}?start=${startStr}&end=${endStr}`;
-    const rawEvents = await this.hass.callApi("GET", path);
-    const events = Array.isArray(rawEvents) ? rawEvents : [];
+    const cacheEntry = CALENDAR_CACHE.get(calEntity);
+    let events;
+
+    if (cacheEntry && (now - cacheEntry.timestamp < ttl)) {
+      events = cacheEntry.events;
+    } else if (CALENDAR_IN_FLIGHT.has(calEntity)) {
+      events = await CALENDAR_IN_FLIGHT.get(calEntity);
+    } else {
+      const fetchPromise = (async () => {
+        try {
+          const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+          const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          const startStr = startOfDay.toISOString();
+          const endStr = endOfDay.toISOString();
+          const path = `calendars/${calEntity}?start=${startStr}&end=${endStr}`;
+          const rawEvents = await this.hass.callApi("GET", path);
+          const res = Array.isArray(rawEvents) ? rawEvents.map(e => {
+            const startStr = e.start?.dateTime || e.start;
+            const parsedDate = startStr ? new Date(startStr) : null;
+            const summary = e.summary || '';
+            const desc = e.description || '';
+            return {
+              ...e,
+              _parsedDate: parsedDate,
+              _timeMs: parsedDate ? parsedDate.getTime() : null,
+              _normalizedText: `${summary} ${desc}`.toLowerCase(),
+              _cleanDest: summary ? summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : ''
+            };
+          }) : [];
+          CALENDAR_CACHE.set(calEntity, { events: res, timestamp: new Date() });
+          return res;
+        } finally {
+          CALENDAR_IN_FLIGHT.delete(calEntity);
+        }
+      })();
+      CALENDAR_IN_FLIGHT.set(calEntity, fetchPromise);
+      events = await fetchPromise;
+    }
 
     this._rawCalendarEvents = events;
     this._processCalendarWatches(events);
@@ -361,6 +469,7 @@ class VGNDepartureCard extends HAControlBase {
 
   _processCalendarWatches(events) {
     const now = new Date();
+    const nowMs = now.getTime();
     const hm = (t) => {
       const [h, m] = t.split(':').map(Number);
       return h * 60 + m;
@@ -374,23 +483,22 @@ class VGNDepartureCard extends HAControlBase {
 
     for (const watch of (this.config.watches || [])) {
       const line = String(watch.line || '');
+      const lineLower = line.toLowerCase();
       const dir = (watch.direction || '').toLowerCase();
 
       const matching = events.filter(e => {
-        const summary = e.summary || '';
-        const desc = e.description || '';
-        const combined = `${summary} ${desc}`.toLowerCase();
-        const matchLine = combined.includes(line.toLowerCase());
-        const matchDir = !dir || combined.includes(dir);
+        const text = e._normalizedText !== undefined ? e._normalizedText : `${e.summary || ''} ${e.description || ''}`.toLowerCase();
+        const matchLine = text.includes(lineLower);
+        const matchDir = !dir || text.includes(dir);
         return matchLine && matchDir;
       });
 
       const allMapped = matching.map(e => {
-        const startStr = e.start?.dateTime || e.start;
-        if (!startStr) return null;
-        const depTime = new Date(startStr);
-        const minutesUntil = Math.round((depTime - now) / 60000);
-        const destination = e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : (watch.direction || '');
+        const depTime = e._parsedDate || (e.start?.dateTime || e.start ? new Date(e.start.dateTime || e.start) : null);
+        if (!depTime) return null;
+        const depTimeMs = e._timeMs || depTime.getTime();
+        const minutesUntil = Math.round((depTimeMs - nowMs) / 60000);
+        const destination = e._cleanDest || (e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : (watch.direction || ''));
         return {
           planned: depTime,
           realtime: depTime,
@@ -536,27 +644,59 @@ class VGNDepartureCard extends HAControlBase {
     this._writeHelpers();
   }
 
+  /**
+   * Writes the next departure time (in minutes) to configured input_number helpers.
+   * Optimizes WebSocket traffic by only calling set_value if the numeric state has changed.
+   */
   _writeHelpers() {
     if (!this.hass) return;
     const inWindow = this._isInTimeWindow();
     for (const watch of (this.config.watches || [])) {
       if (!watch.helper) continue;
       const minutes = inWindow ? this._nextDepartures[watch.line] : null;
-      const value = minutes !== null && minutes !== undefined ? minutes : -1;
-      this.hass.callService('input_number', 'set_value', {
-        entity_id: watch.helper,
-        value: Math.max(-1, value)
-      });
+      const targetVal = Math.max(-1, minutes !== null && minutes !== undefined ? minutes : -1);
+      const currentVal = Number(this.hass.states[watch.helper]?.state);
+
+      // Only dispatch service call if value actually changed
+      if (currentVal !== targetVal) {
+        this.hass.callService('input_number', 'set_value', {
+          entity_id: watch.helper,
+          value: targetVal
+        });
+      }
     }
   }
 
+  /**
+   * Retrieves or computes a cached Set of alert override tokens.
+   * Invalidated only when the raw helper state changes.
+   */
+  _getOverrideTokens() {
+    const overridesHelper = this.config?.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides';
+    const overridesStr = this.hass?.states[overridesHelper]?.state || '';
+    if (this._cachedOverridesStr === overridesStr && this._cachedTokensSet) {
+      return this._cachedTokensSet;
+    }
+    this._cachedOverridesStr = overridesStr;
+    if (!overridesStr) {
+      this._cachedTokensSet = new Set();
+    } else {
+      this._cachedTokensSet = new Set(overridesStr.split(',').map(s => s.trim()).filter(Boolean));
+    }
+    return this._cachedTokensSet;
+  }
+
+  /**
+   * Checks if an individual bus departure is scheduled to trigger a verbal TTS announcement.
+   * Employs O(1) Set lookup from input_text.vgn_bus_alert_overrides.
+   */
   _isDepartureAlertActive(watch, dep) {
     const line = String(watch.line || '');
     const dir = (watch.direction || '').toLowerCase();
     const alertSwitchEntity = watch.alerts_enabled_switch;
     const isAlertsEnabled = alertSwitchEntity
-      ? (this.hass?.states[alertSwitchEntity]?.state !== 'off')
-      : true;
+      ? (this.hass?.states[alertSwitchEntity]?.state === 'on')
+      : false;
 
     const depDate = dep.planned || dep.realtime;
     if (!depDate) return false;
@@ -571,20 +711,24 @@ class VGNDepartureCard extends HAControlBase {
       baseActive = isAlertsEnabled;
     }
 
-    const overridesHelper = this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides';
-    const overridesStr = this.hass?.states[overridesHelper]?.state || '';
-    const timeStr = this._formatTime(depDate);
-    const busKey = `${line}@${timeStr}`;
+    const tokens = this._getOverrideTokens();
+    if (tokens.size > 0) {
+      const timeStr = this._formatTime(depDate);
+      const busKey = `${line}@${timeStr}`;
 
-    if (overridesStr.includes(`-${busKey}`)) {
-      return false;
-    }
-    if (overridesStr.includes(`+${busKey}`)) {
-      return true;
+      if (tokens.has(`-${busKey}`)) {
+        return false;
+      }
+      if (tokens.has(`+${busKey}`)) {
+        return true;
+      }
     }
     return baseActive;
   }
 
+  /**
+   * Toggles verbal alert active state for an individual bus run and persists to helper.
+   */
   _toggleDepartureAlert(watch, dep) {
     if (!this.hass) return;
     const line = String(watch.line || '');
@@ -607,6 +751,10 @@ class VGNDepartureCard extends HAControlBase {
     }
 
     const newVal = items.join(',');
+    // Optimistic cache update for instant UI feedback
+    this._cachedOverridesStr = newVal;
+    this._cachedTokensSet = new Set(items);
+
     this.hass.callService('input_text', 'set_value', {
       entity_id: overridesHelper,
       value: newVal
@@ -626,8 +774,7 @@ class VGNDepartureCard extends HAControlBase {
   }
 
   _formatTime(date) {
-    if (!date) return '—';
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return _fmtTimeHM(date);
   }
 
   _formatDays(days) {
