@@ -1,11 +1,11 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.0';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.0';
 
 /**
  * VGNDepartureCardEditor
  * Visual config editor for the VGN Departure Card.
- * Allows configuration of stop DHID, time window, poll interval and watch entries.
+ * Allows configuration of local calendar, stop DHID, time window, poll interval and watch entries.
  *
  * @extends HAControlBase
  */
@@ -70,34 +70,80 @@ class VGNDepartureCardEditor extends HAControlBase {
     return Object.keys(this.hass.states).filter(id => id.startsWith('input_boolean.')).sort();
   }
 
+  _getCalendarEntities() {
+    if (!this.hass) return [];
+    return Object.keys(this.hass.states).filter(id => id.startsWith('calendar.')).sort();
+  }
+
+  _getInputTextEntities() {
+    if (!this.hass) return [];
+    return Object.keys(this.hass.states).filter(id => id.startsWith('input_text.')).sort();
+  }
+
   render() {
     if (!this.config) return html``;
     const watches = this.config.watches || [];
     const inputNumbers = this._getInputNumberEntities();
     const inputBooleans = this._getInputBooleanEntities();
+    const calendarEntities = this._getCalendarEntities();
+    const inputTextEntities = this._getInputTextEntities();
 
     return html`
       ${this.renderStyle('vgn-departure-card-editor.css')}
 
       <div class="vgn-editor">
+        <!-- Calendar & Source Configuration -->
+        <div class="vgn-editor-section">
+          <div class="vgn-editor-section-title">
+            <ha-icon icon="mdi:calendar-clock"></ha-icon>
+            Kalender & Datenquelle
+          </div>
+
+          <div class="vgn-editor-select">
+            <label>Lokale Kalender-Entität</label>
+            <select
+              .value="${this.config.calendar_entity !== undefined ? this.config.calendar_entity : 'calendar.bus_scedule'}"
+              @change="${e => this._valueChanged('calendar_entity', e.target.value)}"
+            >
+              <option value="">-- Keine (Online REST API) --</option>
+              ${calendarEntities.map(id => html`
+                <option value="${id}" ?selected="${(this.config.calendar_entity || 'calendar.bus_scedule') === id}">${id}</option>
+              `)}
+            </select>
+          </div>
+
+          <div class="vgn-editor-select">
+            <label>Sprachwarnungen-Override Helfer</label>
+            <select
+              .value="${this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides'}"
+              @change="${e => this._valueChanged('alert_overrides_helper', e.target.value)}"
+            >
+              <option value="">-- Keiner --</option>
+              ${inputTextEntities.map(id => html`
+                <option value="${id}" ?selected="${(this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides') === id}">${id}</option>
+              `)}
+            </select>
+          </div>
+        </div>
+
         <!-- Stop Configuration -->
         <div class="vgn-editor-section">
           <div class="vgn-editor-section-title">
             <ha-icon icon="mdi:map-marker-radius"></ha-icon>
-            Haltestelle
+            Haltestelle / Titel
           </div>
 
           <ha-textfield
-            label="Haltestellen-DHID (z.B. de:09371:18001)"
-            .value="${this.config.stop_dhid || ''}"
-            @change="${e => this._valueChanged('stop_dhid', e.target.value)}"
-            helper="Globale Haltestellennummer im Format de:XXXXX:XXXXX"
+            label="Anzeigename der Karte / Haltestelle"
+            .value="${this.config.stop_name || ''}"
+            @change="${e => this._valueChanged('stop_name', e.target.value)}"
           ></ha-textfield>
 
           <ha-textfield
-            label="Anzeigename der Haltestelle"
-            .value="${this.config.stop_name || ''}"
-            @change="${e => this._valueChanged('stop_name', e.target.value)}"
+            label="Haltestellen-DHID (optional bei Kalendernutzung)"
+            .value="${this.config.stop_dhid || ''}"
+            @change="${e => this._valueChanged('stop_dhid', e.target.value)}"
+            helper="Globale Haltestellennummer im Format de:XXXXX:XXXXX"
           ></ha-textfield>
         </div>
 

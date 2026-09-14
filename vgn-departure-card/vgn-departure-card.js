@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.6.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.0';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -14,7 +14,7 @@ const VGN_EFA_BASE = "https://efa.vgn.de/vgnExt_oeffi/XML_DM_REQUEST";
 const VAG_API_BASE = "https://start.vag.de/dm/api/v1/abfahrten/VGN";
 
 /**
- * Shared in-flight fetch Promise cache across multiple card instances.
+ * Shared in-flight fetch Promise cache across multiple card instances for online fallback.
  */
 const IN_FLIGHT_FETCHES = new Map();
 
@@ -33,7 +33,6 @@ function _fmtTime(date) {
 
 /**
  * Persistent module-level cache for fetched departure data per stop DHID.
- * Preserves data across view navigation so switching back to a view renders instantly.
  */
 const DEPARTURES_CACHE = new Map(); // dhid -> { result, timestamp }
 
@@ -59,7 +58,7 @@ async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
           }
         }
       } catch (e) {
-        // Fall through
+        // Fall through to EFA
       }
 
       const efaParams = new URLSearchParams({
@@ -92,25 +91,9 @@ async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
 
 /**
  * VGNDepartureCard
- * A custom Lovelace card that polls the VGN/VAG real-time departure API and
- * displays upcoming bus departures for configured lines at a given stop.
- * Writes minutes-until-departure to `input_number` helpers for automation use.
- *
- * Config shape:
- *   stop_dhid: "de:09371:18001"      # DHID of the departure stop
- *   stop_name: "Sulzbach-Rosenberg"  # Display name for the header
- *   time_from: "06:00"               # Start of the monitoring window (HH:MM)
- *   time_to:   "08:30"               # End of the monitoring window (HH:MM)
- *   poll_interval: 60                # Poll interval in seconds (default 60)
- *   watches:                         # List of buses to watch
- *     - line: "486"
- *       direction: "Amberg"          # Partial match, case-insensitive
- *       helper: "input_number.vgn_bus_486_minutes"
- *       alert_minutes: 10            # Highlight threshold
- *     - line: "456"
- *       direction: "Amberg"
- *       helper: "input_number.vgn_bus_456_minutes"
- *       alert_minutes: 25
+ * A custom Lovelace card that displays upcoming bus departures from a local Home Assistant
+ * calendar (calendar.bus_scedule) or fallback online VGN/VAG API.
+ * Supports per-bus verbal notification indicators and interactive selection/deselection.
  *
  * @extends HAControlBase
  */
@@ -135,23 +118,26 @@ class VGNDepartureCard extends HAControlBase {
 
   static getStubConfig() {
     return {
-      stop_dhid: "de:09371:18001",
-      stop_name: "Sulzbach-Rosenberg, Bischof-Heckel-Str.",
+      calendar_entity: "calendar.bus_scedule",
+      alert_overrides_helper: "input_text.vgn_bus_alert_overrides",
+      stop_name: "Bus Schedule",
       time_from: "06:00",
-      time_to: "08:30",
-      poll_interval: 60,
+      time_to: "21:00",
+      poll_interval: 600,
       watches: [
         {
           line: "486",
           direction: "Amberg",
           helper: "input_number.vgn_bus_486_minutes",
+          alerts_enabled_switch: "input_boolean.vgn_bus_486_alerts_enabled",
           alert_minutes: 10
         },
         {
           line: "456",
           direction: "Amberg",
           helper: "input_number.vgn_bus_456_minutes",
-          alert_minutes: 25
+          alerts_enabled_switch: "input_boolean.vgn_bus_456_alerts_enabled",
+          alert_minutes: 10
         }
       ]
     };
@@ -164,29 +150,35 @@ class VGNDepartureCard extends HAControlBase {
     this._error = null;
     this._loading = false;
     this._pollTimer = null;
-    this._nextDepartures = {}; // cache of { [line]: minutesUntil }
-    this._goneForDay = {}; // cache of { [line]: isGoneForDayBoolean }
+    this._localTickTimer = null;
+    this._nextDepartures = {};
+    this._goneForDay = {};
+    this._rawCalendarEvents = [];
     this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
   }
 
   setConfig(config) {
-    if (!config.stop_dhid && (!config.watches || !config.watches.some(w => w.stop_dhid))) {
-      throw new Error("stop_dhid is required in card config or watches");
+    const calendarEntity = config.calendar_entity !== undefined ? config.calendar_entity : "calendar.bus_scedule";
+    if (!calendarEntity && !config.stop_dhid && (!config.watches || !config.watches.some(w => w.stop_dhid))) {
+      throw new Error("calendar_entity or stop_dhid is required in card config or watches");
     }
     if (!config.watches || !Array.isArray(config.watches) || config.watches.length === 0) {
       throw new Error("At least one watch entry is required");
     }
     this.config = {
-      stop_name: config.stop_name || config.stop_dhid || "VGN Abfahrten",
+      calendar_entity: calendarEntity,
+      alert_overrides_helper: config.alert_overrides_helper || "input_text.vgn_bus_alert_overrides",
+      stop_name: config.stop_name || (calendarEntity ? "Bus Schedule" : config.stop_dhid) || "VGN Abfahrten",
       time_from: "00:00",
       time_to: "23:59",
-      poll_interval: 60,
-      max_departures: 10,
+      poll_interval: config.poll_interval || (calendarEntity ? 600 : 60),
+      max_departures: 12,
       rolling_hours: config.rolling_hours ? Number(config.rolling_hours) : null,
       ...config
     };
     this._unrecognizedKeys = this._validateConfigKeys(config, [
-      'stop_dhid', 'stop_name', 'time_from', 'time_to', 'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug'
+      'calendar_entity', 'alert_overrides_helper', 'stop_dhid', 'stop_name', 'time_from', 'time_to',
+      'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug'
     ]);
   }
 
@@ -199,6 +191,10 @@ class VGNDepartureCard extends HAControlBase {
 
   _restoreFromCache() {
     if (!this.config) return;
+    if (this.config.calendar_entity) {
+      // For calendar mode, initial fetch is performed in _startPolling
+      return;
+    }
     const dhids = new Set();
     if (this.config.stop_dhid) dhids.add(this.config.stop_dhid);
     for (const w of (this.config.watches || [])) {
@@ -231,72 +227,49 @@ class VGNDepartureCard extends HAControlBase {
 
   _handleVisibilityChange() {
     if (document.hidden) {
-      // Screen off / tab hidden -> pause timer to save battery & CPU
       this._stopPolling();
     } else {
-      // Screen on / tab restored -> fetch immediately & resume polling
       this._startPolling();
     }
   }
 
-  /**
-   * Calculates an adaptive polling interval based on how far away the next departure is.
-   * - Next bus <= 30 mins: poll every 60s (or config.poll_interval)
-   * - Next bus 30-60 mins: poll every 3 mins (180s)
-   * - Next bus > 60 mins or no upcoming bus: poll every 5 mins (300s)
-   * @returns {number} Interval in milliseconds
-   */
-  _getAdaptiveInterval() {
-    const baseInterval = (this.config?.poll_interval || 60) * 1000;
-    if (!this._nextDepartures) return baseInterval;
-
-    let minMinutes = null;
-    for (const line in this._nextDepartures) {
-      const val = this._nextDepartures[line];
-      if (val !== null && val !== undefined && val >= 0) {
-        if (minMinutes === null || val < minMinutes) {
-          minMinutes = val;
-        }
-      }
-    }
-
-    if (minMinutes === null || minMinutes > 60) {
-      return Math.max(baseInterval, 300000); // 5 mins
-    } else if (minMinutes > 30) {
-      return Math.max(baseInterval, 180000); // 3 mins
-    }
-
-    return baseInterval;
-  }
-
   _startPolling() {
     this._stopPolling();
-    if (document.hidden) return; // Do not start timer if screen is asleep/hidden
+    if (document.hidden) return;
 
+    // Immediate initial fetch
     this._fetchDepartures();
-    const scheduleNext = () => {
-      const interval = this._getAdaptiveInterval();
-      this._pollTimer = setTimeout(() => {
-        this._fetchDepartures().finally(() => {
-          if (this._pollTimer) scheduleNext();
-        });
-      }, interval);
-    };
-    scheduleNext();
+
+    // 1. Local client ticker every 30 seconds to update countdown minutes with ZERO network calls
+    this._localTickTimer = setInterval(() => {
+      this._recomputeLocalTick();
+    }, 30000);
+
+    // 2. Schedule periodic refresh
+    const interval = (this.config?.poll_interval || 600) * 1000;
+    this._pollTimer = setInterval(() => {
+      this._fetchDepartures();
+    }, interval);
   }
 
   _stopPolling() {
     if (this._pollTimer) {
-      clearTimeout(this._pollTimer);
       clearInterval(this._pollTimer);
       this._pollTimer = null;
     }
+    if (this._localTickTimer) {
+      clearInterval(this._localTickTimer);
+      this._localTickTimer = null;
+    }
   }
 
-  /**
-   * Determines if the current time and day fall within the configured monitoring window.
-   * @returns {boolean}
-   */
+  _recomputeLocalTick() {
+    if (this.config?.calendar_entity && this._rawCalendarEvents && this._rawCalendarEvents.length > 0) {
+      this._processCalendarWatches(this._rawCalendarEvents);
+      this.requestUpdate();
+    }
+  }
+
   _isInTimeWindow() {
     if (!this.config) return false;
     const now = new Date();
@@ -328,12 +301,8 @@ class VGNDepartureCard extends HAControlBase {
     return true;
   }
 
-  /**
-   * Checks if a given departure Date falls within the configured time_from/time_to window.
-   * @param {Date} date
-   * @returns {boolean}
-   */
   _isDepartureInTimeRange(date) {
+    if (!date) return false;
     if (this.config?.rolling_hours && this.config.rolling_hours > 0) {
       const now = new Date();
       const diffMins = Math.round((date - now) / 60000);
@@ -350,10 +319,6 @@ class VGNDepartureCard extends HAControlBase {
     return depMin >= fromMin && depMin <= toMin;
   }
 
-  /**
-   * Fetches real-time departures from the VGN/VAG API for all stops configured across watches.
-   * @param {boolean} [manualRefresh=false] - Optional parameter.
-   */
   async _fetchDepartures(manualRefresh = false) {
     if (!this.config) return;
 
@@ -361,28 +326,11 @@ class VGNDepartureCard extends HAControlBase {
     this._error = null;
 
     try {
-      const defaultDhid = this.config.stop_dhid;
-      const dhids = new Set();
-      if (defaultDhid) dhids.add(defaultDhid);
-
-      for (const watch of (this.config.watches || [])) {
-        if (watch.stop_dhid) {
-          dhids.add(watch.stop_dhid);
-        }
+      if (this.config.calendar_entity) {
+        await this._fetchCalendarDepartures();
+      } else {
+        await this._fetchOnlineDepartures();
       }
-
-      if (dhids.size === 0) {
-        throw new Error("No stop_dhid specified");
-      }
-
-      const results = {};
-      await Promise.all(
-        Array.from(dhids).map(async (dhid) => {
-          results[dhid] = await this._fetchSingleStopDepartures(dhid);
-        })
-      );
-
-      this._processAllWatches(results);
     } catch (err) {
       console.error('[VGNDepartureCard] Fetch error:', err);
       this._error = err.message || 'Failed to fetch departures';
@@ -391,6 +339,106 @@ class VGNDepartureCard extends HAControlBase {
       this._lastUpdated = new Date();
       this.requestUpdate();
     }
+  }
+
+  async _fetchCalendarDepartures() {
+    if (!this.hass || !this.config.calendar_entity) return;
+    const calEntity = this.config.calendar_entity;
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    const startStr = startOfDay.toISOString();
+    const endStr = endOfDay.toISOString();
+
+    const path = `calendars/${calEntity}?start=${startStr}&end=${endStr}`;
+    const rawEvents = await this.hass.callApi("GET", path);
+    const events = Array.isArray(rawEvents) ? rawEvents : [];
+
+    this._rawCalendarEvents = events;
+    this._processCalendarWatches(events);
+  }
+
+  _processCalendarWatches(events) {
+    const now = new Date();
+    const hm = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = hm(this.config?.time_to || "23:59");
+
+    const newDepartures = {};
+    const newNext = {};
+    const newGoneForDay = {};
+
+    for (const watch of (this.config.watches || [])) {
+      const line = String(watch.line || '');
+      const dir = (watch.direction || '').toLowerCase();
+
+      const matching = events.filter(e => {
+        const summary = e.summary || '';
+        const desc = e.description || '';
+        const combined = `${summary} ${desc}`.toLowerCase();
+        const matchLine = combined.includes(line.toLowerCase());
+        const matchDir = !dir || combined.includes(dir);
+        return matchLine && matchDir;
+      });
+
+      const allMapped = matching.map(e => {
+        const startStr = e.start?.dateTime || e.start;
+        if (!startStr) return null;
+        const depTime = new Date(startStr);
+        const minutesUntil = Math.round((depTime - now) / 60000);
+        const destination = e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : (watch.direction || '');
+        return {
+          planned: depTime,
+          realtime: depTime,
+          minutesUntil,
+          delay: 0,
+          direction: destination,
+          summary: e.summary || '',
+          description: e.description || '',
+          calendarEvent: e
+        };
+      }).filter(Boolean);
+
+      const upcoming = allMapped
+        .filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime))
+        .sort((a, b) => a.minutesUntil - b.minutesUntil);
+
+      const isGoneForDay = upcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
+
+      newDepartures[line] = upcoming;
+      newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
+      newGoneForDay[line] = isGoneForDay;
+    }
+
+    this._departures = newDepartures;
+    this._nextDepartures = newNext;
+    this._goneForDay = newGoneForDay;
+    this._writeHelpers();
+  }
+
+  async _fetchOnlineDepartures() {
+    const defaultDhid = this.config.stop_dhid;
+    const dhids = new Set();
+    if (defaultDhid) dhids.add(defaultDhid);
+
+    for (const watch of (this.config.watches || [])) {
+      if (watch.stop_dhid) dhids.add(watch.stop_dhid);
+    }
+
+    if (dhids.size === 0) throw new Error("No stop_dhid specified");
+
+    const results = {};
+    await Promise.all(
+      Array.from(dhids).map(async (dhid) => {
+        results[dhid] = await this._fetchSingleStopDepartures(dhid);
+      })
+    );
+
+    this._processAllWatches(results);
   }
 
   async _fetchSingleStopDepartures(dhid) {
@@ -411,19 +459,6 @@ class VGNDepartureCard extends HAControlBase {
     }
 
     return fetchStopDeparturesShared(dhid, now, targetTimeStr);
-  }
-
-  _formatEFADate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}${m}${d}`;
-  }
-
-  _formatEFATime(date) {
-    const h = String(date.getHours()).padStart(2, '0');
-    const m = String(date.getMinutes()).padStart(2, '0');
-    return `${h}${m}`;
   }
 
   _processAllWatches(stopResults) {
@@ -484,12 +519,10 @@ class VGNDepartureCard extends HAControlBase {
         }).filter(Boolean);
       }
 
-      // Upcoming departures within the card's target window [time_from, time_to]
       const upcoming = allMapped
         .filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime))
         .sort((a, b) => a.minutesUntil - b.minutesUntil);
 
-      // Flag as gone for the day if current time is past time_to and no upcoming departures remain in window
       const isGoneForDay = upcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
 
       newDepartures[line] = upcoming;
@@ -503,10 +536,6 @@ class VGNDepartureCard extends HAControlBase {
     this._writeHelpers();
   }
 
-  /**
-   * Writes the next departure time (in minutes) to configured input_number helpers.
-   * Writes -1 if no upcoming departure is found.
-   */
   _writeHelpers() {
     if (!this.hass) return;
     const inWindow = this._isInTimeWindow();
@@ -521,22 +550,81 @@ class VGNDepartureCard extends HAControlBase {
     }
   }
 
-  /**
-   * Formats a minutes value as a human-readable string.
-   * @param {number} min
-   * @returns {string}
-   */
+  _isDepartureAlertActive(watch, dep) {
+    const line = String(watch.line || '');
+    const dir = (watch.direction || '').toLowerCase();
+    const alertSwitchEntity = watch.alerts_enabled_switch;
+    const isAlertsEnabled = alertSwitchEntity
+      ? (this.hass?.states[alertSwitchEntity]?.state !== 'off')
+      : true;
+
+    const depDate = dep.planned || dep.realtime;
+    if (!depDate) return false;
+    const depHour = depDate.getHours();
+    const depDay = depDate.getDay();
+    const isWeekday = depDay >= 1 && depDay <= 5;
+
+    let baseActive = false;
+    if (line === '486' && dir.includes('amberg')) {
+      baseActive = isAlertsEnabled && isWeekday && (depHour >= 6 && depHour < 9);
+    } else {
+      baseActive = isAlertsEnabled;
+    }
+
+    const overridesHelper = this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides';
+    const overridesStr = this.hass?.states[overridesHelper]?.state || '';
+    const timeStr = this._formatTime(depDate);
+    const busKey = `${line}@${timeStr}`;
+
+    if (overridesStr.includes(`-${busKey}`)) {
+      return false;
+    }
+    if (overridesStr.includes(`+${busKey}`)) {
+      return true;
+    }
+    return baseActive;
+  }
+
+  _toggleDepartureAlert(watch, dep) {
+    if (!this.hass) return;
+    const line = String(watch.line || '');
+    const depDate = dep.planned || dep.realtime;
+    if (!depDate) return;
+    const timeStr = this._formatTime(depDate);
+    const busKey = `${line}@${timeStr}`;
+    const currentlyActive = this._isDepartureAlertActive(watch, dep);
+
+    const overridesHelper = this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides';
+    const currentVal = this.hass?.states[overridesHelper]?.state || '';
+    let items = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+
+    items = items.filter(k => k !== `+${busKey}` && k !== `-${busKey}`);
+
+    if (currentlyActive) {
+      items.push(`-${busKey}`);
+    } else {
+      items.push(`+${busKey}`);
+    }
+
+    const newVal = items.join(',');
+    this.hass.callService('input_text', 'set_value', {
+      entity_id: overridesHelper,
+      value: newVal
+    });
+    this.requestUpdate();
+  }
+
+  _toggleAlerts(entityId) {
+    if (!this.hass || !entityId) return;
+    this.hass.callService('input_boolean', 'toggle', { entity_id: entityId });
+  }
+
   _formatMinutes(min) {
     if (min === null || min === undefined) return '—';
     if (min <= 0) return this._localize('now') || 'Now';
     return `${min} min`;
   }
 
-  /**
-   * Formats a Date to HH:MM string.
-   * @param {Date} date
-   * @returns {string}
-   */
   _formatTime(date) {
     if (!date) return '—';
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -605,11 +693,6 @@ class VGNDepartureCard extends HAControlBase {
     `;
   }
 
-  _toggleAlerts(entityId) {
-    if (!this.hass || !entityId) return;
-    this.hass.callService('input_boolean', 'toggle', { entity_id: entityId });
-  }
-
   _renderWatch(watch) {
     const line = watch.line;
     const hasAlertConfig = watch.alert_minutes !== undefined && watch.alert_minutes !== null && watch.alert_minutes !== false && watch.alert_minutes !== 0;
@@ -644,7 +727,7 @@ class VGNDepartureCard extends HAControlBase {
           ${alertSwitchEntity ? html`
             <button class="vgn-alert-toggle-btn ${isAlertsEnabled ? 'enabled' : 'muted'}"
               @click="${(e) => { e.stopPropagation(); this._toggleAlerts(alertSwitchEntity); }}"
-              title="${isAlertsEnabled ? 'Sprachwarnungen aktiviert' : 'Sprachwarnungen stummgeschaltet'}">
+              title="${isAlertsEnabled ? (this._localize('alerts_enabled_title') || 'Voice alerts enabled') : (this._localize('alerts_muted_title') || 'Voice alerts muted')}">
               <ha-icon icon="${isAlertsEnabled ? 'mdi:volume-high' : 'mdi:volume-off'}"></ha-icon>
             </button>
           ` : ''}
@@ -660,19 +743,32 @@ class VGNDepartureCard extends HAControlBase {
 
         ${departures.length > 0 ? html`
           <div class="vgn-departures">
-            ${departures.slice(0, watch.max_departures || this.config?.max_departures || 12).map((dep, i) => html`
-              <div class="vgn-dep-row ${i === 0 ? 'first' : ''}">
-                <div class="vgn-dep-time">
-                  <span class="vgn-dep-planned">${this._formatTime(dep.planned)}</span>
-                  ${dep.delay > 0 ? html`<span class="vgn-dep-delay">+${dep.delay}</span>` : ''}
-                  ${dep.delay < 0 ? html`<span class="vgn-dep-early">${dep.delay}</span>` : ''}
+            ${departures.slice(0, watch.max_departures || this.config?.max_departures || 12).map((dep, i) => {
+              const isAlertActive = this._isDepartureAlertActive(watch, dep);
+              const alertTooltip = isAlertActive
+                ? (this._localize('alert_enabled') || 'Voice alert active (click to mute)')
+                : (this._localize('alert_disabled') || 'Voice alert disabled (click to activate)');
+
+              return html`
+                <div class="vgn-dep-row ${i === 0 ? 'first' : ''} ${isAlertActive ? 'alert-active' : ''}">
+                  <div class="vgn-dep-time">
+                    <span class="vgn-dep-planned">${this._formatTime(dep.planned)}</span>
+                    ${dep.delay > 0 ? html`<span class="vgn-dep-delay">+${dep.delay}</span>` : ''}
+                    ${dep.delay < 0 ? html`<span class="vgn-dep-early">${dep.delay}</span>` : ''}
+                  </div>
+                  <div class="vgn-dep-realtime">${this._formatTime(dep.realtime)}</div>
+                  <div class="vgn-dep-until ${dep.minutesUntil <= alertMin ? 'urgent' : ''}">
+                    ${this._formatMinutes(dep.minutesUntil)}
+                  </div>
+                  <button
+                    class="vgn-row-alert-btn ${isAlertActive ? 'active' : 'muted'}"
+                    @click="${(e) => { e.stopPropagation(); this._toggleDepartureAlert(watch, dep); }}"
+                    title="${alertTooltip}">
+                    <ha-icon icon="${isAlertActive ? 'mdi:volume-high' : 'mdi:volume-off'}"></ha-icon>
+                  </button>
                 </div>
-                <div class="vgn-dep-realtime">${this._formatTime(dep.realtime)}</div>
-                <div class="vgn-dep-until ${dep.minutesUntil <= alertMin ? 'urgent' : ''}">
-                  ${this._formatMinutes(dep.minutesUntil)}
-                </div>
-              </div>
-            `)}
+              `;
+            })}
           </div>
         ` : html`
           <div class="vgn-no-departures">
@@ -687,13 +783,6 @@ class VGNDepartureCard extends HAControlBase {
     `;
   }
 
-  /**
-   * Returns an appropriate Material Design icon for the given line and transport mode.
-   * @param {string} line
-   * @param {string} [mode]
-   * @param {string} [watchIcon]
-   * @returns {string} MDI icon identifier
-   */
   _modeIcon(line, mode, watchIcon) {
     if (watchIcon) return watchIcon;
     const l = String(line || '').toUpperCase();
@@ -705,12 +794,6 @@ class VGNDepartureCard extends HAControlBase {
     return 'mdi:bus';
   }
 
-  /**
-   * Returns a consistent color for a given line number and transport mode.
-   * @param {string} line
-   * @param {Object} [watch]
-   * @returns {string} CSS color
-   */
   _lineColor(line, watch) {
     if (watch?.color) return watch.color;
     const l = String(line || '').toUpperCase();
@@ -735,6 +818,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "vgn-departure-card",
   name: "VGN Departure Card",
-  description: "Zeigt Echtzeitabfahrten für VGN/VAG Buslinien und schreibt die nächste Abfahrtzeit in input_number Helfer für Automationen.",
+  description: "Zeigt Abfahrten aus dem lokalen Kalender (oder VGN API) und ermöglicht sprachgesteuerte Benachrichtigungen pro Buslinie und Einzelfahrt.",
   preview: true
 });

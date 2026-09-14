@@ -15,5 +15,9 @@
   "mode_train": "Regionalzug",
   "not_available": "n/v",
   "unrecognized_settings": "Unbekannte Konfigurationseinstellungen: {keys}",
-  "clean_settings_desc": "Bitte verwenden Sie den Editor um Ihre Konfiguration zu bereinigen."
+  "clean_settings_desc": "Bitte verwenden Sie den Editor um Ihre Konfiguration zu bereinigen.",
+  "alert_enabled": "Sprachwarnung aktiv (klicken zum Stummschalten)",
+  "alert_disabled": "Sprachwarnung deaktiviert (klicken zum Aktivieren)",
+  "alerts_enabled_title": "Sprachwarnungen aktiviert",
+  "alerts_muted_title": "Sprachwarnungen stummgeschaltet"
 }

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.0 & `vgn-departure-card-loader.js`)**:
+  - **Local Calendar Timetable Integration**: Added `calendar_entity` configuration parameter (defaulting to `calendar.bus_scedule`) allowing the card to fetch departures locally from Home Assistant calendars with zero continuous external network polling.
+  - **Per-Bus Interactive Alert Buttons**: Added interactive volume buttons (🔊 active vs 🔇 muted) to every departure row, allowing users to visually identify and toggle verbal TTS alert eligibility for any individual bus run directly from the GUI.
+  - **Alert Overrides Synchronization**: Linked per-bus selections/deselections to `alert_overrides_helper` (`input_text.vgn_bus_alert_overrides`) for instant cross-device and automation synchronization.
+  - **Client-Side Clock Arithmetic**: Integrated local 30-second countdown ticker running purely in browser memory, eliminating redundant network calls while maintaining real-time urgency state rendering.
+  - **Visual Editor Support**: Added `calendar_entity` and `alert_overrides_helper` dropdown selectors to `vgn-departure-card-editor.js`.
+  - **Cache Busting Version Bump**: Bumped `vgn-departure-card.js`, `vgn-departure-card-loader.js`, and `vgn-departure-card-editor.js` to `1.7.0`.
+
 ### Fixed
 - **Multi Property Card (`custom:multi-property-card` v1.0.44 & `multi-property-card-loader.js`)**:
   - Prevented duplicate rendering of property tile icon, label, and value when nested features (e.g. `custom:progress-bar-feature`) are defined on an entity, by defaulting `show_icon`, `show_label`, and `show_value` to `false` when features are present.

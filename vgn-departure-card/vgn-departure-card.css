@@ -273,12 +273,52 @@
 
 .vgn-dep-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 70px;
+  grid-template-columns: 1fr 1fr 65px 28px;
   align-items: center;
   font-size: 12px;
   padding: 4px 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
   color: var(--vgn-text-secondary);
+}
+
+.vgn-row-alert-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--vgn-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  opacity: 0.35;
+}
+
+.vgn-row-alert-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.9;
+  transform: scale(1.15);
+}
+
+.vgn-row-alert-btn.active {
+  color: var(--vgn-ok);
+  background: rgba(45, 211, 111, 0.15);
+  border-color: rgba(45, 211, 111, 0.3);
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(45, 211, 111, 0.25);
+}
+
+.vgn-row-alert-btn.active ha-icon {
+  --mdc-icon-size: 14px;
+}
+
+.vgn-row-alert-btn.muted ha-icon {
+  --mdc-icon-size: 14px;
 }
 
 .vgn-dep-row:last-child {
