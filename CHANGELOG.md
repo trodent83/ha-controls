@@ -16,7 +16,13 @@ All notable changes to this project will be documented in this file.
   - **Optimized Time Formatting**: Replaced `toLocaleTimeString` with high-performance direct string padding (`_fmtTimeHM`), providing >30x speedup with zero garbage allocations.
   - **WebSocket Call Deduplication**: Guarded `_writeHelpers` with value change checks (`currentVal !== targetVal`), eliminating redundant `input_number.set_value` calls.
   - **Visual Editor Support**: Added `calendar_entity` and `alert_overrides_helper` dropdown selectors to `vgn-departure-card-editor.js`.
-  - **Cache Busting Version Bump**: Bumped `vgn-departure-card.js`, `vgn-departure-card-loader.js`, and `vgn-departure-card-editor.js` to `1.7.2`.
+  - **State Value Feature (`custom:state-value-feature` v1.0.4 & `feature-renderer-card-loader.js` v0.1.38)**:
+    - Added native `state_colors` and `state_animations` mapping support, allowing direct case-insensitive state string matching (e.g. `error`, `running`, `pause`, `finished`, `standby`) consistent with `icon-card-feature`.
+    - Added `.vibrate` / `.rumble` (appliance spin/run cycle vibration) and `.wobble` / `.tumble` (appliance wash drum rock) keyframe animations to `shared-animations.css`.
+    - Bumped `state-value-feature.js` to `1.0.4` and `feature-renderer-card-loader.js` to `0.1.38`.
+  - **Multi State Card (`custom:multi-state-card` v0.1.17 & `multi-state-card-loader.js` v0.1.39)**:
+    - Added `.vibrate`, `.rumble`, `.wobble`, and `.tumble` animations to `multi-state-card.css`.
+    - Bumped `multi-state-card.js` to `0.1.17` and `multi-state-card-loader.js` to `0.1.39`.
 
 ### Fixed
 - **Multi Property Card (`custom:multi-property-card` v1.0.44 & `multi-property-card-loader.js`)**:

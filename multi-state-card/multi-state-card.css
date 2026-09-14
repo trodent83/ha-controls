@@ -104,7 +104,7 @@ ha-icon {
    GPU OPTIMIZED ANIMATIONS
    will-change properties prevent layout shifts and utilize GPU layers.
    ========================================================================== */
-.bounce, .rotating, .pulse, .shake, .float, .spin-slow {
+.bounce, .rotating, .pulse, .shake, .float, .spin-slow, .vibrate, .rumble, .wobble, .tumble {
   will-change: transform;
 }
 
@@ -116,11 +116,28 @@ ha-icon {
 .shake     { animation: shake 0.4s linear infinite; }
 .float     { animation: float 3s ease-in-out infinite; }
 .spin-slow { animation: rotating 8s linear infinite; }
+.vibrate, .rumble { animation: rumble 0.35s linear infinite; }
+.wobble, .tumble  { animation: wobble 2s ease-in-out infinite; }
 
 /* Rotation keyframes definition */
 @keyframes rotating { 
   from { transform: rotate(0deg) translateZ(0); } 
   to { transform: rotate(360deg) translateZ(0); } 
+}
+
+@keyframes rumble {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-1px, 0.5px) rotate(-0.5deg); }
+  40% { transform: translate(1px, -0.5px) rotate(0.5deg); }
+  60% { transform: translate(-0.5px, -1px) rotate(0deg); }
+  80% { transform: translate(0.5px, 1px) rotate(-0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
 }
 
 /* Inner elements container wrapper */

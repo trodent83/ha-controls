@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 
 /**
  * StateValueFeature
@@ -68,7 +68,9 @@ class StateValueFeature extends HAControlThresholdBase {
       font_size: "",
       font_weight: "normal",
       text_align: "center",
-      thresholds: []
+      thresholds: [],
+      state_colors: {},
+      state_animations: {}
     };
   }
 
@@ -145,6 +147,10 @@ class StateValueFeature extends HAControlThresholdBase {
     if (matchedColor == null) {
       matchedColor = this._getMatchedProperty(rawState, this.config.thresholds, 'color');
     }
+    if (matchedColor == null && rawState !== undefined && this.config.state_colors) {
+      const lowerVal = String(rawState).toLowerCase();
+      matchedColor = this.config.state_colors[lowerVal] ?? this.config.state_colors[rawState];
+    }
 
     let matchedAnim = undefined;
     if (this.config.animation_expression) {
@@ -152,6 +158,10 @@ class StateValueFeature extends HAControlThresholdBase {
     }
     if (matchedAnim == null) {
       matchedAnim = this._getMatchedProperty(rawState, this.config.thresholds, 'animation');
+    }
+    if (matchedAnim == null && rawState !== undefined && this.config.state_animations) {
+      const lowerVal = String(rawState).toLowerCase();
+      matchedAnim = this.config.state_animations[lowerVal] ?? this.config.state_animations[rawState];
     }
 
     const featureColor = matchedColor || this.config.color || this.color || 'inherit';
