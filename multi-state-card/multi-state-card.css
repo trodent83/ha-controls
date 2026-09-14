@@ -38,6 +38,16 @@ ha-card {
   border-radius: 8px;
 }
 
+/* Non-actionable / read-only tile styling */
+.btn.is-readonly {
+  cursor: default;
+}
+
+.btn.is-readonly:active {
+  transform: none;
+  background: transparent;
+}
+
 /* Grayed out locked state styling */
 .btn.is-unavailable {
   opacity: 0.4;

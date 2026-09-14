@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.17';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '0.1.18';
 
 /**
  * MultiStateCard
@@ -135,10 +135,13 @@ class MultiStateCard extends HAControlBase {
           const isDisabled = (typeof entConf === 'object' && entConf.disabled_expression)
             ? !!this._evalExpression(entConf.disabled_expression, stateObj)
             : false;
+          const hasTap = typeof entConf === 'object' && entConf.tap_action && entConf.tap_action.action && entConf.tap_action.action !== 'none';
+          const hasHold = typeof entConf === 'object' && entConf.hold_action && entConf.hold_action.action && entConf.hold_action.action !== 'none';
+          const isActionable = hasTap || hasHold;
 
           return html`<div class="multi-state-entity">
             <div
-              class="btn ${isUnavailable ? 'is-unavailable' : ''} ${isDisabled ? 'is-disabled' : ''}"
+              class="btn ${isUnavailable ? 'is-unavailable' : ''} ${isDisabled ? 'is-disabled' : ''} ${!isActionable ? 'is-readonly' : ''}"
               @click="${() => this._runAction(entConf, 'tap')}"
               @contextmenu="${(e) => { e.preventDefault(); this._runAction(entConf, 'hold'); }}"
             >

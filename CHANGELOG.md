@@ -20,9 +20,10 @@ All notable changes to this project will be documented in this file.
     - Added native `state_colors` and `state_animations` mapping support, allowing direct case-insensitive state string matching (e.g. `error`, `running`, `pause`, `finished`, `standby`) consistent with `icon-card-feature`.
     - Added `.vibrate` / `.rumble` (appliance spin/run cycle vibration) and `.wobble` / `.tumble` (appliance wash drum rock) keyframe animations to `shared-animations.css`.
     - Bumped `state-value-feature.js` to `1.0.4` and `feature-renderer-card-loader.js` to `0.1.38`.
-  - **Multi State Card (`custom:multi-state-card` v0.1.17 & `multi-state-card-loader.js` v0.1.39)**:
+  - **Multi State Card (`custom:multi-state-card` v0.1.18 & `multi-state-card-loader.js` v0.1.40)**:
+    - Added `.is-readonly` class support for non-actionable entities (`tap_action.action: none` or omitted actions), switching the cursor to `default` and disabling active button click scaling (`transform: scale(0.96)`).
     - Added `.vibrate`, `.rumble`, `.wobble`, and `.tumble` animations to `multi-state-card.css`.
-    - Bumped `multi-state-card.js` to `0.1.17` and `multi-state-card-loader.js` to `0.1.39`.
+    - Bumped `multi-state-card.js` to `0.1.18` and `multi-state-card-loader.js` to `0.1.40`.
 
 ### Fixed
 - **Multi Property Card (`custom:multi-property-card` v1.0.44 & `multi-property-card-loader.js`)**:
