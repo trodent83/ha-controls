@@ -14,6 +14,8 @@ Below are the configuration parameters for the card:
 | :--- | :--- | :--- | :--- | :--- |
 | `type` | string | **Yes** | — | Must be `custom:vgn-departure-card`. |
 | `calendar_entity` | string | No | `calendar.bus_scedule` | Local Home Assistant calendar entity containing scheduled bus departures. When present, departures are loaded locally with zero external network polling. |
+| `refresh_script` | string | No | `script.vgn_bus_sync_calendar` | Backend script entity executed when the user taps the card's **Refresh** button. Synchronizes fresh timetable data from VGN into the local calendar. |
+| `disable_timer` | boolean | No | `true` (with calendar) | Tablet power-saving zero-timer mode. Completely disables background `setInterval` polling and 30-second client ticker loops to allow deep CPU sleep on wall tablets. |
 | `alert_overrides_helper` | string | No | `input_text.vgn_bus_alert_overrides` | Helper entity storing user selections and deselections made via row alert buttons on the GUI. |
 | `stop_name` | string | No | `"Bus Schedule"` | Friendly display name in the card header. |
 | `stop_dhid` | string | No | — | Global stop DHID identifier (used for online API fallback). |

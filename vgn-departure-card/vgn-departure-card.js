@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.3';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -135,6 +135,8 @@ class VGNDepartureCard extends HAControlBase {
   static getStubConfig() {
     return {
       calendar_entity: "calendar.bus_scedule",
+      refresh_script: "script.vgn_bus_sync_calendar",
+      disable_timer: true,
       alert_overrides_helper: "input_text.vgn_bus_alert_overrides",
       stop_name: "Bus Schedule",
       time_from: "06:00",
@@ -173,6 +175,7 @@ class VGNDepartureCard extends HAControlBase {
     this._cachedOverridesStr = null;
     this._cachedTokensSet = null;
     this._handleVisibilityChange = this._handleVisibilityChange.bind(this);
+    this._handleCalendarRefreshed = this._handleCalendarRefreshed.bind(this);
   }
 
   _getWatchedEntities(config) {
@@ -211,6 +214,13 @@ class VGNDepartureCard extends HAControlBase {
     if (!config.watches || !Array.isArray(config.watches) || config.watches.length === 0) {
       throw new Error("At least one watch entry is required");
     }
+    const disableTimer = config.disable_timer !== undefined
+      ? Boolean(config.disable_timer)
+      : (Boolean(calendarEntity));
+    const refreshScript = config.refresh_script !== undefined
+      ? config.refresh_script
+      : (calendarEntity ? "script.vgn_bus_sync_calendar" : "");
+
     this.config = {
       calendar_entity: calendarEntity,
       alert_overrides_helper: config.alert_overrides_helper || "input_text.vgn_bus_alert_overrides",
@@ -220,11 +230,14 @@ class VGNDepartureCard extends HAControlBase {
       poll_interval: config.poll_interval || (calendarEntity ? 600 : 60),
       max_departures: 12,
       rolling_hours: config.rolling_hours ? Number(config.rolling_hours) : null,
+      disable_timer: disableTimer,
+      refresh_script: refreshScript,
       ...config
     };
     this._unrecognizedKeys = this._validateConfigKeys(config, [
       'calendar_entity', 'alert_overrides_helper', 'stop_dhid', 'stop_name', 'time_from', 'time_to',
-      'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug'
+      'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug',
+      'disable_timer', 'refresh_script'
     ]);
   }
 
@@ -233,6 +246,15 @@ class VGNDepartureCard extends HAControlBase {
     this._restoreFromCache();
     this._startPolling();
     document.addEventListener('visibilitychange', this._handleVisibilityChange);
+    window.addEventListener('vgn-calendar-refreshed', this._handleCalendarRefreshed);
+  }
+
+  _handleCalendarRefreshed(e) {
+    if (this._loading || e?.detail?.source === this) return;
+    if (this.config?.calendar_entity) {
+      CALENDAR_CACHE.delete(this.config.calendar_entity);
+      this._fetchCalendarDepartures(true);
+    }
   }
 
   _restoreFromCache() {
@@ -275,13 +297,26 @@ class VGNDepartureCard extends HAControlBase {
     super.disconnectedCallback();
     this._stopPolling();
     document.removeEventListener('visibilitychange', this._handleVisibilityChange);
+    window.removeEventListener('vgn-calendar-refreshed', this._handleCalendarRefreshed);
   }
 
   _handleVisibilityChange() {
     if (document.hidden) {
       this._stopPolling();
     } else {
-      this._startPolling();
+      if (this.config?.disable_timer) {
+        // Screen wake / active view: recompute countdowns and refresh departures without starting timers
+        if (this.config.calendar_entity) {
+          if (this._rawCalendarEvents && this._rawCalendarEvents.length > 0) {
+            this._processCalendarWatches(this._rawCalendarEvents);
+          }
+          this._fetchCalendarDepartures();
+        } else {
+          this._fetchDepartures();
+        }
+      } else {
+        this._startPolling();
+      }
     }
   }
 
@@ -292,14 +327,19 @@ class VGNDepartureCard extends HAControlBase {
     // Immediate initial fetch
     this._fetchDepartures();
 
+    // Tablet power saving: if disable_timer is true, skip both local countdown loop and poll interval
+    if (this.config?.disable_timer) {
+      return;
+    }
+
     // Align local countdown ticker with wall clock half-minute marks (:00, :30)
     // Ensures clean rollover of minutes without arbitrary timer phase drift
     const scheduleNextTick = () => {
-      if (!this.isConnected) return;
+      if (!this.isConnected || this.config?.disable_timer) return;
       const now = new Date();
       const msToNextBoundary = (30 - (now.getSeconds() % 30)) * 1000 - now.getMilliseconds();
       this._localTickTimer = setTimeout(() => {
-        if (!this.isConnected) return;
+        if (!this.isConnected || this.config?.disable_timer) return;
         this._recomputeLocalTick();
         scheduleNextTick();
       }, Math.max(500, msToNextBoundary));
@@ -308,9 +348,11 @@ class VGNDepartureCard extends HAControlBase {
 
     // Schedule periodic background refresh from local calendar
     const interval = (this.config?.poll_interval || 600) * 1000;
-    this._pollTimer = setInterval(() => {
-      this._fetchDepartures();
-    }, interval);
+    if (interval > 0) {
+      this._pollTimer = setInterval(() => {
+        this._fetchDepartures();
+      }, interval);
+    }
   }
 
   _stopPolling() {
@@ -397,12 +439,33 @@ class VGNDepartureCard extends HAControlBase {
 
     this._loading = true;
     this._error = null;
+    this.requestUpdate();
 
     try {
+      if (manualRefresh && this.config.refresh_script && this.hass) {
+        const scriptId = this.config.refresh_script;
+        const scriptName = scriptId.startsWith('script.') ? scriptId.substring(7) : scriptId;
+        try {
+          await this.hass.callService('script', scriptName, {});
+        } catch (scriptErr) {
+          console.warn('[VGNDepartureCard] Refresh script execution warning:', scriptErr);
+        }
+        if (this.config.calendar_entity) {
+          CALENDAR_CACHE.delete(this.config.calendar_entity);
+        }
+        DEPARTURES_CACHE.clear();
+      }
+
       if (this.config.calendar_entity) {
         await this._fetchCalendarDepartures(manualRefresh);
       } else {
         await this._fetchOnlineDepartures();
+      }
+
+      if (manualRefresh) {
+        window.dispatchEvent(new CustomEvent('vgn-calendar-refreshed', {
+          detail: { source: this, calendar: this.config.calendar_entity }
+        }));
       }
     } catch (err) {
       console.error('[VGNDepartureCard] Fetch error:', err);
@@ -831,9 +894,15 @@ class VGNDepartureCard extends HAControlBase {
         </div>
 
         <div class="vgn-footer">
-          <button class="vgn-refresh-btn" @click="${() => this._fetchDepartures(true)}">
-            <ha-icon icon="mdi:refresh"></ha-icon>
-            ${this._localize('refresh') || 'Refresh'}
+          <button
+            class="vgn-refresh-btn ${this._loading ? 'loading' : ''}"
+            ?disabled="${this._loading}"
+            @click="${() => this._fetchDepartures(true)}"
+          >
+            <ha-icon icon="${this._loading ? 'mdi:loading' : 'mdi:refresh'}" class="${this._loading ? 'spin' : ''}"></ha-icon>
+            ${this._loading
+              ? (this._localize('refreshing') || 'Refreshing...')
+              : (this._localize('refresh') || 'Refresh')}
           </button>
         </div>
       </ha-card>

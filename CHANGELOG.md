@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.3 & `vgn-departure-card-loader.js`)**:
+  - **Configurable Refresh Script (`refresh_script`)**: Added `refresh_script` configuration property (defaulting to `script.vgn_bus_sync_calendar`). When the user clicks the footer Refresh button, the card executes the backend script to fetch the latest timetable from VGN into `calendar.bus_scedule`, invalidates the local cache, re-fetches calendar events, and broadcasts a `vgn-calendar-refreshed` event across `window` to synchronize sibling cards on the dashboard simultaneously.
+  - **Tablet Power-Saving / Zero-Timer Mode (`disable_timer`)**: Added `disable_timer` property (defaulting to `true` when `calendar_entity` is present). Completely disables background `setInterval` polling and recurring 30-second client tick loops to prevent mobile tablet CPU wakeups and maximize battery life. Departure countdowns update reactively via WebSocket events, on screen wake-up (`visibilitychange`), or on demand.
+  - **Visual Editor Script Selector & Power-Saving Toggle**: Added dropdown selector for `refresh_script` and toggle for `disable_timer` under "Kalender & Datenquelle" in `vgn-departure-card-editor.js`.
+  - **Enhanced Refresh Button**: Added spinning loading icon, disabled state, and localized `"Refreshing..."` text during active script execution.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.3`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.7.2 & `vgn-departure-card-loader.js`)**:
   - **Local Calendar Timetable Integration**: Added `calendar_entity` configuration parameter (defaulting to `calendar.bus_scedule`) allowing the card to fetch departures locally from Home Assistant calendars with zero continuous external network polling.
   - **Per-Bus Interactive Alert Buttons**: Added interactive volume buttons (🔊 active vs 🔇 muted) to every departure row, allowing users to visually identify and toggle verbal TTS alert eligibility for any individual bus run directly from the GUI.

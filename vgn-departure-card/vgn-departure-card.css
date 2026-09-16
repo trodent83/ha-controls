@@ -405,10 +405,21 @@
   transition: all 0.2s ease;
 }
 
-.vgn-refresh-btn:hover {
+.vgn-refresh-btn:hover:not(:disabled) {
   background: rgba(79, 142, 247, 0.15);
   color: var(--vgn-accent);
   border-color: rgba(79, 142, 247, 0.3);
+}
+
+.vgn-refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.vgn-refresh-btn.loading {
+  color: var(--vgn-accent);
+  border-color: rgba(79, 142, 247, 0.35);
+  background: rgba(79, 142, 247, 0.1);
 }
 
 .vgn-refresh-btn ha-icon {

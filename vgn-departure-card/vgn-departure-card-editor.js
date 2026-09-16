@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.3';
 
 /**
  * VGNDepartureCardEditor
@@ -80,6 +80,11 @@ class VGNDepartureCardEditor extends HAControlBase {
     return Object.keys(this.hass.states).filter(id => id.startsWith('input_text.')).sort();
   }
 
+  _getScriptEntities() {
+    if (!this.hass) return [];
+    return Object.keys(this.hass.states).filter(id => id.startsWith('script.')).sort();
+  }
+
   render() {
     if (!this.config) return html``;
     const watches = this.config.watches || [];
@@ -87,6 +92,7 @@ class VGNDepartureCardEditor extends HAControlBase {
     const inputBooleans = this._getInputBooleanEntities();
     const calendarEntities = this._getCalendarEntities();
     const inputTextEntities = this._getInputTextEntities();
+    const scriptEntities = this._getScriptEntities();
 
     return html`
       ${this.renderStyle('vgn-departure-card-editor.css')}
@@ -113,6 +119,19 @@ class VGNDepartureCardEditor extends HAControlBase {
           </div>
 
           <div class="vgn-editor-select">
+            <label>Aktualisierungs-Skript (Refresh-Button)</label>
+            <select
+              .value="${this.config.refresh_script !== undefined ? this.config.refresh_script : 'script.vgn_bus_sync_calendar'}"
+              @change="${e => this._valueChanged('refresh_script', e.target.value)}"
+            >
+              <option value="">-- Kein Skript (nur Kalender lesen) --</option>
+              ${scriptEntities.map(id => html`
+                <option value="${id}" ?selected="${(this.config.refresh_script !== undefined ? this.config.refresh_script : 'script.vgn_bus_sync_calendar') === id}">${id}</option>
+              `)}
+            </select>
+          </div>
+
+          <div class="vgn-editor-select">
             <label>Sprachwarnungen-Override Helfer</label>
             <select
               .value="${this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides'}"
@@ -122,6 +141,17 @@ class VGNDepartureCardEditor extends HAControlBase {
               ${inputTextEntities.map(id => html`
                 <option value="${id}" ?selected="${(this.config.alert_overrides_helper || 'input_text.vgn_bus_alert_overrides') === id}">${id}</option>
               `)}
+            </select>
+          </div>
+
+          <div class="vgn-editor-select">
+            <label>Tablet-Stromsparmodus (Keine Timer)</label>
+            <select
+              .value="${String(this.config.disable_timer !== undefined ? this.config.disable_timer : true)}"
+              @change="${e => this._valueChanged('disable_timer', e.target.value === 'true')}"
+            >
+              <option value="true" ?selected="${(this.config.disable_timer !== undefined ? this.config.disable_timer : true) === true}">Aktiviert (Empfohlen – 0 Hintergrund-Timer, spart Akku)</option>
+              <option value="false" ?selected="${(this.config.disable_timer !== undefined ? this.config.disable_timer : true) === false}">Deaktiviert (30-Sekunden Countdown-Timer aktiv)</option>
             </select>
           </div>
         </div>
