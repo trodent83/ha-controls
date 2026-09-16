@@ -198,10 +198,15 @@ class VGNDepartureCard extends HAControlBase {
     if (changedProps.has('hass') && this.config?.calendar_entity) {
       const oldHass = changedProps.get('hass');
       const calEntity = this.config.calendar_entity;
-      if (oldHass && this.hass && oldHass.states[calEntity] !== this.hass.states[calEntity]) {
-        // Automatically invalidate cache and re-fetch when calendar state changes
-        CALENDAR_CACHE.delete(calEntity);
-        this._fetchCalendarDepartures();
+      if (oldHass && this.hass) {
+        if (oldHass.states[calEntity] !== this.hass.states[calEntity]) {
+          // Automatically invalidate cache and re-fetch when calendar state changes
+          CALENDAR_CACHE.delete(calEntity);
+          this._fetchCalendarDepartures();
+        } else if (this.config?.disable_timer && this._rawCalendarEvents?.length > 0) {
+          // Recompute countdowns from calendar events whenever watched helpers or overrides change
+          this._recomputeLocalTick();
+        }
       }
     }
   }
@@ -249,11 +254,12 @@ class VGNDepartureCard extends HAControlBase {
     window.addEventListener('vgn-calendar-refreshed', this._handleCalendarRefreshed);
   }
 
-  _handleCalendarRefreshed(e) {
+  async _handleCalendarRefreshed(e) {
     if (this._loading || e?.detail?.source === this) return;
     if (this.config?.calendar_entity) {
-      CALENDAR_CACHE.delete(this.config.calendar_entity);
-      this._fetchCalendarDepartures(true);
+      await this._fetchCalendarDepartures(false);
+      this._lastUpdated = new Date();
+      this.requestUpdate();
     }
   }
 
