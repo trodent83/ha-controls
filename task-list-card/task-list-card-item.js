@@ -5,7 +5,7 @@ import { parseHtml } from "../utilities/html-parser.js?v=1.0.0";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.36';
 
 /**
  * TaskListCardItem
@@ -115,8 +115,6 @@ class TaskListCardItem extends HAControlBase {
    */
   _handleHold() {
     this.dispatchEvent(new CustomEvent('hold-task', {
-      bubbles: true,
-      composed: true,
       detail: { task: this.task }
     }));
   }
@@ -138,11 +136,12 @@ class TaskListCardItem extends HAControlBase {
       this._isHolding = false;
       return;
     }
+    if (e) {
+      e.stopPropagation();
+    }
     const blockFuture = String(this.config.block_future_toggles) !== 'false';
     if (this.readonly || (blockFuture && this.task.isFuture)) return;
     this.dispatchEvent(new CustomEvent('toggle-task', {
-      bubbles: true,
-      composed: true,
       detail: { task: this.task }
     }));
   }

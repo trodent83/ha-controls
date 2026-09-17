@@ -32,6 +32,12 @@ All notable changes to this project will be documented in this file.
     - Bumped `multi-state-card.js` to `0.1.18` and `multi-state-card-loader.js` to `0.1.40`.
 
 ### Fixed
+- **Task List Card (`custom:task-list-card` v1.0.36 & `task-list-card-loader.js`)**:
+  - **Double-Toggle & Refresh Fix**: Fixed an issue where clicking a task failed to refresh the task list and prevented completed tasks from vanishing. Removed bubbling (`bubbles: true`) from `toggle-task` and `hold-task` in `task-list-card-item.js` and added `stopPropagation()` in `task-list-card-row.js`, preventing duplicate event handling that immediately toggled tasks back to `needs_action`.
+  - **Task List Refresh on Completion**: Added `_fetchItems()` synchronization upon toggling tasks and closing the delay modal to ensure fresh task list state from Home Assistant.
+  - **Regression Test Suite**: Added automated test suite in `tests/test_task_list_card.js` verifying single-dispatch event propagation, hold suppression, `_fetchItems()` execution, and DTO completion/vanishing logic.
+  - Bumped version across `task-list-card.js`, `task-list-card-row.js`, `task-list-card-item.js`, `task-list-card-editor.js`, `task-delay-card.js`, and `task-list-card-loader.js` to `1.0.36`.
+
 - **Multi Property Card (`custom:multi-property-card` v1.0.44 & `multi-property-card-loader.js`)**:
   - Prevented duplicate rendering of property tile icon, label, and value when nested features (e.g. `custom:progress-bar-feature`) are defined on an entity, by defaulting `show_icon`, `show_label`, and `show_value` to `false` when features are present.
   - Added full-width layout support (`.btn.has-features`, `.features-container`, and `.features-container feature-renderer-card`) so features span the full card width properly.

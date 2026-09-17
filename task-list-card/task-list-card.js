@@ -4,12 +4,12 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.36';
 
 import { Task } from "../utilities/task/task-dto-task.js?v=1.0.22";
 import { Day } from "../utilities/task/task-dto-day.js?v=1.0.22";
 import { TaskDataManager } from "../utilities/task/task-data-manager.js?v=1.0.22";
-import "./task-delay-card.js?v=1.0.35";
+import "./task-delay-card.js?v=1.0.36";
 
 /**
  * TaskListCard
@@ -443,7 +443,7 @@ class TaskListCard extends HAControlBase {
                   type: "custom:task-delay-card",
                   task: this._fallbackPopupTask
                 }}
-                @close-popup=${() => { this._fallbackPopupTask = null; this.requestUpdate(); }}
+                @close-popup=${() => { this._fallbackPopupTask = null; this._fetchItems(); this.requestUpdate(); }}
               ></task-delay-card>
             </div>
             <button class="popup-close-btn" @click="${() => { this._fallbackPopupTask = null; this.requestUpdate(); }}">×</button>
@@ -568,6 +568,8 @@ class TaskListCard extends HAControlBase {
         item: task.uid,
         status: newStatus
       });
+      await this._fetchItems();
+      this.requestUpdate();
     } catch (e) {
       console.error("Error updating task status", e);
       task.status = oldStatus;

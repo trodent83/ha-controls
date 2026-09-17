@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.35';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.36';
 
 /**
  * TaskDelayCard
