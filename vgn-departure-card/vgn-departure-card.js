@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.3';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.5';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -51,7 +51,7 @@ function _fmtTimeHM(date) {
  */
 const DEPARTURES_CACHE = new Map(); // dhid -> { result, timestamp }
 
-async function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
+function fetchStopDeparturesShared(dhid, dateObj, targetTimeStr = null) {
   const timeQuery = targetTimeStr || _fmtTime(dateObj);
   const cacheKey = `${dhid}_${_fmtDate(dateObj)}_${timeQuery}`;
   if (IN_FLIGHT_FETCHES.has(cacheKey)) {
@@ -448,14 +448,28 @@ class VGNDepartureCard extends HAControlBase {
     this.requestUpdate();
 
     try {
-      if (manualRefresh && this.config.refresh_script && this.hass) {
+      if (manualRefresh && this.config.refresh_script && this.config.refresh_script !== "none" && this.hass) {
         const scriptId = this.config.refresh_script;
+        const fullScriptId = scriptId.startsWith('script.') ? scriptId : `script.${scriptId}`;
         const scriptName = scriptId.startsWith('script.') ? scriptId.substring(7) : scriptId;
-        try {
-          await this.hass.callService('script', scriptName, {});
-        } catch (scriptErr) {
-          console.warn('[VGNDepartureCard] Refresh script execution warning:', scriptErr);
+
+        // Only invoke script if it actually exists in Home Assistant states
+        const scriptExists = Boolean(this.hass.states && this.hass.states[fullScriptId]);
+        if (scriptExists) {
+          try {
+            if (this.hass.services?.script?.turn_on) {
+              await this.hass.callService('script', 'turn_on', { entity_id: fullScriptId });
+            } else {
+              await this.hass.callService('script', scriptName, {});
+            }
+          } catch (scriptErr) {
+            const errMsg = scriptErr?.message || scriptErr?.code || (typeof scriptErr === 'object' ? JSON.stringify(scriptErr) : String(scriptErr));
+            console.warn(`[VGNDepartureCard] Refresh script execution warning: ${errMsg}`);
+          }
+        } else if (this.config.debug) {
+          console.info(`[VGNDepartureCard] Refresh script "${fullScriptId}" not present in Home Assistant states; skipping.`);
         }
+
         if (this.config.calendar_entity) {
           CALENDAR_CACHE.delete(this.config.calendar_entity);
         }
@@ -1043,3 +1057,16 @@ window.customCards.push({
   description: "Zeigt Abfahrten aus dem lokalen Kalender (oder VGN API) und ermöglicht sprachgesteuerte Benachrichtigungen pro Buslinie und Einzelfahrt.",
   preview: true
 });
+
+export {
+  IN_FLIGHT_FETCHES,
+  CALENDAR_CACHE,
+  CALENDAR_IN_FLIGHT,
+  DEPARTURES_CACHE,
+  _fmtDate,
+  _fmtTime,
+  _fmtTimeHM,
+  fetchStopDeparturesShared,
+  VGNDepartureCard
+};
+

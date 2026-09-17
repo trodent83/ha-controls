@@ -4,7 +4,7 @@ import { HAControlThresholdBase, html } from "../ha-control-threshold-base.js?v=
  * Cache-busting version parameter for dynamic asset loading, parsed from module import query string.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.0.8';
 
 /**
  * NavigationBarCard
@@ -27,6 +27,16 @@ class NavigationBarCard extends HAControlThresholdBase {
     super();
     this._filteredCounts = {};
     this._lastFetchedStates = {};
+    this._debounceTimer = null;
+    this._isUpdatingCounts = false;
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+      this._debounceTimer = null;
+    }
   }
 
   static getConfigElement() {
@@ -94,7 +104,10 @@ class NavigationBarCard extends HAControlThresholdBase {
   updated(changedProps) {
     super.updated(changedProps);
     if (changedProps.has("hass") || changedProps.has("config")) {
-      this._updateFilteredCounts();
+      clearTimeout(this._debounceTimer);
+      this._debounceTimer = setTimeout(() => {
+        this._updateFilteredCounts();
+      }, 150);
     }
   }
 
@@ -106,145 +119,173 @@ class NavigationBarCard extends HAControlThresholdBase {
    * @async
    */
   async _updateFilteredCounts() {
-    if (!this.hass || !this.config) return;
+    if (!this.hass || !this.config || this._isUpdatingCounts) return;
 
     const items = this.config.items || [];
 
     // Synchronous pre-check: skip the async work entirely if no entity timestamps have changed
-    const anyChanged = items.some((item, idx) => {
+    const anyChanged = items.some((item) => {
       if (!item.show_counter || !item.entity) return false;
       const stateObj = this.hass.states[item.entity];
       if (!stateObj) return false;
+      if (["unavailable", "unknown"].includes(stateObj.state)) return false;
       return this._lastFetchedStates[item.entity] !== stateObj.last_updated;
     });
     if (!anyChanged) return;
 
-    const newCounts = { ...this._filteredCounts };
-    let needsUpdate = false;
+    this._isUpdatingCounts = true;
+    try {
+      const newCounts = { ...this._filteredCounts };
+      let needsUpdate = false;
 
-    for (let idx = 0; idx < items.length; idx++) {
-      const item = items[idx];
-      if (!item.show_counter || !item.entity) continue;
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx];
+        if (!item.show_counter || !item.entity) continue;
 
-      const entityId = item.entity;
-      const stateObj = this.hass.states[entityId];
-      if (!stateObj) continue;
+        const entityId = item.entity;
+        const stateObj = this.hass.states[entityId];
+        if (!stateObj) continue;
 
-      const lastUpdated = stateObj.last_updated;
-      if (this._lastFetchedStates[entityId] === lastUpdated) {
-        continue;
+        // Skip fetching when entity is temporarily unavailable or unknown (e.g. during integration reload)
+        if (["unavailable", "unknown"].includes(stateObj.state)) {
+          continue;
+        }
+
+        const lastUpdated = stateObj.last_updated;
+        if (this._lastFetchedStates[entityId] === lastUpdated) {
+          continue;
+        }
+
+        // Use pre-compiled regex filters from setConfig
+        const compiledFilters = this._compiledItemFilters?.[idx] || [];
+
+        if (entityId.startsWith("todo.")) {
+          try {
+            let tasks = null;
+
+            // 1. Primary query via WebSocket API
+            try {
+              const response = await this.hass.callWS({
+                type: "todo/item/list",
+                entity_id: entityId
+              });
+              if (response && response.items) {
+                tasks = response.items;
+              }
+            } catch (wsErr) {
+              // 2. Fallback to todo.get_items service if callWS rejects
+              if (this.hass.services?.todo?.get_items) {
+                const res = await this.hass.callService("todo", "get_items", { entity_id: entityId }, undefined, true, true);
+                if (res && res[entityId]?.items) {
+                  tasks = res[entityId].items;
+                }
+              }
+              if (!tasks) throw wsErr;
+            }
+
+            if (tasks && Array.isArray(tasks)) {
+              if (compiledFilters.length > 0) {
+                tasks = tasks.filter(t => {
+                  const text = t.summary || '';
+                  return !compiledFilters.some(regex => regex.test(text));
+                });
+              }
+
+              // Apply show_completed
+              const showCompleted = item.show_completed === true;
+              if (!showCompleted) {
+                tasks = tasks.filter(t => t.status !== 'completed');
+              }
+
+              // Apply show_no_due_date
+              const showNoDueDate = item.show_no_due_date !== false;
+              if (!showNoDueDate) {
+                tasks = tasks.filter(t => t.due);
+              }
+
+              // Apply max_days
+              const maxDays = item.max_days !== undefined && item.max_days !== null && item.max_days !== '' ? parseInt(item.max_days) : null;
+              if (maxDays !== null) {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() + maxDays);
+                cutoff.setHours(23, 59, 59, 999);
+
+                tasks = tasks.filter(t => {
+                  if (t.due) return new Date(t.due) <= cutoff;
+                  return true;
+                });
+              }
+
+              newCounts[idx] = tasks.length;
+              this._lastFetchedStates[entityId] = lastUpdated;
+              needsUpdate = true;
+            }
+          } catch (e) {
+            const errMsg = e?.message || e?.code || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+            console.warn(`[NavigationBarCard] Could not fetch tasks for ${entityId}: ${errMsg}`);
+            // Retain previous count or fallback to numeric state if available
+            if (newCounts[idx] === undefined && !isNaN(parseInt(stateObj.state, 10))) {
+              newCounts[idx] = parseInt(stateObj.state, 10);
+              needsUpdate = true;
+            }
+          }
+        } else if (entityId.startsWith("calendar.")) {
+          try {
+            const start = new Date();
+            start.setHours(0, 0, 0, 0);
+
+            const maxDays = item.max_days !== undefined && item.max_days !== null && item.max_days !== '' ? parseInt(item.max_days) : 7;
+            const end = new Date();
+            end.setDate(end.getDate() + maxDays);
+            end.setHours(23, 59, 59, 999);
+
+            const startStr = start.toISOString();
+            const endStr = end.toISOString();
+            const path = `calendars/${entityId}?start=${startStr}&end=${endStr}`;
+
+            const events = await this.hass.callApi("GET", path);
+
+            if (events && Array.isArray(events)) {
+              let filteredEvents = events;
+
+              if (compiledFilters.length > 0) {
+                filteredEvents = filteredEvents.filter(event => {
+                  const text = event.summary || '';
+                  return !compiledFilters.some(regex => regex.test(text));
+                });
+              }
+
+              const showFinished = item.show_finished_events !== false;
+              if (!showFinished) {
+                const now = new Date();
+                filteredEvents = filteredEvents.filter(e => {
+                  const endDt = e.end?.dateTime ? new Date(e.end.dateTime) : (e.end?.date ? new Date(e.end.date) : null);
+                  return endDt && endDt >= now;
+                });
+              }
+
+              const maxItems = item.max_items !== undefined && item.max_items !== null && item.max_items !== '' ? parseInt(item.max_items) : null;
+              if (maxItems !== null) {
+                filteredEvents = filteredEvents.slice(0, maxItems);
+              }
+
+              newCounts[idx] = filteredEvents.length;
+              this._lastFetchedStates[entityId] = lastUpdated;
+              needsUpdate = true;
+            }
+          } catch (e) {
+            const errMsg = e?.message || e?.code || (typeof e === 'object' ? JSON.stringify(e) : String(e));
+            console.warn(`[NavigationBarCard] Could not fetch calendar events for ${entityId}: ${errMsg}`);
+          }
+        }
       }
 
-      this._lastFetchedStates[entityId] = lastUpdated;
-      needsUpdate = true;
-
-      // Use pre-compiled regex filters from setConfig
-      const compiledFilters = this._compiledItemFilters?.[idx] || [];
-
-      if (entityId.startsWith("todo.")) {
-        try {
-          const response = await this.hass.callWS({
-            type: "todo/item/list",
-            entity_id: entityId
-          });
-
-          if (response && response.items) {
-            let tasks = response.items;
-
-            if (compiledFilters.length > 0) {
-              tasks = tasks.filter(t => {
-                const text = t.summary || '';
-                return !compiledFilters.some(regex => regex.test(text));
-              });
-            }
-
-            // Apply show_completed
-            const showCompleted = item.show_completed === true;
-            if (!showCompleted) {
-              tasks = tasks.filter(t => t.status !== 'completed');
-            }
-
-            // Apply show_no_due_date
-            const showNoDueDate = item.show_no_due_date !== false;
-            if (!showNoDueDate) {
-              tasks = tasks.filter(t => t.due);
-            }
-
-            // Apply max_days
-            const maxDays = item.max_days !== undefined && item.max_days !== null && item.max_days !== '' ? parseInt(item.max_days) : null;
-            if (maxDays !== null) {
-              const cutoff = new Date();
-              cutoff.setDate(cutoff.getDate() + maxDays);
-              cutoff.setHours(23, 59, 59, 999);
-
-              tasks = tasks.filter(t => {
-                if (t.due) return new Date(t.due) <= cutoff;
-                return true;
-              });
-            }
-
-            newCounts[idx] = tasks.length;
-          } else {
-            newCounts[idx] = 0;
-          }
-        } catch (e) {
-          console.error("Error fetching filtered tasks for navigation bar", entityId, e);
-          newCounts[idx] = 0;
-        }
-      } else if (entityId.startsWith("calendar.")) {
-        try {
-          const start = new Date();
-          start.setHours(0, 0, 0, 0);
-
-          const maxDays = item.max_days !== undefined && item.max_days !== null && item.max_days !== '' ? parseInt(item.max_days) : 7;
-          const end = new Date();
-          end.setDate(end.getDate() + maxDays);
-          end.setHours(23, 59, 59, 999);
-
-          const startStr = start.toISOString();
-          const endStr = end.toISOString();
-          const path = `calendars/${entityId}?start=${startStr}&end=${endStr}`;
-
-          const events = await this.hass.callApi("GET", path);
-
-          if (events && Array.isArray(events)) {
-            let filteredEvents = events;
-
-            if (compiledFilters.length > 0) {
-              filteredEvents = filteredEvents.filter(event => {
-                const text = event.summary || '';
-                return !compiledFilters.some(regex => regex.test(text));
-              });
-            }
-
-            const showFinished = item.show_finished_events !== false;
-            if (!showFinished) {
-              const now = new Date();
-              filteredEvents = filteredEvents.filter(e => {
-                const endDt = e.end?.dateTime ? new Date(e.end.dateTime) : (e.end?.date ? new Date(e.end.date) : null);
-                return endDt && endDt >= now;
-              });
-            }
-
-            const maxItems = item.max_items !== undefined && item.max_items !== null && item.max_items !== '' ? parseInt(item.max_items) : null;
-            if (maxItems !== null) {
-              filteredEvents = filteredEvents.slice(0, maxItems);
-            }
-
-            newCounts[idx] = filteredEvents.length;
-          } else {
-            newCounts[idx] = 0;
-          }
-        } catch (e) {
-          console.error("Error fetching filtered events for navigation bar", entityId, e);
-          newCounts[idx] = 0;
-        }
+      if (needsUpdate) {
+        this._filteredCounts = newCounts;
+        this.requestUpdate();
       }
-    }
-
-    if (needsUpdate) {
-      this._filteredCounts = newCounts;
-      this.requestUpdate();
+    } finally {
+      this._isUpdatingCounts = false;
     }
   }
 

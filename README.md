@@ -190,6 +190,17 @@ Each card is split into modular components for easier code maintenance:
 
 To add support for a new language, create a file under `translations/` named with your language's ISO code (e.g. `de.json`, `fr.json`) mapping the key/values defined in the English fallback (`en.json`).
 
+### 🧪 Running Tests
+
+Automated regression and unit tests run with Node's native test runner without any external dependencies:
+
+```bash
+npm test
+# or: node --test tests/test_task_list_card.js tests/test_vgn_departure_card.js
+```
+
+See [tests/README.md](tests/README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for full testing guides and architecture.
+
 ---
 
 *Made with ❤️ for the Home Assistant Community.*

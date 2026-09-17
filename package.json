@@ -1,0 +1,16 @@
+{
+  "name": "ha-controls",
+  "version": "1.0.0",
+  "description": "Custom Lovelace controls for Home Assistant",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/test_task_list_card.js tests/test_vgn_departure_card.js"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-cards"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -32,6 +32,23 @@ All notable changes to this project will be documented in this file.
     - Bumped `multi-state-card.js` to `0.1.18` and `multi-state-card-loader.js` to `0.1.40`.
 
 ### Fixed
+- **Navigation Bar Card (`custom:navigation-bar-card` v1.0.8 & `navigation-bar-card-loader.js`)**:
+  - **Entity Availability & Debounce Guard**: Added a state availability guard to skip querying entities when they are in `unavailable` or `unknown` states (e.g. during integration reload or backend sync), preventing unhandled `todo/item/list` WebSocket rejections.
+  - **Fallback Query Support**: Added fallback to `todo.get_items` service when WebSocket queries fail, and retained valid previous badge count rather than dropping to 0.
+  - **Debounced Counter Fetching**: Added a 150ms debounce and in-flight guard to eliminate overlapping concurrent queries on rapid state updates.
+  - Bumped version across `navigation-bar-card.js`, `navigation-bar-card-editor.js`, and `navigation-bar-card-loader.js` to `1.0.8`.
+
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.5 & `vgn-departure-card-loader.js`)**:
+  - **Automated Unit & Regression Test Suite**: Created comprehensive test suite in `tests/test_vgn_departure_card.js` (25 unit tests) covering date/time formatters (`_fmtDate`, `_fmtTime`, `_fmtTimeHM`), shared online departures in-flight deduplication (`fetchStopDeparturesShared`), calendar cache TTL and cross-instance concurrency deduplication (`CALENDAR_CACHE`, `CALENDAR_IN_FLIGHT`), refresh script execution safe guards, watched entities resolution (`_getWatchedEntities`), time range filtering (`_isDepartureInTimeRange`), and version consistency checks.
+  - **In-Flight Promise Deduplication Optimization**: Optimized `fetchStopDeparturesShared` to directly return the in-flight Promise instance without redundant async wrapper allocations.
+  - **Named Module Exports**: Exported cache structures, formatters, and class for testability while preserving full Lovelace card runtime compatibility.
+  - Bumped version across `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.5`.
+
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.4 & `vgn-departure-card-loader.js`)**:
+  - **Graceful Refresh Script Execution**: Checked whether the configured/default refresh script entity actually exists in `hass.states` before attempting execution, preventing `service_not_found` warnings and console errors when the backend script has not been deployed.
+  - **Improved Warning Formatting**: Formatted error message strings properly so console logs output actionable details instead of raw `Object`.
+  - Bumped version across `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.4`.
+
 - **Task List Card (`custom:task-list-card` v1.0.36 & `task-list-card-loader.js`)**:
   - **Double-Toggle & Refresh Fix**: Fixed an issue where clicking a task failed to refresh the task list and prevented completed tasks from vanishing. Removed bubbling (`bubbles: true`) from `toggle-task` and `hold-task` in `task-list-card-item.js` and added `stopPropagation()` in `task-list-card-row.js`, preventing duplicate event handling that immediately toggled tasks back to `needs_action`.
   - **Task List Refresh on Completion**: Added `_fetchItems()` synchronization upon toggling tasks and closing the delay modal to ensure fresh task list state from Home Assistant.

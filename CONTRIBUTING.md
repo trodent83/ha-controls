@@ -282,3 +282,25 @@ get translationPath() {
 * **Use Localized Formatters:** Avoid rendering raw timestamps or float values. Utilize Home Assistant's integrated formatting helpers (e.g., `this.hass.formatEntityState(stateObj)`) to display values matching the user's regional format settings.
 * **Lovelace Config Editors:** Always provide a visual configuration editor for your cards to support user-friendly customization via the dashboard visual builder.
 * **Graceful Degradation:** Display clear warnings when a configured entity is missing, unavailable, or misconfigured, preventing JS stack failures. Use the base class helpers `this.renderError(message)` or `this.renderWarning(message)` to display alerts uniformly.
+
+---
+
+## 🧪 Automated Testing
+
+Automated unit, integration, and regression test suites are located in the [tests/](tests/) directory and run with Node's native test runner (`node:test` and `node:assert/strict`) without external dependencies:
+
+```bash
+# Run all test suites
+npm test
+
+# Alternatively using Node directly
+node --test tests/test_task_list_card.js tests/test_vgn_departure_card.js
+```
+
+### Running Individual Card Suites
+
+* **Task List Card**: `node --test tests/test_task_list_card.js`
+* **VGN Departure Card**: `node --test tests/test_vgn_departure_card.js`
+
+See [tests/README.md](tests/README.md) for mocking conventions, architecture details, and guidelines for writing new tests.
+
