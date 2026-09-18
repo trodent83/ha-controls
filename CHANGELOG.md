@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.8.4 & `vgn-departure-card-loader.js`)**:
+  - **Removed Non-Existent Service Call**: Completely removed `callService("calendar", "delete_event")` which does not exist in Home Assistant core. Pure client-side deduplication in `_processCalendarWatches` seamlessly deduplicates departures by departure minute and destination without error popups.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.4`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.8.3 & `vgn-departure-card-loader.js`)**:
   - **Self-Healing Duplicate Elimination & UI Protection**: Re-introduced robust minute-level departure deduplication in `_processCalendarWatches` so identical scheduled departures for the same line are never duplicated in the card UI. In `_fetchCalendarDepartures`, when the user clicks Refresh, uses the Home Assistant REST API's event `uid` to automatically call `calendar.delete_event` and purge redundant duplicate entries from `calendar.bus_scedule`.
   - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.3`.

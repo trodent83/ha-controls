@@ -813,39 +813,6 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       assert.equal(departures.length, 1, "Duplicate events at the exact same minute must be deduplicated to 1 departure");
       assert.equal(departures[0].direction, "Amberg Bahnhof");
     });
-
-    it("purges duplicate calendar events by UID on manual refresh", async () => {
-      const deletedUids = [];
-      const card = new VGNDepartureCard();
-      card.config = {
-        calendar_entity: "calendar.bus_scedule",
-        watches: [{ line: "486" }]
-      };
-      card.hass = {
-        callApi: async () => [
-          {
-            summary: "Bus 486 - Amberg",
-            start: "2026-09-18T10:00:00Z",
-            uid: "uid-1"
-          },
-          {
-            summary: "Regionalbus 486 - Amberg",
-            start: "2026-09-18T10:00:00Z",
-            uid: "uid-2"
-          }
-        ],
-        callService: async (domain, service, data) => {
-          if (domain === "calendar" && service === "delete_event") {
-            deletedUids.push(data.uid);
-          }
-        }
-      };
-
-      await card._fetchCalendarDepartures(true);
-
-      assert.equal(deletedUids.length, 1, "Must delete exactly 1 duplicate event UID");
-      assert.equal(deletedUids[0], "uid-2", "Must target the redundant event UID");
-    });
   });
 });
 

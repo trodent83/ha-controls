@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.3';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.4';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -458,10 +458,10 @@ class VGNDepartureCard extends HAControlBase {
         const scriptExists = Boolean(this.hass.states && this.hass.states[fullScriptId]);
         if (scriptExists) {
           try {
-            if (this.hass.services?.script?.turn_on) {
-              await this.hass.callService('script', 'turn_on', { entity_id: fullScriptId });
-            } else {
+            if (this.hass.services?.script?.[scriptName]) {
               await this.hass.callService('script', scriptName, {});
+            } else if (this.hass.services?.script?.turn_on) {
+              await this.hass.callService('script', 'turn_on', { entity_id: fullScriptId });
             }
           } catch (scriptErr) {
             const errMsg = scriptErr?.message || scriptErr?.code || (typeof scriptErr === 'object' ? JSON.stringify(scriptErr) : String(scriptErr));
@@ -524,29 +524,6 @@ class VGNDepartureCard extends HAControlBase {
           const endStr = endOfDay.toISOString();
           const path = `calendars/${calEntity}?start=${startStr}&end=${endStr}`;
           const rawEvents = await this.hass.callApi("GET", path);
-
-          // Detect duplicate entries in calendar and delete redundant copies by UID on manual refresh
-          if (Array.isArray(rawEvents)) {
-            const seenSigs = new Set();
-            for (const e of rawEvents) {
-              const startStr = e.start?.dateTime || e.start;
-              const parsedDate = startStr ? new Date(startStr) : null;
-              const timeMs = parsedDate ? parsedDate.getTime() : null;
-              const cleanDest = _cleanTransitSummary(e.summary || '').toLowerCase();
-              const sig = `${cleanDest}@${timeMs}`;
-              if (timeMs && seenSigs.has(sig)) {
-                if (manualRefresh && e.uid && this.hass?.callService) {
-                  this.hass.callService("calendar", "delete_event", {
-                    entity_id: calEntity,
-                    uid: e.uid
-                  }).catch(() => {});
-                }
-              } else if (timeMs) {
-                seenSigs.add(sig);
-              }
-            }
-          }
-
           const res = Array.isArray(rawEvents) ? rawEvents.map(e => {
             const startStr = e.start?.dateTime || e.start;
             const parsedDate = startStr ? new Date(startStr) : null;

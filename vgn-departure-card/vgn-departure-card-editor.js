@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.3';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.4';
 
 /**
  * VGNDepartureCardEditor
