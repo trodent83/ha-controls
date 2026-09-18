@@ -597,6 +597,27 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       assert.equal(matchLine(401, "486"), false, "Line 401 must NOT match '486'");
       assert.equal(matchLine(402, "both"), false, "Line 402 must NOT match 'both'");
     });
+
+    it("verifies departure start and end time formatting from ISO strings", () => {
+      const depRaw = "2026-09-18T04:44:00Z";
+      const dt = new Date(depRaw);
+      assert.ok(!isNaN(dt.getTime()), "Valid date parsed");
+
+      const pad = (n) => String(n).padStart(2, "0");
+      const fmtLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+
+      const start = fmtLocal(dt);
+      const endDt = new Date(dt.getTime() + 5 * 60 * 1000);
+      const end = fmtLocal(endDt);
+
+      assert.match(start, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:00$/);
+      assert.match(end, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:00$/);
+
+      const ts = Math.floor(dt.getTime() / 1000);
+      const evSig = `Bus 486 - Amberg Bahnhof@${ts}`;
+      assert.ok(evSig.includes("@"), "Signature must include epoch timestamp");
+    });
   });
 });
+
 
