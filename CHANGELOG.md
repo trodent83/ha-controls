@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.8 & `vgn-departure-card-loader.js`)**:
+  - **Universal Multi-Modal Transit Support**: Expanded route destination cleaner (`_cleanTransitSummary`) and matching to support any transport mode (Bus, Tram, Train, S-Bahn, U-Bahn, Regionalbahn, Regional-Express).
+  - **Dynamic Alert Scheduling**: Replaced hardcoded line 486 check in `_isDepartureAlertActive` with universal watch-level properties: `alert_hours` (e.g. `[6, 9]`) and `alert_weekdays` (e.g. `true`), preserving backward compatibility for legacy configs while allowing any line to have custom alert schedules.
+  - **Configurable Near-Departure Window (`near_poll_window_min`)**: Added `near_poll_window_min` configuration parameter (default: `25` min) exposed in card config and visual editor.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.8`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.7 & `vgn-departure-card-loader.js`)**:
+  - **Live Delay & Real-Time Sync**: In `_processCalendarWatches`, automatically synchronizes live real-time departure minutes and delays from configured `watch.helper` entities (updated by `automation.vgn_bus_departure_background_update` via VGN GPS API) for upcoming departures within 30 minutes.
+  - **Delay Badge Display**: Computes `dep.delay = liveMinutes - scheduledMinutes`, adjusts `dep.realtime`, and renders dynamic delay badges (`+delay` in red or `-early` in green) alongside destination names and live countdown times.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.7`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.7.6 & `vgn-departure-card-loader.js`)**:
   - **Destination Column**: Replaced redundant second time column with destination name (`.vgn-dep-destination`), displaying clean truncated destination routes (e.g. `"Amberg Bahnhof"`, `"Sulzbach-Rosenberg"`).
   - **Row-Level Alert Toggle**: Entire departure row (`.vgn-dep-row`) is now an interactive touch target with hover highlights and tap scaling (`transform: scale(0.995)`), toggling verbal TTS alerts on click without requiring precision tapping on the small 24px icon.

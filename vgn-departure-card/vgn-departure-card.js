@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.6';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.9';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -20,7 +20,7 @@ const IN_FLIGHT_FETCHES = new Map();
 
 /**
  * Shared module-level calendar event cache and in-flight request deduplication across card instances.
- * When multiple cards (e.g. Card 1 for 486 and Card 2 for 456) are on the same view,
+ * When multiple cards are on the same view,
  * they share a single fetch call to Home Assistant's local calendar API.
  */
 const CALENDAR_CACHE = new Map(); // entityId -> { events, timestamp }
@@ -44,6 +44,11 @@ function _fmtTimeHM(date) {
   const h = String(date.getHours()).padStart(2, '0');
   const m = String(date.getMinutes()).padStart(2, '0');
   return `${h}:${m}`;
+}
+
+export function _cleanTransitSummary(summary) {
+  if (!summary) return '';
+  return summary.replace(/^(?:Bus|Tram|Zug|Train|S-Bahn|U-Bahn|Strab|RB|RE|IC|ICE|S|U)?\s*[A-Za-z0-9]+\s*[-–:]\s*/i, '').trim();
 }
 
 /**
@@ -138,24 +143,19 @@ class VGNDepartureCard extends HAControlBase {
       refresh_script: "script.vgn_bus_sync_calendar",
       disable_timer: true,
       alert_overrides_helper: "input_text.vgn_bus_alert_overrides",
-      stop_name: "Bus Schedule",
+      stop_name: "Abfahrten",
       time_from: "06:00",
       time_to: "21:00",
       poll_interval: 600,
+      near_poll_window_min: 25,
       watches: [
         {
-          line: "486",
-          direction: "Amberg",
-          helper: "input_number.vgn_bus_486_minutes",
-          alerts_enabled_switch: "input_boolean.vgn_bus_486_alerts_enabled",
-          alert_minutes: 10
-        },
-        {
-          line: "456",
-          direction: "Amberg",
-          helper: "input_number.vgn_bus_456_minutes",
-          alerts_enabled_switch: "input_boolean.vgn_bus_456_alerts_enabled",
-          alert_minutes: 10
+          line: "1",
+          direction: "Zentrum",
+          helper: "input_number.transit_line1_minutes",
+          alerts_enabled_switch: "input_boolean.transit_line1_alerts_enabled",
+          alert_minutes: 10,
+          color: "#0284c7"
         }
       ]
     };
@@ -237,12 +237,13 @@ class VGNDepartureCard extends HAControlBase {
       rolling_hours: config.rolling_hours ? Number(config.rolling_hours) : null,
       disable_timer: disableTimer,
       refresh_script: refreshScript,
+      near_poll_window_min: config.near_poll_window_min !== undefined ? Number(config.near_poll_window_min) : 25,
       ...config
     };
     this._unrecognizedKeys = this._validateConfigKeys(config, [
       'calendar_entity', 'alert_overrides_helper', 'stop_dhid', 'stop_name', 'time_from', 'time_to',
       'days', 'poll_interval', 'max_departures', 'rolling_hours', 'watches', 'debug',
-      'disable_timer', 'refresh_script'
+      'disable_timer', 'refresh_script', 'near_poll_window_min'
     ]);
   }
 
@@ -533,7 +534,7 @@ class VGNDepartureCard extends HAControlBase {
               _parsedDate: parsedDate,
               _timeMs: parsedDate ? parsedDate.getTime() : null,
               _normalizedText: `${summary} ${desc}`.toLowerCase(),
-              _cleanDest: summary ? summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : ''
+              _cleanDest: _cleanTransitSummary(summary)
             };
           }) : [];
           CALENDAR_CACHE.set(calEntity, { events: res, timestamp: new Date() });
@@ -586,7 +587,7 @@ class VGNDepartureCard extends HAControlBase {
 
         // 3. Direction / Destination matching: match against route destination only (not origin stop name)
         if (dir) {
-          const cleanDest = (e._cleanDest || (e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : '')).toLowerCase();
+          const cleanDest = (e._cleanDest || _cleanTransitSummary(e.summary)).toLowerCase();
           const dirMatch = desc.match(/direction:\s*([^|]+)/i);
           const eventDir = dirMatch ? dirMatch[1].trim().toLowerCase() : cleanDest;
           const matchDir = eventDir.includes(dir) || cleanDest.includes(dir);
@@ -601,7 +602,7 @@ class VGNDepartureCard extends HAControlBase {
         if (!depTime) return null;
         const depTimeMs = e._timeMs || depTime.getTime();
         const minutesUntil = Math.round((depTimeMs - nowMs) / 60000);
-        const destination = e._cleanDest || (e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : (watch.direction || ''));
+        const destination = e._cleanDest || _cleanTransitSummary(e.summary) || (watch.direction || '');
         return {
           planned: depTime,
           realtime: depTime,
@@ -617,6 +618,25 @@ class VGNDepartureCard extends HAControlBase {
       const upcoming = allMapped
         .filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime))
         .sort((a, b) => a.minutesUntil - b.minutesUntil);
+
+      // Check if watch helper has live real-time minutes for the upcoming departure
+      if (watch.helper && upcoming.length > 0 && this.hass?.states[watch.helper]) {
+        const helperState = parseFloat(this.hass.states[watch.helper].state);
+        if (!isNaN(helperState) && helperState >= -1) {
+          const firstDep = upcoming[0];
+          const nearWindow = this.config?.near_poll_window_min !== undefined ? Number(this.config.near_poll_window_min) : 25;
+          // If upcoming departure is within near-departure window (+5 min grace), sync live minutes & delay from helper
+          if (firstDep.minutesUntil <= (nearWindow + 5) && firstDep.minutesUntil >= -2) {
+            const liveMinutes = Math.round(helperState);
+            if (liveMinutes >= -1) {
+              const liveDelay = liveMinutes - firstDep.minutesUntil;
+              firstDep.delay = liveDelay;
+              firstDep.minutesUntil = liveMinutes;
+              firstDep.realtime = new Date(firstDep.planned.getTime() + liveDelay * 60000);
+            }
+          }
+        }
+      }
 
       const isGoneForDay = upcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
 
@@ -807,11 +827,17 @@ class VGNDepartureCard extends HAControlBase {
     const depDay = depDate.getDay();
     const isWeekday = depDay >= 1 && depDay <= 5;
 
-    let baseActive = false;
-    if (line === '486' && dir.includes('amberg')) {
-      baseActive = isAlertsEnabled && isWeekday && (depHour >= 6 && depHour < 9);
-    } else {
-      baseActive = isAlertsEnabled;
+    let baseActive = isAlertsEnabled;
+    if (baseActive) {
+      if (watch.alert_weekdays === true && !isWeekday) {
+        baseActive = false;
+      }
+      if (Array.isArray(watch.alert_hours) && watch.alert_hours.length === 2) {
+        const [startH, endH] = watch.alert_hours;
+        if (depHour < startH || depHour >= endH) {
+          baseActive = false;
+        }
+      }
     }
 
     const tokens = this._getOverrideTokens();
@@ -1056,19 +1082,17 @@ class VGNDepartureCard extends HAControlBase {
   _lineColor(line, watch) {
     if (watch?.color) return watch.color;
     const l = String(line || '').toUpperCase();
-    const colors = {
-      '486': '#e8501a',
-      '456': '#1a78e8',
+    const networkColors = {
       'U1': '#d01e38',
       'U2': '#cd126b',
       'U3': '#00893b'
     };
-    if (colors[l]) return colors[l];
+    if (networkColors[l]) return networkColors[l];
     if (l.startsWith('U')) return '#00509a';
     if (l.startsWith('S')) return '#008e4e';
     if (l.startsWith('RE') || l.startsWith('RB') || l.startsWith('IC') || l.startsWith('ICE')) return '#991b1b';
     if (l.startsWith('TRAM')) return '#dc2626';
-    return '#475569';
+    return '#0284c7';
   }
 }
 

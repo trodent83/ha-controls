@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.6';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.9';
 
 /**
  * VGNDepartureCardEditor
@@ -223,9 +223,19 @@ class VGNDepartureCardEditor extends HAControlBase {
               label="Abfrageintervall (Sekunden)"
               type="number"
               min="10"
-              max="300"
+              max="600"
               .value="${String(this.config.poll_interval || 60)}"
               @change="${e => this._valueChanged('poll_interval', parseInt(e.target.value) || 60)}"
+            ></ha-textfield>
+
+            <ha-textfield
+              label="Live-Echtzeit-Fenster (Minuten)"
+              type="number"
+              min="5"
+              max="60"
+              .value="${String(this.config.near_poll_window_min !== undefined ? this.config.near_poll_window_min : 25)}"
+              @change="${e => this._valueChanged('near_poll_window_min', parseInt(e.target.value) || 25)}"
+              helper="Echtzeitprüfung kurz vor Abfahrt (z.B. 25 min)"
             ></ha-textfield>
 
             <ha-textfield
@@ -351,14 +361,14 @@ class VGNDepartureCardEditor extends HAControlBase {
           </div>
           <div class="vgn-yaml-block">
             <pre>input_number:
-  vgn_bus_486_minutes:
-    name: "Bus 486 – Minuten"
+  transit_line1_minutes:
+    name: "Linie 1 – Minuten"
     min: -1
     max: 120
     step: 1
     icon: mdi:bus-clock
-  vgn_bus_456_minutes:
-    name: "Bus 456 – Minuten"
+  transit_line2_minutes:
+    name: "Linie 2 – Minuten"
     min: -1
     max: 120
     step: 1

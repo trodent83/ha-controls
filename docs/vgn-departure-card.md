@@ -25,19 +25,22 @@ Below are the configuration parameters for the card:
 | `poll_interval` | number | No | `600` | Calendar refresh interval in seconds (default 10 minutes). Countdown minutes update locally every 30 seconds via client clock. |
 | `max_departures` | number | No | `12` | Maximum number of departure rows to display on the card (between 1 and 30). |
 | `rolling_hours` | number | No | — | Optional relative moving time window in hours (e.g. `3`). Overrides fixed `time_from`/`time_to`. |
+| `near_poll_window_min` | number | No | `25` | Minutes before departure to trigger near-departure live GPS verification window. |
 | `watches` | list | **Yes** | — | Array of line watch configuration objects (see below). |
 
 ### Watch Entry Settings (`watches`)
 
 | Property | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `line` | string | **Yes** | — | Line number or transport identifier (e.g. `"486"`, `"456"`). |
-| `direction` | string | No | — | Direction destination filter string (partial match, case-insensitive, e.g. `"Amberg"` or `"Sulzbach"`). |
+| `line` | string | **Yes** | — | Line number or transport identifier (e.g. `"486"`, `"456"`, `"8"`, `"RE30"`). |
+| `direction` | string | No | — | Direction destination filter string (partial match, case-insensitive, e.g. `"Amberg"`, `"Nürnberg"`, or `"Sulzbach"`). |
 | `mode` | string | No | `"bus"` | Transport mode filter (`"bus"`, `"tram"`, `"ubahn"`, `"sbahn"`, `"train"`). |
-| `icon` | string | No | auto | Custom MDI icon override for the line row (e.g. `"mdi:bus"`). |
+| `icon` | string | No | auto | Custom MDI icon override for the line row (e.g. `"mdi:bus"`, `"mdi:tram"`, `"mdi:train"`). |
 | `color` | string | No | auto | Custom badge CSS background color (e.g. `"#e8501a"`). |
 | `helper` | string | No | — | Home Assistant `input_number` entity ID to receive the next departure countdown minutes. |
 | `alerts_enabled_switch` | string | No | — | Home Assistant `input_boolean` entity ID to control verbal warnings for this line. Renders an interactive speaker toggle button in the watch header. |
+| `alert_hours` | list | No | — | Optional active hours range for verbal alerts (e.g. `[6, 9]` for morning only). |
+| `alert_weekdays` | boolean | No | `false` | When `true`, verbal alerts only activate on weekdays (Mon–Fri). |
 | `alert_minutes` | number | No | `10` | Urgency highlight threshold in minutes. |
 
 ---

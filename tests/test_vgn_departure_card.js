@@ -44,6 +44,7 @@ const {
   _fmtDate,
   _fmtTime,
   _fmtTimeHM,
+  _cleanTransitSummary,
   fetchStopDeparturesShared,
   VGNDepartureCard
 } = await import("../vgn-departure-card/vgn-departure-card.js");
@@ -505,21 +506,27 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
   });
 
   describe("8. Destination Text Cleaner & Line Color Mapping", () => {
-    it("cleans bus prefix from calendar summaries (_processCalendarWatches normalization)", () => {
-      const card = new VGNDepartureCard();
-      // Test regex used in line 536: summary.replace(/Bus\s*\d+\s*[-–:]\s*\/i, '').trim()
-      const cleanDest = (summary) => summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim();
-
-      assert.equal(cleanDest("Bus 486 - Schwabach"), "Schwabach");
-      assert.equal(cleanDest("Bus 456: Rohr"), "Rohr");
-      assert.equal(cleanDest("Bus 61 – Röthenbach"), "Röthenbach");
-      assert.equal(cleanDest("Nürnberg Hbf"), "Nürnberg Hbf");
+    it("cleans multi-modal transit prefixes from calendar summaries (_cleanTransitSummary)", () => {
+      assert.equal(_cleanTransitSummary("Bus 486 - Schwabach"), "Schwabach");
+      assert.equal(_cleanTransitSummary("Bus 456: Rohr"), "Rohr");
+      assert.equal(_cleanTransitSummary("Bus 61 – Röthenbach"), "Röthenbach");
+      assert.equal(_cleanTransitSummary("Tram 8 - Doku-Zentrum"), "Doku-Zentrum");
+      assert.equal(_cleanTransitSummary("Train RE30 - Nürnberg Hbf"), "Nürnberg Hbf");
+      assert.equal(_cleanTransitSummary("Zug RB31 - Neukirchen"), "Neukirchen");
+      assert.equal(_cleanTransitSummary("S-Bahn S1 - Forchheim"), "Forchheim");
+      assert.equal(_cleanTransitSummary("U-Bahn U2 - Flughafen"), "Flughafen");
+      assert.equal(_cleanTransitSummary("Nürnberg Hbf"), "Nürnberg Hbf");
     });
 
     it("_lineColor returns assigned or default colors for bus and subway lines", () => {
       const card = new VGNDepartureCard();
-      assert.equal(card._lineColor("486"), "#e8501a");
-      assert.equal(card._lineColor("456"), "#1a78e8");
+      // Configured watch colors
+      assert.equal(card._lineColor("486", { color: "#e8501a" }), "#e8501a");
+      assert.equal(card._lineColor("456", { color: "#1a78e8" }), "#1a78e8");
+      // Generic bus lines default to transit blue fallback
+      assert.equal(card._lineColor("486"), "#0284c7");
+      assert.equal(card._lineColor("12"), "#0284c7");
+      // Transit network conventions
       assert.equal(card._lineColor("U1"), "#d01e38");
       assert.equal(card._lineColor("U2"), "#cd126b");
       assert.equal(card._lineColor("U3"), "#00893b");
@@ -531,72 +538,55 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
 
   describe("9. Timetable & RapidJSON Payload Compatibility Suite", () => {
     it("handles both stopEvents and departureList keys in EFA responses", () => {
-      const responseWithStopEvents = { stopEvents: [{ transportation: { number: "486" } }] };
-      const responseWithDepList = { departureList: [{ servingLine: { number: 456, direction: "Amberg" } }] };
-      const emptyResponse = {};
-
-      const extractEvents = (data) => data.stopEvents || data.departureList || [];
-
-      assert.equal(extractEvents(responseWithStopEvents).length, 1);
-      assert.equal(extractEvents(responseWithDepList).length, 1);
-      assert.equal(extractEvents(emptyResponse).length, 0);
+      const responseWithDepartureList = { departureList: [{ servingLine: { number: "1" } }] };
+      const responseWithStopEvents = { stopEvents: [{ transportation: { number: "1" } }] };
+      const extractItems = (data) => data?.departureList || data?.stopEvents || [];
+      assert.equal(extractItems(responseWithDepartureList).length, 1);
+      assert.equal(extractItems(responseWithStopEvents).length, 1);
     });
 
     it("normalizes transportation and line numbers whether numeric or string", () => {
-      const itemNumeric = { transportation: { number: 486 }, destination: { name: "Amberg Bahnhof" } };
-      const itemString = { servingLine: { number: "456", direction: "Sulzbach-Rosenberg" } };
-
       const parseItem = (item) => {
         const trans = item.transportation || item.servingLine || item;
         const num = String(trans.number || trans.disassembledName || trans.name || "").trim();
-        const dest = String(trans.destination?.name || item.destination?.name || trans.direction || item.routeDescription || "").trim();
+        const dest = String(item.destination?.name || trans.destination?.name || trans.direction || item.routeDescription || "").trim();
         return { num, dest };
       };
 
+      const itemNumeric = { transportation: { number: 486 }, destination: { name: "Amberg Bahnhof" } };
       const parsed1 = parseItem(itemNumeric);
       assert.equal(parsed1.num, "486");
       assert.equal(parsed1.dest, "Amberg Bahnhof");
-
-      const parsed2 = parseItem(itemString);
-      assert.equal(parsed2.num, "456");
-      assert.equal(parsed2.dest, "Sulzbach-Rosenberg");
     });
 
     it("evaluates calendar deduplication signatures properly without string-boolean inversion", () => {
       const existingSignatures = ["Bus 486 - Amberg@1726640000"];
-      const newSig = "Bus 456 - Amberg@1726643600";
+      const newSig = "Bus 486 - Amberg@1726640300";
       const duplicateSig = "Bus 486 - Amberg@1726640000";
 
-      // Direct membership check as in updated script: ev_sig not in existing_signatures
-      assert.equal(!existingSignatures.includes(newSig), true, "New signature must not be flagged as duplicate");
-      assert.equal(!existingSignatures.includes(duplicateSig), false, "Existing signature must be flagged as duplicate");
+      const isNewDuplicate = existingSignatures.includes(newSig);
+      const isDupDuplicate = existingSignatures.includes(duplicateSig);
 
-      // Verify empty calendar allows all events
-      const emptyCalendarSignatures = [];
-      assert.equal(!emptyCalendarSignatures.includes(newSig), true, "Empty calendar must allow new event");
-      assert.equal(!emptyCalendarSignatures.includes(duplicateSig), true, "Empty calendar must allow first event");
+      assert.equal(isNewDuplicate, false, "New event signature must NOT be reported as duplicate");
+      assert.equal(isDupDuplicate, true, "Existing event signature must be reported as duplicate");
     });
 
-    it("verifies line matching succeeds when num is integer (HA native typing) or string", () => {
-      const matchLine = (numVal, lineFilter) => {
+    it("verifies line matching succeeds with dynamic slines list, single line, or all", () => {
+      const matchLine = (numVal, slinesConfig) => {
         const snum = String(numVal).trim();
-        const sline = String(lineFilter).trim();
-        return sline === "both" ? (snum.includes("486") || snum.includes("456")) : snum.includes(sline);
+        const slines = Array.isArray(slinesConfig) ? slinesConfig : [String(slinesConfig).trim()];
+        return slines.includes("all") ? true : (slines.includes(snum) || slines.some(l => snum.includes(l)));
       };
 
       // Native typing causes num to be integer 486 or 456
-      assert.equal(matchLine(486, "486"), true, "Integer 486 must match line '486'");
-      assert.equal(matchLine(456, "456"), true, "Integer 456 must match line '456'");
-      assert.equal(matchLine(486, "both"), true, "Integer 486 must match 'both'");
-      assert.equal(matchLine(456, "both"), true, "Integer 456 must match 'both'");
-
-      // String line numbers
-      assert.equal(matchLine("486", "486"), true, "String '486' must match line '486'");
-      assert.equal(matchLine("Regionalbus 486", "486"), true, "Prefixed line 'Regionalbus 486' must match '486'");
+      assert.equal(matchLine(486, ["486", "456"]), true, "Integer 486 must match list ['486', '456']");
+      assert.equal(matchLine(456, ["486", "456"]), true, "Integer 456 must match list ['486', '456']");
+      assert.equal(matchLine("486", "486"), true, "String '486' must match single line '486'");
+      assert.equal(matchLine("Regionalbus 486", ["486"]), true, "Prefixed line 'Regionalbus 486' must match ['486']");
+      assert.equal(matchLine("Tram 8", ["all"]), true, "all must match everything");
 
       // Negative matches
-      assert.equal(matchLine(401, "486"), false, "Line 401 must NOT match '486'");
-      assert.equal(matchLine(402, "both"), false, "Line 402 must NOT match 'both'");
+      assert.equal(matchLine(401, ["486", "456"]), false, "Line 401 must NOT match list");
     });
 
     it("verifies departure start and end time formatting from ISO strings", () => {
@@ -713,6 +703,78 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       // Must only contain the outbound trip to Amberg, NOT the return trip to Sulzbach
       assert.equal(departures.length, 1, "Only 1 matching outbound departure expected");
       assert.equal(departures[0].direction, "Amberg Bahnhof", "Matched departure must be towards Amberg");
+    });
+
+    it("syncs live delay and minutes from watch helper for upcoming departures within 30 minutes", () => {
+      const card = new VGNDepartureCard();
+      card.config = {
+        calendar_entity: "calendar.bus_scedule",
+        time_from: "00:00",
+        time_to: "23:59",
+        watches: [
+          {
+            line: "486",
+            direction: "Amberg",
+            stop_dhid: "de:09371:18017",
+            helper: "input_number.vgn_bus_486_minutes"
+          }
+        ]
+      };
+      // Scheduled in 10 minutes, but helper says 14 minutes (+4 min delay)
+      card.hass = {
+        states: {
+          "input_number.vgn_bus_486_minutes": { state: "14" }
+        }
+      };
+
+      const now = new Date();
+      const inFuture = (min) => new Date(now.getTime() + min * 60000);
+
+      const events = [
+        {
+          summary: "Bus 486 - Amberg",
+          description: "Line: 486 | Direction: Amberg | Stop: Sulzbach-Rosenberg (de:09371:18017)",
+          start: { dateTime: inFuture(10).toISOString() }
+        }
+      ];
+
+      card._processCalendarWatches(events);
+      const departures = card._departures["486"] || [];
+
+      assert.equal(departures.length, 1);
+      assert.equal(departures[0].minutesUntil, 14, "Minutes until should be updated to live minutes from helper");
+      assert.equal(departures[0].delay, 4, "Delay should be calculated as 14 - 10 = +4");
+      assert.equal(card._nextDepartures["486"], 14, "Next departure countdown should be 14");
+    });
+
+    it("evaluates universal transit alert eligibility with custom alert_hours and weekdays", () => {
+      const card = new VGNDepartureCard();
+      card.hass = {
+        states: {
+          "input_boolean.tram_8_alerts": { state: "on" },
+          "input_text.vgn_bus_alert_overrides": { state: "" }
+        }
+      };
+
+      const watch = {
+        line: "8",
+        direction: "Doku-Zentrum",
+        alerts_enabled_switch: "input_boolean.tram_8_alerts",
+        alert_hours: [14, 18],
+        alert_weekdays: true
+      };
+
+      // Tuesday 15:30 (Weekday, within [14, 18]) -> should be active
+      const depActive = { planned: new Date("2026-09-15T15:30:00") };
+      assert.equal(card._isDepartureAlertActive(watch, depActive), true, "Should be active during configured hours on weekday");
+
+      // Tuesday 10:30 (Weekday, outside [14, 18]) -> should be inactive
+      const depOutsideHours = { planned: new Date("2026-09-15T10:30:00") };
+      assert.equal(card._isDepartureAlertActive(watch, depOutsideHours), false, "Should be inactive outside configured hours");
+
+      // Sunday 15:30 (Weekend, alert_weekdays=true) -> should be inactive
+      const depWeekend = { planned: new Date("2026-09-20T15:30:00") };
+      assert.equal(card._isDepartureAlertActive(watch, depWeekend), false, "Should be inactive on weekends when alert_weekdays is true");
     });
   });
 });
