@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.2';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.3';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -524,6 +524,29 @@ class VGNDepartureCard extends HAControlBase {
           const endStr = endOfDay.toISOString();
           const path = `calendars/${calEntity}?start=${startStr}&end=${endStr}`;
           const rawEvents = await this.hass.callApi("GET", path);
+
+          // Detect duplicate entries in calendar and delete redundant copies by UID on manual refresh
+          if (Array.isArray(rawEvents)) {
+            const seenSigs = new Set();
+            for (const e of rawEvents) {
+              const startStr = e.start?.dateTime || e.start;
+              const parsedDate = startStr ? new Date(startStr) : null;
+              const timeMs = parsedDate ? parsedDate.getTime() : null;
+              const cleanDest = _cleanTransitSummary(e.summary || '').toLowerCase();
+              const sig = `${cleanDest}@${timeMs}`;
+              if (timeMs && seenSigs.has(sig)) {
+                if (manualRefresh && e.uid && this.hass?.callService) {
+                  this.hass.callService("calendar", "delete_event", {
+                    entity_id: calEntity,
+                    uid: e.uid
+                  }).catch(() => {});
+                }
+              } else if (timeMs) {
+                seenSigs.add(sig);
+              }
+            }
+          }
+
           const res = Array.isArray(rawEvents) ? rawEvents.map(e => {
             const startStr = e.start?.dateTime || e.start;
             const parsedDate = startStr ? new Date(startStr) : null;
@@ -621,11 +644,22 @@ class VGNDepartureCard extends HAControlBase {
         .filter(d => d.minutesUntil >= -1 && this._isDepartureInTimeRange(d.realtime))
         .sort((a, b) => a.minutesUntil - b.minutesUntil);
 
+      // Deduplicate multiple calendar entries scheduled at the exact same departure minute
+      const seenTimes = new Set();
+      const dedupedUpcoming = [];
+      for (const d of upcoming) {
+        const timeKey = _fmtTimeHM(d.planned);
+        if (!seenTimes.has(timeKey)) {
+          seenTimes.add(timeKey);
+          dedupedUpcoming.push(d);
+        }
+      }
+
       // Check if watch helper has live real-time minutes for the upcoming departure
-      if (watch.helper && upcoming.length > 0 && this.hass?.states[watch.helper]) {
+      if (watch.helper && dedupedUpcoming.length > 0 && this.hass?.states[watch.helper]) {
         const helperState = parseFloat(this.hass.states[watch.helper].state);
         if (!isNaN(helperState) && helperState >= -1) {
-          const firstDep = upcoming[0];
+          const firstDep = dedupedUpcoming[0];
           const nearWindow = this.config?.near_poll_window_min !== undefined ? Number(this.config.near_poll_window_min) : 25;
           // If upcoming departure is within near-departure window (+5 min grace), sync live minutes & delay from helper
           if (firstDep.minutesUntil <= (nearWindow + 5) && firstDep.minutesUntil >= -2) {
@@ -640,10 +674,10 @@ class VGNDepartureCard extends HAControlBase {
         }
       }
 
-      const isGoneForDay = upcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
+      const isGoneForDay = dedupedUpcoming.length === 0 && (this.config?.rolling_hours ? false : nowMin > toMin);
 
-      newDepartures[line] = upcoming;
-      newNext[line] = upcoming.length > 0 ? upcoming[0].minutesUntil : null;
+      newDepartures[line] = dedupedUpcoming;
+      newNext[line] = dedupedUpcoming.length > 0 ? dedupedUpcoming[0].minutesUntil : null;
       newGoneForDay[line] = isGoneForDay;
     }
 

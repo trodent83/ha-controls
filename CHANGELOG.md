@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **VGN Departure Card (`custom:vgn-departure-card` v1.8.3 & `vgn-departure-card-loader.js`)**:
+  - **Self-Healing Duplicate Elimination & UI Protection**: Re-introduced robust minute-level departure deduplication in `_processCalendarWatches` so identical scheduled departures for the same line are never duplicated in the card UI. In `_fetchCalendarDepartures`, when the user clicks Refresh, uses the Home Assistant REST API's event `uid` to automatically call `calendar.delete_event` and purge redundant duplicate entries from `calendar.bus_scedule`.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.3`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.8.2 & `vgn-departure-card-loader.js`)**:
   - **Code Cleanup & Word-Boundary Line Matching**: Removed unused `dir` variable in `_isDepartureAlertActive`, replaced fuzzy string inclusion with regex word boundary matching for lines in `_processCalendarWatches` to prevent partial line number collisions (e.g. line 1 matching 10), and standardized select element event handling in editor.
   - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.2`.

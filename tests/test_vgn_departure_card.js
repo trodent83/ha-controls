@@ -778,6 +778,74 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       const depWeekend = { planned: new Date("2026-09-20T15:30:00") };
       assert.equal(card._isDepartureAlertActive(watch, depWeekend), false, "Should be inactive on weekends when alert_weekdays is true");
     });
+
+    it("deduplicates conflicting duplicate calendar events scheduled at the exact same minute", () => {
+      const card = new VGNDepartureCard();
+      card.config = {
+        calendar_entity: "calendar.bus_scedule",
+        time_from: "00:00",
+        time_to: "23:59",
+        watches: [
+          { line: "486", direction: "Amberg" }
+        ]
+      };
+
+      const now = new Date();
+      const inFuture = (min) => new Date(now.getTime() + min * 60000);
+      const targetTime = inFuture(15);
+
+      const events = [
+        {
+          summary: "Bus 486 - Amberg Bahnhof",
+          description: "Line: 486 | Direction: Amberg Bahnhof",
+          start: { dateTime: targetTime.toISOString() }
+        },
+        {
+          summary: "Regionalbus 486 - Amberg Bahnhof",
+          description: "Line: 486 | Direction: Amberg Bahnhof",
+          start: { dateTime: targetTime.toISOString() }
+        }
+      ];
+
+      card._processCalendarWatches(events);
+      const departures = card._departures["486"] || [];
+
+      assert.equal(departures.length, 1, "Duplicate events at the exact same minute must be deduplicated to 1 departure");
+      assert.equal(departures[0].direction, "Amberg Bahnhof");
+    });
+
+    it("purges duplicate calendar events by UID on manual refresh", async () => {
+      const deletedUids = [];
+      const card = new VGNDepartureCard();
+      card.config = {
+        calendar_entity: "calendar.bus_scedule",
+        watches: [{ line: "486" }]
+      };
+      card.hass = {
+        callApi: async () => [
+          {
+            summary: "Bus 486 - Amberg",
+            start: "2026-09-18T10:00:00Z",
+            uid: "uid-1"
+          },
+          {
+            summary: "Regionalbus 486 - Amberg",
+            start: "2026-09-18T10:00:00Z",
+            uid: "uid-2"
+          }
+        ],
+        callService: async (domain, service, data) => {
+          if (domain === "calendar" && service === "delete_event") {
+            deletedUids.push(data.uid);
+          }
+        }
+      };
+
+      await card._fetchCalendarDepartures(true);
+
+      assert.equal(deletedUids.length, 1, "Must delete exactly 1 duplicate event UID");
+      assert.equal(deletedUids[0], "uid-2", "Must target the redundant event UID");
+    });
   });
 });
 
