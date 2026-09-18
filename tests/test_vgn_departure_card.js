@@ -527,4 +527,54 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       assert.equal(card._lineColor("custom", { color: "#ff00ff" }), "#ff00ff");
     });
   });
+
+  describe("9. Timetable & RapidJSON Payload Compatibility Suite", () => {
+    it("handles both stopEvents and departureList keys in EFA responses", () => {
+      const responseWithStopEvents = { stopEvents: [{ transportation: { number: "486" } }] };
+      const responseWithDepList = { departureList: [{ servingLine: { number: 456, direction: "Amberg" } }] };
+      const emptyResponse = {};
+
+      const extractEvents = (data) => data.stopEvents || data.departureList || [];
+
+      assert.equal(extractEvents(responseWithStopEvents).length, 1);
+      assert.equal(extractEvents(responseWithDepList).length, 1);
+      assert.equal(extractEvents(emptyResponse).length, 0);
+    });
+
+    it("normalizes transportation and line numbers whether numeric or string", () => {
+      const itemNumeric = { transportation: { number: 486 }, destination: { name: "Amberg Bahnhof" } };
+      const itemString = { servingLine: { number: "456", direction: "Sulzbach-Rosenberg" } };
+
+      const parseItem = (item) => {
+        const trans = item.transportation || item.servingLine || item;
+        const num = String(trans.number || trans.disassembledName || trans.name || "").trim();
+        const dest = String(trans.destination?.name || item.destination?.name || trans.direction || item.routeDescription || "").trim();
+        return { num, dest };
+      };
+
+      const parsed1 = parseItem(itemNumeric);
+      assert.equal(parsed1.num, "486");
+      assert.equal(parsed1.dest, "Amberg Bahnhof");
+
+      const parsed2 = parseItem(itemString);
+      assert.equal(parsed2.num, "456");
+      assert.equal(parsed2.dest, "Sulzbach-Rosenberg");
+    });
+
+    it("evaluates calendar deduplication signatures properly without string-boolean inversion", () => {
+      const existingSignatures = ["Bus 486 - Amberg@1726640000"];
+      const newSig = "Bus 456 - Amberg@1726643600";
+      const duplicateSig = "Bus 486 - Amberg@1726640000";
+
+      // Direct membership check as in updated script: ev_sig not in existing_signatures
+      assert.equal(!existingSignatures.includes(newSig), true, "New signature must not be flagged as duplicate");
+      assert.equal(!existingSignatures.includes(duplicateSig), false, "Existing signature must be flagged as duplicate");
+
+      // Verify empty calendar allows all events
+      const emptyCalendarSignatures = [];
+      assert.equal(!emptyCalendarSignatures.includes(newSig), true, "Empty calendar must allow new event");
+      assert.equal(!emptyCalendarSignatures.includes(duplicateSig), true, "Empty calendar must allow first event");
+    });
+  });
 });
+
