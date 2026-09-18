@@ -45,10 +45,10 @@ Below are the configuration parameters for the card:
 ## 🔔 Interactive Alert Toggling (GUI & Backend)
 
 1. **Watch Header Switch**: Clicking the volume button in the watch header toggles the master line switch (e.g., `input_boolean.vgn_bus_486_alerts_enabled` or `input_boolean.vgn_bus_back_486_alerts_enabled`).
-2. **Individual Departure Row Buttons**: Each departure row features an interactive volume button:
+2. **Row-Level Alert Toggle & Status Indicator**: Clicking anywhere on a departure row activates or deactivates the verbal announcement for that specific bus run, providing a large, responsive touch target on wall tablets and mobile devices. The right-hand speaker icon serves as a visual status indicator:
    * 🔊 `mdi:volume-high` (green / highlighted): Verbal alert active for this specific bus run.
    * 🔇 `mdi:volume-off` (gray / dimmed): Verbal alert inactive.
-   * Clicking the button immediately toggles the verbal alert for that specific bus run. Overrides are persisted to `input_text.vgn_bus_alert_overrides`.
+   * Clicking anywhere on the row immediately toggles the state. Overrides are persisted to `input_text.vgn_bus_alert_overrides`.
 3. **Local Client Arithmetic**: The card recalculates minutes until departure every 30 seconds using client-side JavaScript date math, resulting in instant responsiveness and zero network traffic.
 4. **On-Demand Refresh & Sibling Sync**: Clicking the refresh button in the card header invokes `refresh_script` (`script.vgn_bus_sync_calendar` by default). The script runs with `mode: restart` and `reset_overrides: false` to fetch the latest VGN timetable without erasing active user overrides. Upon completion, the initiating card invalidates the local calendar cache, fetches the latest departures, and dispatches a `vgn-calendar-refreshed` event across `window`, instantly synchronizing all sibling departure cards on the same dashboard without requiring a page reload.
 

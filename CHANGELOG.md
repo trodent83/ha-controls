@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- **VGN Departure Card (`custom:vgn-departure-card` v1.7.3 & `vgn-departure-card-loader.js`)**:
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.6 & `vgn-departure-card-loader.js`)**:
+  - **Destination Column**: Replaced redundant second time column with destination name (`.vgn-dep-destination`), displaying clean truncated destination routes (e.g. `"Amberg Bahnhof"`, `"Sulzbach-Rosenberg"`).
+  - **Row-Level Alert Toggle**: Entire departure row (`.vgn-dep-row`) is now an interactive touch target with hover highlights and tap scaling (`transform: scale(0.995)`), toggling verbal TTS alerts on click without requiring precision tapping on the small 24px icon.
+  - **Visual Status Indicator**: The speaker button (`.vgn-row-alert-btn`) now acts as a clean visual status indicator with `pointer-events: none;`, displaying green highlighted `mdi:volume-high` when active and dimmed `mdi:volume-off` when muted.
+  - **Accurate Direction & Stop Filtering**: Fixed calendar event matching in `_processCalendarWatches`. Previously, `direction` was matched against a combined string of `summary` and `description` (which contains `Stop: <origin>`), causing return trips departing from Amberg (like the 08:35 bus to Sulzbach) to match the "To Amberg" card. Refactored matching to filter `direction` strictly against route destination and enforce `stop_dhid`, ensuring only genuine departures from the configured stop (e.g. 08:09 and 09:14) appear.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.6`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.5 & `vgn-departure-card-loader.js`)**:
   - **Configurable Refresh Script (`refresh_script`)**: Added `refresh_script` configuration property (defaulting to `script.vgn_bus_sync_calendar`). When the user clicks the footer Refresh button, the card executes the backend script to fetch the latest timetable from VGN into `calendar.bus_scedule`, invalidates the local cache, re-fetches calendar events, and broadcasts a `vgn-calendar-refreshed` event across `window` to synchronize sibling cards on the dashboard simultaneously.
   - **Tablet Power-Saving / Zero-Timer Mode (`disable_timer`)**: Added `disable_timer` property (defaulting to `true` when `calendar_entity` is present). Completely disables background `setInterval` polling and recurring 30-second client tick loops to prevent mobile tablet CPU wakeups and maximize battery life. Departure countdowns update reactively via WebSocket events, on screen wake-up (`visibilitychange`), or on demand.
   - **Visual Editor Script Selector & Power-Saving Toggle**: Added dropdown selector for `refresh_script` and toggle for `disable_timer` under "Kalender & Datenquelle" in `vgn-departure-card-editor.js`.

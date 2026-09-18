@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.5';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.6';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -568,12 +568,32 @@ class VGNDepartureCard extends HAControlBase {
       const line = String(watch.line || '');
       const lineLower = line.toLowerCase();
       const dir = (watch.direction || '').toLowerCase();
+      const stopDhid = (watch.stop_dhid || this.config.stop_dhid || '').toLowerCase();
 
       const matching = events.filter(e => {
-        const text = e._normalizedText !== undefined ? e._normalizedText : `${e.summary || ''} ${e.description || ''}`.toLowerCase();
-        const matchLine = text.includes(lineLower);
-        const matchDir = !dir || text.includes(dir);
-        return matchLine && matchDir;
+        const summary = (e.summary || '').toLowerCase();
+        const desc = (e.description || '').toLowerCase();
+
+        // 1. Line matching
+        const matchLine = summary.includes(lineLower) || desc.includes(`line: ${lineLower}`);
+        if (!matchLine) return false;
+
+        // 2. Stop DHID matching (if configured on watch or card)
+        if (stopDhid) {
+          const matchStop = desc.includes(stopDhid) || (e.location || '').toLowerCase().includes(stopDhid);
+          if (!matchStop) return false;
+        }
+
+        // 3. Direction / Destination matching: match against route destination only (not origin stop name)
+        if (dir) {
+          const cleanDest = (e._cleanDest || (e.summary ? e.summary.replace(/Bus\s*\d+\s*[-–:]\s*/i, '').trim() : '')).toLowerCase();
+          const dirMatch = desc.match(/direction:\s*([^|]+)/i);
+          const eventDir = dirMatch ? dirMatch[1].trim().toLowerCase() : cleanDest;
+          const matchDir = eventDir.includes(dir) || cleanDest.includes(dir);
+          if (!matchDir) return false;
+        }
+
+        return true;
       });
 
       const allMapped = matching.map(e => {
@@ -986,22 +1006,25 @@ class VGNDepartureCard extends HAControlBase {
                 : (this._localize('alert_disabled') || 'Voice alert disabled (click to activate)');
 
               return html`
-                <div class="vgn-dep-row ${i === 0 ? 'first' : ''} ${isAlertActive ? 'alert-active' : ''}">
+                <div class="vgn-dep-row ${i === 0 ? 'first' : ''} ${isAlertActive ? 'alert-active' : ''}"
+                  @click="${() => this._toggleDepartureAlert(watch, dep)}"
+                  title="${alertTooltip}">
                   <div class="vgn-dep-time">
                     <span class="vgn-dep-planned">${this._formatTime(dep.planned)}</span>
                     ${dep.delay > 0 ? html`<span class="vgn-dep-delay">+${dep.delay}</span>` : ''}
                     ${dep.delay < 0 ? html`<span class="vgn-dep-early">${dep.delay}</span>` : ''}
                   </div>
-                  <div class="vgn-dep-realtime">${this._formatTime(dep.realtime)}</div>
+                  <div class="vgn-dep-destination" title="${dep.direction || watch.direction || ''}">
+                    ${dep.direction || watch.direction || '—'}
+                  </div>
                   <div class="vgn-dep-until ${dep.minutesUntil <= alertMin ? 'urgent' : ''}">
                     ${this._formatMinutes(dep.minutesUntil)}
                   </div>
-                  <button
+                  <div
                     class="vgn-row-alert-btn ${isAlertActive ? 'active' : 'muted'}"
-                    @click="${(e) => { e.stopPropagation(); this._toggleDepartureAlert(watch, dep); }}"
                     title="${alertTooltip}">
                     <ha-icon icon="${isAlertActive ? 'mdi:volume-high' : 'mdi:volume-off'}"></ha-icon>
-                  </button>
+                  </div>
                 </div>
               `;
             })}

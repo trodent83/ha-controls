@@ -10,7 +10,8 @@ class MockLitElement extends EventTarget {
   requestUpdate() {}
   updated() {}
 }
-MockLitElement.prototype.html = (strings, ...values) => strings.join("");
+MockLitElement.prototype.html = (strings, ...values) =>
+  strings.reduce((acc, str, i) => acc + str + (values[i] !== undefined ? (Array.isArray(values[i]) ? values[i].join("") : values[i]) : ""), "");
 MockLitElement.prototype.css = (strings, ...values) => strings.join("");
 
 const windowTarget = new EventTarget();
@@ -617,7 +618,104 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       const evSig = `Bus 486 - Amberg Bahnhof@${ts}`;
       assert.ok(evSig.includes("@"), "Signature must include epoch timestamp");
     });
+
+    it("verifies _renderWatch renders destination column and row-level alert status", () => {
+      const card = new VGNDepartureCard();
+      card.config = {
+        calendar_entity: "calendar.bus_scedule",
+        watches: [{ line: "486", direction: "Amberg Bahnhof" }]
+      };
+      card._departures = {
+        "486": [{
+          planned: new Date("2026-09-18T06:44:00Z"),
+          realtime: new Date("2026-09-18T06:44:00Z"),
+          minutesUntil: 15,
+          delay: 0,
+          direction: "Amberg Bahnhof"
+        }]
+      };
+      card._nextDepartures = { "486": 15 };
+      card._goneForDay = { "486": false };
+
+      const template = card._renderWatch(card.config.watches[0]);
+      // MockLitElement html() joins strings
+      assert.ok(template.includes("vgn-dep-destination"), "Must contain destination column element");
+      assert.ok(template.includes("Amberg Bahnhof"), "Must display destination text in row");
+      assert.ok(!template.includes("vgn-dep-realtime"), "Must NOT render redundant vgn-dep-realtime column");
+      assert.ok(template.includes("vgn-row-alert-btn"), "Must contain status indicator");
+    });
+
+    it("verifies _toggleDepartureAlert updates overrides helper and optimistic cache", () => {
+      const card = new VGNDepartureCard();
+      card.config = {
+        alert_overrides_helper: "input_text.vgn_bus_alert_overrides",
+        watches: [{ line: "486", direction: "Amberg" }]
+      };
+      let calledService = null;
+      let serviceData = null;
+      card.hass = {
+        states: {
+          "input_text.vgn_bus_alert_overrides": { state: "" }
+        },
+        callService: (domain, service, data) => {
+          calledService = `${domain}.${service}`;
+          serviceData = data;
+        }
+      };
+
+      const dep = {
+        planned: new Date(2026, 8, 18, 6, 44),
+        realtime: new Date(2026, 8, 18, 6, 44),
+        minutesUntil: 15
+      };
+
+      // By default without alerts enabled, departure is inactive -> toggling adds +486@06:44 or -486@06:44
+      card._toggleDepartureAlert(card.config.watches[0], dep);
+      assert.equal(calledService, "input_text.set_value");
+      assert.ok(serviceData.value.includes("486@06:44"), "Must update overrides helper with line and time");
+      assert.ok(card._cachedTokensSet.size > 0, "Must update optimistic token cache");
+    });
+
+    it("prevents return trips from matching outbound card when origin stop is in description", () => {
+      const card = new VGNDepartureCard();
+      card.config = {
+        stop_dhid: "de:09371:18017",
+        time_from: "06:00",
+        time_to: "23:59",
+        watches: [
+          { line: "486", direction: "Amberg", stop_dhid: "de:09371:18017" }
+        ]
+      };
+
+      const now = new Date();
+      const inFuture = (min) => new Date(now.getTime() + min * 60000);
+
+      const events = [
+        // Outbound trip: Sulzbach -> Amberg
+        {
+          summary: "Bus 486 - Amberg Bahnhof",
+          description: "Line: 486 | Direction: Amberg Bahnhof | Stop: Sulzbach-Rosenberg, Bischof-Heckel-Str. (de:09371:18017)",
+          location: "Sulzbach-Rosenberg, Bischof-Heckel-Str.",
+          start: { dateTime: inFuture(30).toISOString() }
+        },
+        // Return trip: Amberg -> Sulzbach (the 08:35 bus) - description contains Stop: Amberg Bahnhof
+        {
+          summary: "Bus 486 - Sulzbach-Rosenb. Bahnhof",
+          description: "Line: 486 | Direction: Sulzbach-Rosenb. Bahnhof | Stop: Amberg Bahnhof (de:09361:19500)",
+          location: "Amberg Bahnhof",
+          start: { dateTime: inFuture(15).toISOString() }
+        }
+      ];
+
+      card._processCalendarWatches(events);
+      const departures = card._departures["486"] || [];
+
+      // Must only contain the outbound trip to Amberg, NOT the return trip to Sulzbach
+      assert.equal(departures.length, 1, "Only 1 matching outbound departure expected");
+      assert.equal(departures[0].direction, "Amberg Bahnhof", "Matched departure must be towards Amberg");
+    });
   });
 });
+
 
 
