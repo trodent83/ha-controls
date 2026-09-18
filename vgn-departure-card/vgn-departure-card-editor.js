@@ -1,6 +1,6 @@
 import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
 
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.9';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.2';
 
 /**
  * VGNDepartureCardEditor
@@ -287,7 +287,7 @@ class VGNDepartureCardEditor extends HAControlBase {
                 <ha-select
                   label="Verkehrsmittel"
                   .value="${watch.mode || 'all'}"
-                  @selected="${e => this._watchChanged(idx, 'mode', e.target.value)}"
+                  @selected="${e => this._watchChanged(idx, 'mode', e.detail?.value ?? e.target?.value)}"
                 >
                   <mwc-list-item value="all">Alle / Auto</mwc-list-item>
                   <mwc-list-item value="bus">Bus (mdi:bus)</mwc-list-item>
@@ -314,7 +314,7 @@ class VGNDepartureCardEditor extends HAControlBase {
               <ha-select
                 label="input_number Helfer (optional)"
                 .value="${watch.helper || ''}"
-                @selected="${e => this._watchChanged(idx, 'helper', e.detail.value)}"
+                @selected="${e => this._watchChanged(idx, 'helper', e.detail?.value ?? e.target?.value)}"
                 @closed="${e => e.stopPropagation()}"
               >
                 <mwc-list-item value="">— kein Helfer —</mwc-list-item>
@@ -326,7 +326,7 @@ class VGNDepartureCardEditor extends HAControlBase {
               <ha-select
                 label="Sprachwarnungs-Schalter (input_boolean, optional)"
                 .value="${watch.alerts_enabled_switch || ''}"
-                @selected="${e => this._watchChanged(idx, 'alerts_enabled_switch', e.detail.value)}"
+                @selected="${e => this._watchChanged(idx, 'alerts_enabled_switch', e.detail?.value ?? e.target?.value)}"
                 @closed="${e => e.stopPropagation()}"
               >
                 <mwc-list-item value="">— kein Schalter —</mwc-list-item>

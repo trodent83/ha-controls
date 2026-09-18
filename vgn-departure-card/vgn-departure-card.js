@@ -4,7 +4,7 @@ import { HAControlBase, html } from "../ha-control-base.js?v=0.6.9";
  * Cache-busting version parameter for dynamic asset loading.
  * @type {string}
  */
-const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.7.9';
+const VERSION = new URL(import.meta.url).searchParams.get('v') || '1.8.2';
 
 /**
  * VGN/VAG API endpoint for departures using the VGN outer-network EFA endpoint.
@@ -48,7 +48,7 @@ function _fmtTimeHM(date) {
 
 export function _cleanTransitSummary(summary) {
   if (!summary) return '';
-  return summary.replace(/^(?:Bus|Tram|Zug|Train|S-Bahn|U-Bahn|Strab|RB|RE|IC|ICE|S|U)?\s*[A-Za-z0-9]+\s*[-–:]\s*/i, '').trim();
+  return summary.replace(/^(?:Regionalbus|Stadtbus|Expressbus|Nachtbus|Ortsbus|Bus|Tram|Zug|Train|Regionalbahn|Regional-Express|S-Bahn|U-Bahn|Strab|RB|RE|IC|ICE|S|U)?\s*[A-Za-z0-9]+\s*[-–:]\s*/i, '').trim();
 }
 
 /**
@@ -575,8 +575,10 @@ class VGNDepartureCard extends HAControlBase {
         const summary = (e.summary || '').toLowerCase();
         const desc = (e.description || '').toLowerCase();
 
-        // 1. Line matching
-        const matchLine = summary.includes(lineLower) || desc.includes(`line: ${lineLower}`);
+        // 1. Line matching (word boundary prevents line "1" matching "10" or "41")
+        const escapedLine = lineLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const lineRegex = new RegExp(`\\b${escapedLine}\\b`, 'i');
+        const matchLine = lineRegex.test(summary) || desc.includes(`line: ${lineLower}`);
         if (!matchLine) return false;
 
         // 2. Stop DHID matching (if configured on watch or card)
@@ -815,7 +817,6 @@ class VGNDepartureCard extends HAControlBase {
    */
   _isDepartureAlertActive(watch, dep) {
     const line = String(watch.line || '');
-    const dir = (watch.direction || '').toLowerCase();
     const alertSwitchEntity = watch.alerts_enabled_switch;
     const isAlertsEnabled = alertSwitchEntity
       ? (this.hass?.states[alertSwitchEntity]?.state === 'on')

@@ -508,6 +508,8 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
   describe("8. Destination Text Cleaner & Line Color Mapping", () => {
     it("cleans multi-modal transit prefixes from calendar summaries (_cleanTransitSummary)", () => {
       assert.equal(_cleanTransitSummary("Bus 486 - Schwabach"), "Schwabach");
+      assert.equal(_cleanTransitSummary("Regionalbus 486 - Sulzbach-Rosenb. Luitpoldplatz"), "Sulzbach-Rosenb. Luitpoldplatz");
+      assert.equal(_cleanTransitSummary("Stadtbus 456 - Amberg"), "Amberg");
       assert.equal(_cleanTransitSummary("Bus 456: Rohr"), "Rohr");
       assert.equal(_cleanTransitSummary("Bus 61 – Röthenbach"), "Röthenbach");
       assert.equal(_cleanTransitSummary("Tram 8 - Doku-Zentrum"), "Doku-Zentrum");

@@ -5,11 +5,18 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- **VGN Departure Card (`custom:vgn-departure-card` v1.7.8 & `vgn-departure-card-loader.js`)**:
-  - **Universal Multi-Modal Transit Support**: Expanded route destination cleaner (`_cleanTransitSummary`) and matching to support any transport mode (Bus, Tram, Train, S-Bahn, U-Bahn, Regionalbahn, Regional-Express).
-  - **Dynamic Alert Scheduling**: Replaced hardcoded line 486 check in `_isDepartureAlertActive` with universal watch-level properties: `alert_hours` (e.g. `[6, 9]`) and `alert_weekdays` (e.g. `true`), preserving backward compatibility for legacy configs while allowing any line to have custom alert schedules.
-  - **Configurable Near-Departure Window (`near_poll_window_min`)**: Added `near_poll_window_min` configuration parameter (default: `25` min) exposed in card config and visual editor.
-  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.8`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.8.2 & `vgn-departure-card-loader.js`)**:
+  - **Code Cleanup & Word-Boundary Line Matching**: Removed unused `dir` variable in `_isDepartureAlertActive`, replaced fuzzy string inclusion with regex word boundary matching for lines in `_processCalendarWatches` to prevent partial line number collisions (e.g. line 1 matching 10), and standardized select element event handling in editor.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.2`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.8.1 & `vgn-departure-card-loader.js`)**:
+  - **Code Cleanup & Pure Backend Delegation**: Cleaned up departure mapping in `_processCalendarWatches` to map directly from calendar events, removing client-side deduplication loops in favor of the backend calendar sync script's self-healing deduplication and purge.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.1`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.8.0 & `vgn-departure-card-loader.js`)**:
+  - **Regionalbus & Transit Prefix Normalization**: Expanded `_cleanTransitSummary` regex to strip `Regionalbus`, `Stadtbus`, `Expressbus`, `Nachtbus`, `Ortsbus`, `Regionalbahn`, and `Regional-Express` prefixes from destination text.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.8.0`.
+- **VGN Departure Card (`custom:vgn-departure-card` v1.7.9 & `vgn-departure-card-loader.js`)**:
+  - **Complete Parameterization**: Removed all hardcoded line numbers (`486`, `456`) and line-specific schedule/color rules from card code; colors and alert schedules are 100% parameter-driven from view configurations.
+  - Bumped version in `vgn-departure-card.js`, `vgn-departure-card-editor.js`, and `vgn-departure-card-loader.js` to `1.7.9`.
 - **VGN Departure Card (`custom:vgn-departure-card` v1.7.7 & `vgn-departure-card-loader.js`)**:
   - **Live Delay & Real-Time Sync**: In `_processCalendarWatches`, automatically synchronizes live real-time departure minutes and delays from configured `watch.helper` entities (updated by `automation.vgn_bus_departure_background_update` via VGN GPS API) for upcoming departures within 30 minutes.
   - **Delay Badge Display**: Computes `dep.delay = liveMinutes - scheduledMinutes`, adjusts `dep.realtime`, and renders dynamic delay badges (`+delay` in red or `-early` in green) alongside destination names and live countdown times.
