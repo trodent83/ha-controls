@@ -575,6 +575,28 @@ describe("VGNDepartureCard - Formatters, Cache, In-Flight Deduplication & Refres
       assert.equal(!emptyCalendarSignatures.includes(newSig), true, "Empty calendar must allow new event");
       assert.equal(!emptyCalendarSignatures.includes(duplicateSig), true, "Empty calendar must allow first event");
     });
+
+    it("verifies line matching succeeds when num is integer (HA native typing) or string", () => {
+      const matchLine = (numVal, lineFilter) => {
+        const snum = String(numVal).trim();
+        const sline = String(lineFilter).trim();
+        return sline === "both" ? (snum.includes("486") || snum.includes("456")) : snum.includes(sline);
+      };
+
+      // Native typing causes num to be integer 486 or 456
+      assert.equal(matchLine(486, "486"), true, "Integer 486 must match line '486'");
+      assert.equal(matchLine(456, "456"), true, "Integer 456 must match line '456'");
+      assert.equal(matchLine(486, "both"), true, "Integer 486 must match 'both'");
+      assert.equal(matchLine(456, "both"), true, "Integer 456 must match 'both'");
+
+      // String line numbers
+      assert.equal(matchLine("486", "486"), true, "String '486' must match line '486'");
+      assert.equal(matchLine("Regionalbus 486", "486"), true, "Prefixed line 'Regionalbus 486' must match '486'");
+
+      // Negative matches
+      assert.equal(matchLine(401, "486"), false, "Line 401 must NOT match '486'");
+      assert.equal(matchLine(402, "both"), false, "Line 402 must NOT match 'both'");
+    });
   });
 });
 
